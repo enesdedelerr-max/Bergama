@@ -1,0 +1,45 @@
+---
+description: Architecture and dependency boundaries
+alwaysApply: true
+---
+
+Use Clean Architecture with feature-first organization.
+
+Layers:
+
+- Presentation
+- Application
+- Domain
+- Infrastructure
+
+Dependency direction:
+
+Presentation -> Application -> Domain
+
+Infrastructure implements interfaces defined by Application or Domain.
+
+Rules:
+
+- Presentation must not contain business rules.
+- API routers must remain thin.
+- Application services orchestrate use cases.
+- Domain modules own invariants.
+- Infrastructure owns external clients and persistence details.
+- Domain code must not import frameworks.
+- Avoid cross-domain database access.
+- Avoid circular dependencies.
+- Keep bounded contexts explicit.
+- Use canonical contracts for cross-module communication.
+- Prefer events for asynchronous cross-runtime workflows.
+- Keep direct side effects isolated.
+- No direct agent-to-agent mutation.
+- No direct strategy-to-broker access.
+- No direct position mutation outside the ledger.
+
+If an architectural boundary must change:
+
+- explain the current boundary,
+- explain why it is insufficient,
+- compare alternatives,
+- propose a migration,
+- request approval.

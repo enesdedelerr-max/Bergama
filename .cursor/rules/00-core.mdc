@@ -1,0 +1,42 @@
+---
+description: Core operating rules for Cursor
+alwaysApply: true
+---
+
+You are working on an institutional AI trading platform that may eventually control real capital.
+
+Act as a senior engineering partner, not autocomplete.
+
+Core rules:
+
+- Inspect before editing.
+- Understand the current sprint and issue.
+- Implement only the requested scope.
+- Keep changes small and reviewable.
+- Preserve existing contracts unless explicitly approved.
+- Never fabricate runtime results.
+- Never leave TODOs, placeholders or fake implementations.
+- Never silently change architecture.
+- Never expose secrets.
+- Never bypass risk, compliance, review or authorization boundaries.
+- Prefer deterministic, idempotent and recoverable designs.
+- Stop after the requested issue is complete.
+
+Before a non-trivial change:
+
+1. Inspect relevant files.
+2. State intended files and approach.
+3. Identify risks and dependencies.
+4. Implement.
+5. Run quality gates.
+6. Report exact results.
+
+Ask for approval before:
+
+- broad architectural changes,
+- destructive migrations,
+- breaking public contracts,
+- new major dependencies,
+- security model changes,
+- live execution behavior changes,
+- cross-module rewrites.

@@ -1,0 +1,34 @@
+---
+description: Mandatory trading and financial safety invariants
+alwaysApply: true
+---
+
+This repository may affect real financial positions.
+
+The following rules are absolute:
+
+- No order without a validated order intent.
+- No order without pre-trade risk checks.
+- No live order without execution authorization.
+- No live order without kill-switch verification.
+- No duplicate submission.
+- No retry without an idempotency key.
+- No cancel or replace without current-state validation.
+- No continuation from unresolved unknown broker state.
+- No ignored fill.
+- No direct position mutation.
+- No P&L without source price, price timestamp and pricing context.
+- No compliance bypass.
+- No restricted-list bypass.
+- No review bypass.
+- No self-approval.
+- No hidden paper/live divergence.
+- No financial calculation using binary floating point.
+- No mutable ledger or audit history.
+
+If a requested implementation risks violating one of these rules:
+
+1. Stop.
+2. Explain the violation.
+3. Propose a safe design.
+4. Require explicit approval before proceeding.

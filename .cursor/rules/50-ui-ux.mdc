@@ -1,0 +1,34 @@
+---
+description: Frontend and operational UX rules
+alwaysApply: true
+---
+
+Build a premium institutional control center, not a decorative dashboard.
+
+Design goals:
+
+- trustworthy,
+- calm,
+- information-dense but readable,
+- operationally clear,
+- accessible,
+- responsive.
+
+Requirements:
+
+- Use TypeScript strict mode.
+- Use TanStack Query for server state.
+- Keep local state local.
+- Do not duplicate backend state in arbitrary stores.
+- Use typed API contracts.
+- Keep business rules out of React components.
+- Support loading, empty, stale, partial and error states.
+- Always display data freshness where relevant.
+- Make paper, sandbox and live environments visually distinct.
+- Make risk, blocked and safe-hold states explicit.
+- Dangerous actions require confirmation.
+- Backend authorization remains mandatory.
+- Use accessible labels, keyboard navigation and contrast.
+- Avoid excessive animation.
+- Avoid decorative charts that do not support decisions.
+- Prefer tables, status indicators, timelines and evidence links for operational flows.

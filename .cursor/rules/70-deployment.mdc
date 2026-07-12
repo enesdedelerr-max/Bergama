@@ -1,0 +1,23 @@
+---
+description: Infrastructure, deployment and release rules
+alwaysApply: true
+---
+
+- Builds must be reproducible.
+- Pin tool, chart, image and dependency versions.
+- Do not use mutable image tags.
+- Keep environment configuration centralized.
+- Separate secrets from non-secret configuration.
+- Use Helm lint and template validation.
+- Validate Kubernetes manifests.
+- Add readiness, liveness and startup probes where relevant.
+- Add resource requests and limits.
+- Use persistent volumes for stateful services.
+- Make bootstrap scripts idempotent.
+- Make failures observable.
+- Provide rollback or recovery instructions.
+- Treat release artifacts as first-class outputs.
+- Generate checksums.
+- Generate SBOMs.
+- Do not claim deployment success without runtime evidence.
+- Do not modify ArgoCD applications outside the corresponding issue scope.

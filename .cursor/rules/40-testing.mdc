@@ -1,0 +1,56 @@
+---
+description: Testing and verification requirements
+alwaysApply: true
+---
+
+Testing is mandatory.
+
+Every meaningful change must include the appropriate combination of:
+
+- unit tests,
+- contract tests,
+- integration tests,
+- smoke tests,
+- replay tests,
+- parity tests,
+- end-to-end tests.
+
+Critical flows include:
+
+- authentication,
+- event processing,
+- point-in-time feature retrieval,
+- decision orchestration,
+- human review,
+- order submission,
+- cancel and replace,
+- partial fills,
+- reconciliation,
+- ledger booking,
+- P&L,
+- kill switch,
+- restricted-list enforcement.
+
+Testing rules:
+
+- Test observable behavior.
+- Keep tests deterministic.
+- Avoid sleep-based synchronization.
+- Avoid unseeded randomness.
+- Do not over-mock domain behavior.
+- Test error paths.
+- Test retries and idempotency.
+- Test stale and missing data.
+- Test rollback and recovery when relevant.
+- Test same input + same config = same output.
+
+Before completion run:
+
+- format
+- lint
+- typecheck
+- unit tests
+- relevant integration tests
+- relevant smoke or e2e tests
+
+Never say a test passed unless it actually ran.

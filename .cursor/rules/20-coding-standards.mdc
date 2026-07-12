@@ -1,0 +1,27 @@
+---
+description: General coding standards
+alwaysApply: true
+---
+
+- Use strong typing.
+- Avoid `Any` and TypeScript `any`.
+- Never use magic constants.
+- Use named configuration and policies.
+- Keep functions small and single-purpose.
+- Keep modules cohesive.
+- Use descriptive names.
+- Prefer explicit data flow.
+- Avoid hidden mutation.
+- Avoid global mutable state.
+- Avoid duplicated business logic.
+- Do not swallow exceptions.
+- Convert low-level exceptions at clear boundaries.
+- Preserve original error context.
+- Use structured error types.
+- Use deterministic serialization where hashes or replay are involved.
+- Use Decimal for financial values.
+- Use timezone-aware timestamps.
+- Store timestamps in UTC.
+- Keep rounding policy explicit.
+- Never leave TODOs, stubs or fake implementations.
+- Prefer simple correct designs over clever abstractions.

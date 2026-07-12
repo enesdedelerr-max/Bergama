@@ -1,0 +1,26 @@
+---
+description: Data, replay and determinism rules
+alwaysApply: true
+---
+
+All historical, feature, research and decision workflows must be deterministic and point-in-time safe.
+
+Requirements:
+
+- No direct wall-clock calls in replayable code.
+- Use injected clocks.
+- No unseeded randomness.
+- No live database reads during replay.
+- Pin datasets and configuration.
+- Preserve canonical event ordering.
+- Use event time, effective time and known-at time correctly.
+- Support effective-date-aware symbol resolution.
+- Support corporate actions.
+- Handle duplicates explicitly.
+- Handle late data explicitly.
+- Handle stale data explicitly.
+- Do not compare floating-point values for financial equality.
+- Use canonical serialization before hashing.
+- Same input, configuration and code version must produce the same output.
+- Offline and online feature definitions must remain compatible.
+- Research, backtest, paper and live must share core contracts where practical.

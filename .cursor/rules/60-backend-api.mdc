@@ -1,0 +1,59 @@
+---
+description: Backend, API and persistence rules
+alwaysApply: true
+---
+
+Backend structure:
+
+- transport layer,
+- application layer,
+- domain layer,
+- infrastructure layer.
+
+API requirements:
+
+- versioned paths,
+- typed request contracts,
+- typed response contracts,
+- explicit validation,
+- correct status codes,
+- normalized errors,
+- correlation IDs,
+- idempotency where required,
+- no persistence leakage.
+
+Preferred error shape:
+
+```json
+{
+  "code": "stable.machine.readable.code",
+  "message": "Human-readable message",
+  "request_id": "string",
+  "details": {}
+}
+```
+
+Database rules:
+
+- use migrations,
+- use explicit transactions,
+- enforce constraints,
+- add indexes intentionally,
+- avoid destructive changes,
+- use expand/contract migrations,
+- document recovery behavior.
+
+Repository rules:
+
+- introduce repository abstractions at meaningful domain boundaries,
+- do not create unnecessary generic repositories,
+- do not expose ORM models outside infrastructure,
+- do not place SQL in API routers.
+
+Async rules:
+
+- use async only for real async I/O,
+- do not block the event loop,
+- bound concurrency,
+- propagate cancellation,
+- apply timeouts.

@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eef2f5;
+  --foreground: #14202b;
+  --surface: #f8fafc;
+  --surface-muted: #e2e8f0;
+  --border: #c9d4df;
+  --muted-fg: #516173;
+  --accent: #1f4f5b;
+  --accent-hover: #173c45;
+  --accent-fg: #f4f8f9;
+  --ring: #2f6b78;
+  --status-success-bg: #dff0e7;
+  --status-success-fg: #1b5c3c;
+  --status-success-border: #95c7ad;
+  --status-warning-bg: #f3ebda;
+  --status-warning-fg: #745214;
+  --status-warning-border: #d2b57c;
+  --status-danger-bg: #f3e3e1;
+  --status-danger-fg: #842f2c;
+  --status-danger-border: #d4a6a2;
+  --status-info-bg: #e2ebf3;
+  --status-info-fg: #2b4d66;
+  --status-info-border: #98b1c7;
+  --env-paper-bg: #ddeee8;
+  --env-paper-fg: #1f4f5b;
+  --env-paper-border: #8fbfb3;
+  --env-sandbox-bg: #e2eaf3;
+  --env-sandbox-fg: #2a4d6e;
+  --env-sandbox-border: #9db3c9;
+  --env-live-bg: #f4e4e2;
+  --env-live-fg: #842a26;
+  --env-live-border: #d1a19c;
+}
+
+.dark {
+  --background: #0f161d;
+  --foreground: #e8eef4;
+  --surface: #16212b;
+  --surface-muted: #223140;
+  --border: #314556;
+  --muted-fg: #9aabbb;
+  --accent: #5fa8b4;
+  --accent-hover: #79bcc6;
+  --accent-fg: #0d171c;
+  --ring: #5fa8b4;
+  --status-success-bg: #163528;
+  --status-success-fg: #9fd9b5;
+  --status-success-border: #2f6b4d;
+  --status-warning-bg: #3a2e16;
+  --status-warning-fg: #e2c48a;
+  --status-warning-border: #7a5d2a;
+  --status-danger-bg: #3a1d1c;
+  --status-danger-fg: #efb0ab;
+  --status-danger-border: #7a3a36;
+  --status-info-bg: #1b2c3b;
+  --status-info-fg: #a9c4da;
+  --status-info-border: #3d5c76;
+  --env-paper-bg: #173530;
+  --env-paper-fg: #9fd4c8;
+  --env-paper-border: #2f6b5f;
+  --env-sandbox-bg: #1b2c3b;
+  --env-sandbox-fg: #a9c4da;
+  --env-sandbox-border: #3d5c76;
+  --env-live-bg: #3a1d1c;
+  --env-live-fg: #efb0ab;
+  --env-live-border: #7a3a36;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-display: var(--font-display);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}

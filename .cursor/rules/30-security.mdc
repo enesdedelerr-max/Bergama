@@ -1,0 +1,42 @@
+---
+description: Security and trading safety rules
+alwaysApply: true
+---
+
+Security is a blocking quality gate.
+
+Requirements:
+
+- Never commit, print or expose secrets.
+- Never use default credentials in production-like environments.
+- Validate all external inputs.
+- Enforce authentication and authorization on the backend.
+- Apply least privilege.
+- Avoid SQL injection.
+- Avoid command injection.
+- Avoid unsafe deserialization.
+- Protect browser flows against XSS and CSRF.
+- Do not log tokens, passwords, credentials or sensitive payloads.
+- Pin dependencies and container images.
+- Generate and validate SBOMs.
+- Use signed artifacts when supported.
+- Prefer non-root containers.
+- Drop unnecessary capabilities.
+- Use read-only filesystems where practical.
+- Separate paper, sandbox and live credentials.
+- Never allow UI state to authorize financial actions.
+- Never allow direct broker access without authorization.
+- Fail closed for critical compliance and execution boundaries.
+
+Any change involving:
+
+- credentials,
+- broker execution,
+- authorization,
+- human approvals,
+- tenant data,
+- restricted lists,
+- payments,
+- live trading
+
+requires explicit security review.
