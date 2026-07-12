@@ -1,0 +1,83 @@
+global:
+  environment: paper
+  sprint: "1"
+  releaseVersion: v0.1.0-sprint1
+
+namespace: platform
+argocdNamespace: argocd
+
+labels:
+  app.kubernetes.io/part-of: platform-foundation
+  bergama.io/sprint: "1"
+
+images:
+  postgresql:
+    repository: postgres
+    tag: "16.8"
+  redis:
+    repository: redis
+    tag: "7.4.2"
+  kafka:
+    repository: apache/kafka
+    tag: "3.9.0"
+  clickhouse:
+    repository: clickhouse/clickhouse-server
+    tag: "25.3.2"
+  minio:
+    repository: minio/minio
+    tag: "RELEASE.2025-04-22T22-12-26Z"
+  prometheus:
+    repository: prom/prometheus
+    tag: "v3.2.1"
+  grafana:
+    repository: grafana/grafana
+    tag: "11.6.0"
+  loki:
+    repository: grafana/loki
+    tag: "3.4.2"
+  tempo:
+    repository: grafana/tempo
+    tag: "2.7.1"
+  argocd:
+    repository: quay.io/argoproj/argocd
+    tag: "v2.14.9"
+
+services:
+  - id: postgresql
+    kind: stateful
+    port: 5432
+  - id: redis
+    kind: stateful
+    port: 6379
+  - id: kafka
+    kind: stateful
+    port: 9092
+  - id: clickhouse
+    kind: stateful
+    port: 8123
+  - id: minio
+    kind: stateful
+    port: 9000
+  - id: prometheus
+    kind: observability
+    port: 9090
+  - id: grafana
+    kind: observability
+    port: 3000
+  - id: loki
+    kind: observability
+    port: 3100
+  - id: tempo
+    kind: observability
+    port: 3200
+  - id: argocd
+    kind: gitops
+    port: 443
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi

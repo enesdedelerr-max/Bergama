@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}
+    bergama.io/environment: {{ .Values.global.environment }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.argocdNamespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}
+    bergama.io/environment: {{ .Values.global.environment }}

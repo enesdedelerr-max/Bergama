@@ -1,0 +1,9 @@
+{
+  "check": "build-release",
+  "status": "pass",
+  "release_version": "v0.1.0-sprint1",
+  "archive": "releases/v0.1.0-sprint1/bergama-v0.1.0-sprint1.tar.gz",
+  "archive_sha256": "f7fe0a74920b03f24d6c8e8d91b68ab23e500daea0652d8d73aee1b8f0bb2631",
+  "sbom": "releases/v0.1.0-sprint1/bergama-v0.1.0-sprint1.sbom.json",
+  "sbom_sha256": "d7c4bfa5b80846284a390369c3f6a2e4a4b4232278b2a1ad4d99810370d50a13"
+}

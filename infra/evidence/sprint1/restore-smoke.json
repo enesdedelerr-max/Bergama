@@ -1,0 +1,7 @@
+{
+  "check": "restore-smoke",
+  "status": "pass",
+  "archive": "infra/evidence/sprint1/backups/sprint1-foundation.tar.gz",
+  "sha256_verified": true,
+  "restored_required_paths": 5
+}

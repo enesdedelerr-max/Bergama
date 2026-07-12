@@ -1,0 +1,15 @@
+{
+  "check": "backup",
+  "status": "pass",
+  "archive": "infra/evidence/sprint1/backups/sprint1-foundation.tar.gz",
+  "sha256": "422f7359fea41af32033e494fc887bbff0e7dfa694c32aecc2a2d55f931b8eb0",
+  "bytes": 14007,
+  "includes": [
+    "infra/locks",
+    "infra/secrets",
+    "infra/helm",
+    "infra/gitops",
+    "infra/scripts",
+    "Makefile"
+  ]
+}

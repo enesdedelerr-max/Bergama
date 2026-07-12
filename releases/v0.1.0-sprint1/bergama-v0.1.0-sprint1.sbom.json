@@ -1,0 +1,93 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-12T22:46:56Z",
+    "component": {
+      "type": "application",
+      "name": "bergama-sprint1",
+      "version": "v0.1.0-sprint1"
+    },
+    "tools": [
+      {
+        "name": "bergama-build-release",
+        "version": "0.1.0"
+      }
+    ],
+    "properties": [
+      {
+        "name": "bergama:content-hash",
+        "value": "c898ec493148244b0426cb52a9f23ccf8106803fe366870b42fba25cd0268f42"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "container",
+      "name": "postgresql",
+      "version": "16.8",
+      "purl": "pkg:docker/postgres@16.8"
+    },
+    {
+      "type": "container",
+      "name": "redis",
+      "version": "7.4.2",
+      "purl": "pkg:docker/redis@7.4.2"
+    },
+    {
+      "type": "container",
+      "name": "kafka",
+      "version": "3.9.0",
+      "purl": "pkg:docker/apache/kafka@3.9.0"
+    },
+    {
+      "type": "container",
+      "name": "clickhouse",
+      "version": "25.3.2",
+      "purl": "pkg:docker/clickhouse/clickhouse-server@25.3.2"
+    },
+    {
+      "type": "container",
+      "name": "minio",
+      "version": "RELEASE.2025-04-22T22-12-26Z",
+      "purl": "pkg:docker/minio/minio@RELEASE.2025-04-22T22-12-26Z"
+    },
+    {
+      "type": "container",
+      "name": "prometheus",
+      "version": "v3.2.1",
+      "purl": "pkg:docker/prom/prometheus@v3.2.1"
+    },
+    {
+      "type": "container",
+      "name": "grafana",
+      "version": "11.6.0",
+      "purl": "pkg:docker/grafana/grafana@11.6.0"
+    },
+    {
+      "type": "container",
+      "name": "loki",
+      "version": "3.4.2",
+      "purl": "pkg:docker/grafana/loki@3.4.2"
+    },
+    {
+      "type": "container",
+      "name": "tempo",
+      "version": "2.7.1",
+      "purl": "pkg:docker/grafana/tempo@2.7.1"
+    },
+    {
+      "type": "container",
+      "name": "argocd",
+      "version": "v2.14.9",
+      "purl": "pkg:docker/quay.io/argoproj/argocd@v2.14.9"
+    },
+    {
+      "type": "application",
+      "name": "platform-foundation",
+      "version": "0.1.0",
+      "purl": "pkg:helm/platform-foundation@0.1.0"
+    }
+  ]
+}

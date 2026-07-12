@@ -1,0 +1,12 @@
+apiVersion: v2
+name: platform-foundation
+description: Sprint 1 platform foundation chart (namespaces, GitOps metadata, service declarations)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - platform
+  - foundation
+  - sprint1
+maintainers:
+  - name: BergamaTrading Platform

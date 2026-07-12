@@ -1,0 +1,65 @@
+# Sprint 1 version lock file.
+# Issue #195 — all tool, chart, and image versions must be pinned here.
+# Mutable tags such as "latest" are forbidden.
+
+schema_version: 1
+sprint: "1"
+release_version: "v0.1.0-sprint1"
+
+tools:
+  helm:
+    version: "v3.21.3"
+  kubectl:
+    version: "v1.34.1"
+  make:
+    min_version: "3.81"
+  python3:
+    min_version: "3.9"
+  node:
+    min_version: "20"
+
+charts:
+  platform-foundation:
+    name: platform-foundation
+    version: "0.1.0"
+    appVersion: "0.1.0"
+    path: infra/helm/platform-foundation
+
+images:
+  # Declared platform images for Sprint 1 foundation (pinned tags, not latest).
+  postgresql:
+    repository: postgres
+    tag: "16.8"
+  redis:
+    repository: redis
+    tag: "7.4.2"
+  kafka:
+    repository: apache/kafka
+    tag: "3.9.0"
+  clickhouse:
+    repository: clickhouse/clickhouse-server
+    tag: "25.3.2"
+  minio:
+    repository: minio/minio
+    tag: "RELEASE.2025-04-22T22-12-26Z"
+  prometheus:
+    repository: prom/prometheus
+    tag: "v3.2.1"
+  grafana:
+    repository: grafana/grafana
+    tag: "11.6.0"
+  loki:
+    repository: grafana/loki
+    tag: "3.4.2"
+  tempo:
+    repository: grafana/tempo
+    tag: "2.7.1"
+  argocd:
+    repository: quay.io/argoproj/argocd
+    tag: "v2.14.9"
+
+forbidden_tags:
+  - latest
+  - stable
+  - master
+  - main

@@ -1,0 +1,23 @@
+{{- range .Values.services }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-declaration-{{ .id }}
+  namespace: {{ $.Values.namespace }}
+  labels:
+    {{- toYaml $.Values.labels | nindent 4 }}
+    bergama.io/service-id: {{ .id }}
+    bergama.io/service-kind: {{ .kind }}
+data:
+  id: {{ .id | quote }}
+  kind: {{ .kind | quote }}
+  port: {{ .port | quote }}
+  imageRepository: {{ index $.Values.images .id "repository" | quote }}
+  imageTag: {{ index $.Values.images .id "tag" | quote }}
+  readinessNote: "Declaration only for Sprint 1 foundation gate; live workload rollout is environment-controlled."
+  resources.requests.cpu: {{ $.Values.resources.requests.cpu | quote }}
+  resources.requests.memory: {{ $.Values.resources.requests.memory | quote }}
+  resources.limits.cpu: {{ $.Values.resources.limits.cpu | quote }}
+  resources.limits.memory: {{ $.Values.resources.limits.memory | quote }}
+{{- end }}

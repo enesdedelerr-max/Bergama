@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: platform-foundation-inventory
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- toYaml .Values.labels | nindent 4 }}
+data:
+  releaseVersion: {{ .Values.global.releaseVersion | quote }}
+  sprint: {{ .Values.global.sprint | quote }}
+  environment: {{ .Values.global.environment | quote }}
+  services.json: |
+    {{- .Values.services | toJson | nindent 4 }}
+  images.json: |
+    {{- .Values.images | toJson | nindent 4 }}
