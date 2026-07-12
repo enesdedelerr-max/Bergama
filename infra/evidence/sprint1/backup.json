@@ -2,8 +2,8 @@
   "check": "backup",
   "status": "pass",
   "archive": "infra/evidence/sprint1/backups/sprint1-foundation.tar.gz",
-  "sha256": "422f7359fea41af32033e494fc887bbff0e7dfa694c32aecc2a2d55f931b8eb0",
-  "bytes": 14007,
+  "sha256": "824cf2a03acc79eee00c10f8b9ad9ff75ac74d9787ed5a70b57cd9d58286c685",
+  "bytes": 14036,
   "includes": [
     "infra/locks",
     "infra/secrets",

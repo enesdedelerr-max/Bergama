@@ -8,7 +8,7 @@ GATE_JSON="${EVIDENCE_DIR}/GATE_RESULT.json"
 GATE_MD="${EVIDENCE_DIR}/GATE_RESULT.md"
 RELEASE_VERSION="$(awk '/^release_version:/{gsub(/"/,"",$2); print $2; exit}' "${ROOT}/infra/locks/versions.lock.yaml")"
 PATH="${HOME}/.local/bin:${PATH}"
-export PATH
+export PATH ROOT RELEASE_VERSION
 
 cd "${ROOT}"
 
@@ -50,11 +50,12 @@ else
   fi
 fi
 
-python3 - <<PY
+python3 - <<'PY'
 import json, pathlib, datetime, subprocess, os
-root = pathlib.Path(r"${ROOT}")
-evidence = root / "infra/evidence/sprint1"
-release = "${RELEASE_VERSION}"
+
+root = pathlib.Path(os.environ["ROOT"])
+evidence = root / "infra" / "evidence" / "sprint1"
+release = os.environ["RELEASE_VERSION"]
 
 def read_json(name):
     return json.loads((evidence / name).read_text())
@@ -71,39 +72,46 @@ steps = [
     "build-release",
 ]
 platform = read_json("PLATFORM_VALIDATION.json")
-tag_exists = subprocess.call(["git", "rev-parse", release], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0
+tag_exists = (
+    subprocess.call(
+        ["git", "rev-parse", release],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    == 0
+)
 
 report = {
-  "gate": "sprint1",
-  "status": "pass",
-  "release_version": release,
-  "generated_at": datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
-  "steps": steps,
-  "platform_validation": platform["status"],
-  "tag": release if tag_exists else None,
-  "artifacts": {
-    "archive": f"releases/{release}/bergama-{release}.tar.gz",
-    "sbom": f"releases/{release}/bergama-{release}.sbom.json",
-    "platform_validation": "infra/evidence/sprint1/PLATFORM_VALIDATION.json",
-  },
-  "sprint2_decision": "GO",
-  "risks": [
-    "Live Kind/ArgoCD runtime sync was not executed as part of this gate sequence.",
-    "GitOps 'Healthy and Synced' is declared via Application manifest policy, not live controller status.",
-  ],
+    "gate": "sprint1",
+    "status": "pass",
+    "release_version": release,
+    "generated_at": datetime.datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+    "steps": steps,
+    "platform_validation": platform["status"],
+    "tag": release if tag_exists else None,
+    "artifacts": {
+        "archive": f"releases/{release}/bergama-{release}.tar.gz",
+        "sbom": f"releases/{release}/bergama-{release}.sbom.json",
+        "platform_validation": "infra/evidence/sprint1/PLATFORM_VALIDATION.json",
+    },
+    "sprint2_decision": "GO",
+    "risks": [
+        "Live Kind/ArgoCD runtime sync was not executed as part of this gate sequence.",
+        "GitOps 'Healthy and Synced' is declared via Application manifest policy, not live controller status.",
+    ],
 }
 (evidence / "GATE_RESULT.json").write_text(json.dumps(report, indent=2) + "\n")
 md = [
-  "# Sprint 1 Gate Result",
-  "",
-  "Status: **PASS**",
-  "",
-  f"Release: `{release}`",
-  "",
-  "Sprint 2 decision: **GO**",
-  "",
-  "## Risks",
-  "",
+    "# Sprint 1 Gate Result",
+    "",
+    "Status: **PASS**",
+    "",
+    f"Release: `{release}`",
+    "",
+    "Sprint 2 decision: **GO**",
+    "",
+    "## Risks",
+    "",
 ]
 md.extend(f"- {r}" for r in report["risks"])
 md.append("")

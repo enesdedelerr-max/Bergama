@@ -1,0 +1,29 @@
+{
+  "gate": "sprint1",
+  "status": "pass",
+  "release_version": "v0.1.0-sprint1",
+  "generated_at": "2026-07-12T22:47:36Z",
+  "steps": [
+    "helm-lint",
+    "helm-template",
+    "full-check",
+    "verify-locks",
+    "validate-secrets",
+    "backup",
+    "restore-smoke",
+    "platform-validate",
+    "build-release"
+  ],
+  "platform_validation": "pass",
+  "tag": "v0.1.0-sprint1",
+  "artifacts": {
+    "archive": "releases/v0.1.0-sprint1/bergama-v0.1.0-sprint1.tar.gz",
+    "sbom": "releases/v0.1.0-sprint1/bergama-v0.1.0-sprint1.sbom.json",
+    "platform_validation": "infra/evidence/sprint1/PLATFORM_VALIDATION.json"
+  },
+  "sprint2_decision": "GO",
+  "risks": [
+    "Live Kind/ArgoCD runtime sync was not executed as part of this gate sequence.",
+    "GitOps 'Healthy and Synced' is declared via Application manifest policy, not live controller status."
+  ]
+}

@@ -3,7 +3,7 @@
   "specVersion": "1.5",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-07-12T22:46:56Z",
+    "timestamp": "2026-07-12T22:47:35Z",
     "component": {
       "type": "application",
       "name": "bergama-sprint1",
@@ -18,7 +18,7 @@
     "properties": [
       {
         "name": "bergama:content-hash",
-        "value": "c898ec493148244b0426cb52a9f23ccf8106803fe366870b42fba25cd0268f42"
+        "value": "5206bf71de3733917fa35c8a182a32a467bbc0a2f11eb213cf68378b0cad7d79"
       }
     ]
   },
