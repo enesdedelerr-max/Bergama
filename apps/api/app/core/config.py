@@ -71,6 +71,28 @@ class AppSettings(BaseSettings):
         description="Defaults to true for local/test and false for staging/production.",
     )
 
+    # Health runtime (Issue #207)
+    health_check_timeout_seconds: float = Field(default=2.0, gt=0)
+    health_total_timeout_seconds: float = Field(default=5.0, gt=0)
+    postgres_host: str | None = Field(default=None)
+    postgres_port: int = Field(default=5432, ge=1, le=65535)
+    redis_host: str | None = Field(default=None)
+    redis_port: int = Field(default=6379, ge=1, le=65535)
+    kafka_host: str | None = Field(default=None)
+    kafka_port: int = Field(default=9092, ge=1, le=65535)
+    postgres_required: bool | None = Field(
+        default=None,
+        description="Defaults to false until full DB clients are integrated.",
+    )
+    redis_required: bool | None = Field(
+        default=None,
+        description="Defaults to false until full Redis clients are integrated.",
+    )
+    kafka_required: bool | None = Field(
+        default=None,
+        description="Defaults to false until full Kafka clients are integrated.",
+    )
+
     @field_validator("environment", "deployment_environment", mode="before")
     @classmethod
     def normalize_environment(cls, value: object) -> object:
@@ -142,6 +164,22 @@ class AppSettings(BaseSettings):
         if enabled:
             self.secrets.validate_bootstrap_signing_key()
 
+        # External deps stay optional until full clients land (#208+).
+        # Staging/production must set BERGAMA_*_REQUIRED explicitly to enforce.
+        if self.postgres_required is None:
+            object.__setattr__(self, "postgres_required", False)
+        if self.redis_required is None:
+            object.__setattr__(self, "redis_required", False)
+        if self.kafka_required is None:
+            object.__setattr__(self, "kafka_required", False)
+
+        if self.health_total_timeout_seconds < self.health_check_timeout_seconds:
+            msg = (
+                "BERGAMA_HEALTH_TOTAL_TIMEOUT_SECONDS must be >= "
+                "BERGAMA_HEALTH_CHECK_TIMEOUT_SECONDS"
+            )
+            raise ValueError(msg)
+
         return self
 
     @classmethod
@@ -193,6 +231,14 @@ class AppSettings(BaseSettings):
             "jwt_audience": self.jwt_audience,
             "jwt_access_token_ttl_seconds": self.jwt_access_token_ttl_seconds,
             "bootstrap_auth_enabled": self.bootstrap_auth_enabled,
+            "health_check_timeout_seconds": self.health_check_timeout_seconds,
+            "health_total_timeout_seconds": self.health_total_timeout_seconds,
+            "postgres_required": self.postgres_required,
+            "redis_required": self.redis_required,
+            "kafka_required": self.kafka_required,
+            "postgres_configured": bool(self.postgres_host),
+            "redis_configured": bool(self.redis_host),
+            "kafka_configured": bool(self.kafka_host),
             "secrets": self.secrets.safe_summary(),
         }
         return summary

@@ -7,10 +7,30 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#201** Runtime Bootstrap
 - ✅ **#202** Configuration Layer
 - ✅ **#203** Structured Logging
-- ✅ **#204** Settings & Secrets
 - ✅ **#205** JWT Bootstrap
-- 🟡 **#206** Dependency Injection Container (current)
-- Later: Health Runtime, DB, Kafka
+- ✅ **#206** Dependency Injection Container
+- 🟡 **#207** Health Runtime (current)
+- Later: Kafka Runtime, smoke gate
+
+## Health runtime (#207)
+
+| Probe | Path | Meaning | HTTP |
+|-------|------|---------|------|
+| Liveness | `GET /health/live` | Process alive (no deps) | 200 |
+| Readiness | `GET /health/ready` | Required deps pass | 200 ready/degraded, 503 not_ready |
+| Startup | `GET /health/startup` | Lifespan init complete | 200 started, 503 starting/failed |
+| Legacy | `GET /health` | Alias → live | same as live |
+| Legacy | `GET /ready` | Alias → ready | same as ready |
+
+Aggregate readiness: all required pass + optional pass → `ready`; required pass + optional fail → `degraded` (200); any required fail/timeout/skipped → `not_ready` (503).
+
+Checks are container-owned (`HealthService`), concurrent, per-check timeout, deterministic order. Responses use `Cache-Control: no-store`.
+
+Default Sprint 2 checks: `postgres_tcp`, `redis_tcp`, `kafka_tcp` — **connectivity-only** TCP probes when hosts are set; `skipped` when hosts unset. Message `connectivity_only` on PASS. Full clients belong to later issues.
+
+Policy (defaults): `*_REQUIRED=false` until clients are integrated. Configure via `BERGAMA_POSTGRES_REQUIRED` / `REDIS` / `KAFKA`, hosts, and `BERGAMA_HEALTH_*_TIMEOUT_SECONDS`.
+
+Kubernetes mapping: liveness → `/health/live`, readiness → `/health/ready`, startup → `/health/startup`.
 
 ## Dependency container (#206)
 
@@ -203,9 +223,11 @@ make lint
 make typecheck
 make test-api
 make test-api-container
+make test-api-health
 ```
 
-## Out of scope (#206)
+## Out of scope (#207)
 
-PostgreSQL, Redis, Kafka clients, registry loading, readiness integrations,
-business logic, third-party DI frameworks, `apps/platform-console` changes.
+Full PostgreSQL/Redis/Kafka client runtimes, metrics, tracing, registry loader,
+business-domain checks, Helm/ArgoCD probe chart changes (no API Deployment yet),
+`apps/platform-console` changes.

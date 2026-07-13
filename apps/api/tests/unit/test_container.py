@@ -13,6 +13,8 @@ from app.core.environment import AppEnvironment
 from app.core.secrets import SecretSettings
 from app.deps.container import get_app_container
 from app.factory import create_app
+from app.health.runtime_state import RuntimeState
+from app.health.service import HealthService
 from app.services.token_service import TokenService
 from fastapi import FastAPI, Request
 from starlette.requests import Request as StarletteRequest
@@ -49,6 +51,8 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert isinstance(container.clock, SystemClock)
     assert isinstance(container.jti_generator, UuidJtiGenerator)
     assert isinstance(container.token_service, TokenService)
+    assert isinstance(container.runtime_state, RuntimeState)
+    assert isinstance(container.health_service, HealthService)
 
 
 def test_container_holds_same_settings_instance() -> None:
