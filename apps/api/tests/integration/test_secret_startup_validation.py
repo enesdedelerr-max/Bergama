@@ -34,7 +34,9 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 @pytest.mark.asyncio
 async def test_valid_local_app_startup() -> None:
-    settings = AppSettings(environment=AppEnvironment.LOCAL, debug=True)
+    settings = AppSettings(
+        environment=AppEnvironment.LOCAL, debug=True, bootstrap_auth_enabled=False
+    )
     application = create_app(settings)
     transport = ASGITransport(app=application)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -44,7 +46,9 @@ async def test_valid_local_app_startup() -> None:
 
 @pytest.mark.asyncio
 async def test_valid_test_app_startup() -> None:
-    settings = AppSettings(environment=AppEnvironment.TEST, debug=False)
+    settings = AppSettings(
+        environment=AppEnvironment.TEST, debug=False, bootstrap_auth_enabled=False
+    )
     application = create_app(settings)
     transport = ASGITransport(app=application)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
@@ -52,9 +56,13 @@ async def test_valid_test_app_startup() -> None:
         assert (await client.get("/ready")).status_code == 200
 
 
-def test_production_startup_fails_when_required_secret_absent(clean_env: None) -> None:
-    with pytest.raises(ValidationError):
-        create_app(AppSettings(environment=AppEnvironment.PRODUCTION, debug=False))
+def test_production_startup_succeeds_without_bootstrap_secret(clean_env: None) -> None:
+    application = create_app(
+        AppSettings(
+            environment=AppEnvironment.PRODUCTION, debug=False, bootstrap_auth_enabled=False
+        )
+    )
+    assert application.state.settings.bootstrap_auth_enabled is False
 
 
 @pytest.mark.asyncio
@@ -106,13 +114,10 @@ def test_secret_validation_errors_do_not_reveal_raw_content(clean_env: None) -> 
     leaked = "super-leaky-production-secret-value-9999"
     with pytest.raises(ValidationError) as exc_info:
         AppSettings(
-            environment=AppEnvironment.PRODUCTION,
-            debug=False,
-            secrets=SecretSettings(
-                app_secret_key="example",
-                bootstrap_jwt_signing_key=leaked,
-            ),
+            environment=AppEnvironment.TEST,
+            bootstrap_auth_enabled=True,
+            secrets=SecretSettings(bootstrap_jwt_signing_key="example"),
         )
     err = str(exc_info.value)
     assert leaked not in err
-    assert "example" not in err or "placeholder" in err.lower()
+    assert "placeholder" in err.lower()

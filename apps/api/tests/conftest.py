@@ -45,6 +45,7 @@ def settings() -> AppSettings:
         api_prefix="/api/v1",
         service_name="bergama-api-test",
         instance_id="test-1",
+        bootstrap_auth_enabled=False,
     )
 
 

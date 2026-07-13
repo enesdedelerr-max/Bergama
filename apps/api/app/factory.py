@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, FastAPI
+from fastapi.openapi.utils import get_openapi
 
 from app.core.config import AppSettings, get_settings
 from app.core.exception_handlers import register_exception_handlers
@@ -29,7 +32,10 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         title=resolved.app_name,
         version=resolved.app_version,
         debug=resolved.debug,
-        description="Bergama Trading Platform API — Sprint 2 FastAPI runtime foundation.",
+        description=(
+            "Bergama Trading Platform API — Sprint 2 FastAPI runtime foundation. "
+            "JWT bootstrap auth is local/test only; production identity will use OIDC."
+        ),
         lifespan=lifespan,
         docs_url=docs_url,
         openapi_url=openapi_url,
@@ -45,4 +51,32 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
     api_router = APIRouter()
     register_routers(api_router, include_health=False)
     application.include_router(api_router, prefix=resolved.api_prefix)
+
+    _install_openapi(application)
     return application
+
+
+def _install_openapi(application: FastAPI) -> None:
+    """Ensure Bearer security scheme is present for protected routes."""
+
+    def custom_openapi() -> dict[str, Any]:
+        if application.openapi_schema is not None:
+            return application.openapi_schema
+        schema = get_openapi(
+            title=application.title,
+            version=application.version,
+            description=application.description,
+            routes=application.routes,
+        )
+        components = schema.setdefault("components", {})
+        security_schemes = components.setdefault("securitySchemes", {})
+        security_schemes["HTTPBearer"] = {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Local/test bootstrap JWT (HS256). Not a production OIDC token.",
+        }
+        application.openapi_schema = schema
+        return schema
+
+    application.openapi = custom_openapi  # type: ignore[method-assign]

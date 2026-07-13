@@ -7,8 +7,42 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#201** Runtime Bootstrap
 - ✅ **#202** Configuration Layer
 - ✅ **#203** Structured Logging
-- 🟡 **#204** Settings & Secrets (current)
-- Later: JWT auth, DI, DB, Kafka
+- ✅ **#204** Settings & Secrets
+- 🟡 **#205** JWT Bootstrap (current)
+- Later: DI, DB, Kafka
+
+## JWT bootstrap (#205)
+
+Local/test-only HS256 access tokens. **Not** production identity (future OIDC).
+
+| Item | Value |
+|------|--------|
+| Algorithm | `HS256` (fixed; no alg negotiation) |
+| Signing key | `BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY` |
+| Enable flag | `BERGAMA_BOOTSTRAP_AUTH_ENABLED` (default: true local/test, false staging/prod) |
+| Issuer / audience | `BERGAMA_JWT_ISSUER` / `BERGAMA_JWT_AUDIENCE` (default `bergama-api`) |
+| TTL | `BERGAMA_JWT_ACCESS_TOKEN_TTL_SECONDS` (default 900) |
+| Mint | `POST /api/v1/auth/token` `{"grant_type":"bootstrap"}` |
+| Smoke | `GET /api/v1/auth/me` (Bearer) |
+| Staging/prod mint | **404** (`auth.bootstrap_disabled`) |
+
+Fixed bootstrap identity (server-side only): `local-bootstrap-user` / roles `developer` / scopes `api:read`.
+
+No refresh tokens, user DB, passwords, or RBAC.
+
+### Example local flow
+
+```bash
+# ensure .secrets.env has BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY (>=32 chars)
+curl -sS -X POST http://localhost:8000/api/v1/auth/token \
+  -H 'Content-Type: application/json' \
+  -d '{"grant_type":"bootstrap"}'
+
+curl -sS http://localhost:8000/api/v1/auth/me \
+  -H "Authorization: Bearer <access_token>"
+```
+
+Rate limiting is deferred (no Redis). Token responses use `Cache-Control: no-store`.
 
 ## Secrets (#204)
 
@@ -16,11 +50,12 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 |---------|----------|
 | Model | Nested `AppSettings.secrets` (`SecretSettings`) |
 | Types | `pydantic.SecretStr` only |
-| Env names | `BERGAMA_SECRETS__APP_SECRET_KEY`, `BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY` |
+| Env names | `BERGAMA_SECRETS__APP_SECRET_KEY` (optional), `BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY` |
 | Local file | `.secrets.env` (gitignored); template `.secrets.example` |
 | Non-secret local | `.env` (gitignored); template `.env.example` |
 | Test / staging / production | No `.secrets.env` fallback — inject env only |
-| Production/staging | Both secrets required; reject placeholders; min length 32 |
+| Bootstrap signing key | Required only when `bootstrap_auth_enabled=true` |
+| `APP_SECRET_KEY` | Optional — unused by current runtime |
 | Access | `settings.secrets.bootstrap_jwt_signing_key.get_secret_value()` |
 | Summaries / logs | Configured flags only — never raw values |
 
@@ -34,14 +69,11 @@ cp .secrets.example .secrets.env
 uv run app
 ```
 
-### Fail-fast (staging/production)
+### Fail-fast
 
-- Missing `BERGAMA_SECRETS__*`
-- Placeholder equality: `changeme`, `password`, `secret`, `default`, `example`, `test`
-- Cryptographic secrets shorter than 32 characters
-- Leading/trailing whitespace on secret values
-
-JWT verification is **not** implemented in #204 — keys are reserved for #205.
+- Staging/production cannot enable bootstrap auth
+- When bootstrap auth is enabled: signing key required, no placeholders, min length 32
+- Leading/trailing whitespace on secret values rejected
 
 ## Structured logging (#203)
 

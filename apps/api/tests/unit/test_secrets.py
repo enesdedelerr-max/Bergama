@@ -40,41 +40,35 @@ def test_empty_string_becomes_none() -> None:
     assert secrets.bootstrap_jwt_signing_key is None
 
 
-def test_production_validation_missing_fails() -> None:
+def test_bootstrap_signing_key_missing_fails_when_validated() -> None:
     secrets = SecretSettings()
     with pytest.raises(ValueError, match="required"):
-        secrets.validate_for_environment(production_like=True)
+        secrets.validate_bootstrap_signing_key()
 
 
-def test_production_placeholder_fails() -> None:
-    secrets = SecretSettings(
-        app_secret_key="changeme",
-        bootstrap_jwt_signing_key=VALID_PROD_JWT_SECRET,
-    )
+def test_bootstrap_placeholder_fails() -> None:
+    secrets = SecretSettings(bootstrap_jwt_signing_key="changeme")
     with pytest.raises(ValueError, match="placeholder") as exc_info:
-        secrets.validate_for_environment(production_like=True)
+        secrets.validate_bootstrap_signing_key()
     assert "changeme" not in str(exc_info.value)
 
 
-def test_production_weak_length_fails() -> None:
+def test_bootstrap_weak_length_fails() -> None:
     short = "x" * (MIN_CRYPTO_SECRET_LENGTH - 1)
-    secrets = SecretSettings(
-        app_secret_key=short,
-        bootstrap_jwt_signing_key=VALID_PROD_JWT_SECRET,
-    )
+    secrets = SecretSettings(bootstrap_jwt_signing_key=short)
     with pytest.raises(ValueError, match="at least") as exc_info:
-        secrets.validate_for_environment(production_like=True)
+        secrets.validate_bootstrap_signing_key()
     assert short not in str(exc_info.value)
 
 
-def test_production_valid_passes() -> None:
-    secrets = make_production_secrets()
-    secrets.validate_for_environment(production_like=True)
+def test_bootstrap_valid_passes() -> None:
+    secrets = SecretSettings(bootstrap_jwt_signing_key=VALID_PROD_JWT_SECRET)
+    secrets.validate_bootstrap_signing_key()
 
 
-def test_local_may_omit_secrets() -> None:
-    secrets = SecretSettings()
-    secrets.validate_for_environment(production_like=False)
+def test_app_secret_optional() -> None:
+    secrets = SecretSettings(bootstrap_jwt_signing_key=VALID_PROD_JWT_SECRET)
+    assert secrets.app_secret_key is None
 
 
 def test_explicit_access_pattern() -> None:

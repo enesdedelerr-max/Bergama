@@ -12,11 +12,11 @@ API_DIR := $(ROOT)/apps/api
 	kind-bootstrap ingress-install argocd-bootstrap \
 	postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy \
 	backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1 \
-	lint typecheck test-api run-api
+	lint typecheck test-api test-api-auth run-api
 
 help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
-	@echo "Sprint 2 targets: lint typecheck test-api run-api"
+	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth run-api"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -90,6 +90,12 @@ typecheck:
 
 test-api:
 	@cd "$(API_DIR)" && uv run pytest -q
+
+test-api-auth:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_token_service.py \
+		tests/unit/test_auth_config.py \
+		tests/integration/test_auth_endpoints.py
 
 run-api:
 	@cd "$(API_DIR)" && uv run app
