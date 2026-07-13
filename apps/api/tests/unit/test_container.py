@@ -12,6 +12,7 @@ from app.core.container import AppContainer, build_container
 from app.core.environment import AppEnvironment
 from app.core.secrets import SecretSettings
 from app.deps.container import get_app_container
+from app.events.topics import TopicRegistry
 from app.factory import create_app
 from app.health.runtime_state import RuntimeState
 from app.health.service import HealthService
@@ -53,6 +54,8 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert isinstance(container.token_service, TokenService)
     assert isinstance(container.runtime_state, RuntimeState)
     assert isinstance(container.health_service, HealthService)
+    assert isinstance(container.topic_registry, TopicRegistry)
+    assert container.kafka_runtime is None
 
 
 def test_container_holds_same_settings_instance() -> None:

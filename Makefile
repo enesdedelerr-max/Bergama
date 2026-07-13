@@ -12,11 +12,11 @@ API_DIR := $(ROOT)/apps/api
 	kind-bootstrap ingress-install argocd-bootstrap \
 	postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy \
 	backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1 \
-	lint typecheck test-api test-api-auth test-api-container test-api-health run-api
+	lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core run-api
 
 help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
-	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health run-api"
+	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core run-api"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -109,6 +109,15 @@ test-api-health:
 		tests/unit/test_runtime_state.py \
 		tests/integration/test_health_runtime.py \
 		tests/smoke/test_health.py
+
+test-api-kafka-core:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_event_envelope.py \
+		tests/unit/test_event_serialization.py \
+		tests/unit/test_topic_registry.py \
+		tests/unit/test_consumer_worker.py \
+		tests/unit/test_kafka_container.py \
+		tests/integration/test_kafka_adapter.py
 
 run-api:
 	@cd "$(API_DIR)" && uv run app

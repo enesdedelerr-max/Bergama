@@ -20,6 +20,7 @@ from app.health.protocol import (
     HealthCheck,
 )
 from app.health.runtime_state import RuntimeLifecycleState, RuntimeState
+from app.infrastructure.kafka.runtime import KafkaRuntime
 from app.schemas.health import (
     DependencyHealthResult,
     DependencyHealthStatus,
@@ -230,14 +231,30 @@ class HealthService:
         return result
 
 
-def build_default_health_checks(settings: AppSettings) -> tuple[HealthCheck, ...]:
-    """Register Sprint 2 dependency checks (connectivity-only until full clients)."""
+def build_default_health_checks(
+    settings: AppSettings,
+    *,
+    kafka_runtime: KafkaRuntime | None = None,
+) -> tuple[HealthCheck, ...]:
+    """Register Sprint 2 dependency checks."""
     from app.health.checks import TcpConnectivityCheck
+    from app.infrastructure.kafka.health import KafkaHealthCheck
 
     timeout = settings.health_check_timeout_seconds
     postgres_required = bool(settings.postgres_required)
     redis_required = bool(settings.redis_required)
-    kafka_required = bool(settings.kafka_required)
+
+    async def _kafka_metadata() -> object:
+        if kafka_runtime is None or not kafka_runtime.started:
+            msg = "kafka client is not started"
+            raise RuntimeError(msg)
+        return await kafka_runtime.fetch_metadata()
+
+    kafka_check = KafkaHealthCheck(
+        settings=settings.kafka,
+        timeout_seconds=timeout,
+        metadata_fetcher=_kafka_metadata if settings.kafka.enabled else None,
+    )
     return (
         TcpConnectivityCheck(
             name="postgres_tcp",
@@ -253,13 +270,7 @@ def build_default_health_checks(settings: AppSettings) -> tuple[HealthCheck, ...
             host=settings.redis_host,
             port=settings.redis_port,
         ),
-        TcpConnectivityCheck(
-            name="kafka_tcp",
-            required=kafka_required,
-            timeout_seconds=timeout,
-            host=settings.kafka_host,
-            port=settings.kafka_port,
-        ),
+        kafka_check,
     )
 
 

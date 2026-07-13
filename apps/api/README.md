@@ -7,10 +7,30 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#201** Runtime Bootstrap
 - ✅ **#202** Configuration Layer
 - ✅ **#203** Structured Logging
-- ✅ **#205** JWT Bootstrap
 - ✅ **#206** Dependency Injection Container
-- 🟡 **#207** Health Runtime (current)
-- Later: Kafka Runtime, smoke gate
+- ✅ **#207** Health Runtime
+- 🟡 **#208A** Kafka Core Runtime (current)
+- Later: #208B Kafka Test Runtime, #209 Registry Loader, #210 Smoke Gate
+
+## Kafka core runtime (#208A)
+
+| Concern | Behavior |
+|---------|----------|
+| Client | `aiokafka` only |
+| Default | `BERGAMA_KAFKA__ENABLED=false` (local/test stay broker-free) |
+| Envelope | Canonical `EventEnvelope` + deterministic JSON + content hash |
+| Topics | `TopicRegistry` — `market-data`, `events`, `audit`, `execution`, `risk` |
+| Commit | Manual only (`enable_auto_commit` must be false) |
+| Retry | In-memory bounded backoff; exhausted + no DLQ → fail-closed (no commit) |
+| DLQ | Protocol only — no concrete publisher in #208A |
+| Health | Check name `kafka` via cluster metadata (not TCP-only) |
+| Lifecycle | Start producer → consumers → workers; stop workers → consumers → producer |
+
+**Limitations**
+
+- Topics are **not** auto-created. Provision them before producing.
+- Sprint 1 Kind Kafka advertises `127.0.0.1:9092` (in-pod / port-forward oriented). Cluster-internal clients may need a later infra listener fix; do not treat TCP open as full protocol health.
+- Market-data connectors, Iceberg, Schema Registry, retry topics and real DLQ are out of scope (#208B / Sprint 3+).
 
 ## Health runtime (#207)
 
@@ -26,7 +46,7 @@ Aggregate readiness: all required pass + optional pass → `ready`; required pas
 
 Checks are container-owned (`HealthService`), concurrent, per-check timeout, deterministic order. Responses use `Cache-Control: no-store`.
 
-Default Sprint 2 checks: `postgres_tcp`, `redis_tcp`, `kafka_tcp` — **connectivity-only** TCP probes when hosts are set; `skipped` when hosts unset. Message `connectivity_only` on PASS. Full clients belong to later issues.
+Default Sprint 2 checks: `postgres_tcp`, `redis_tcp`, and `kafka` (metadata when Kafka enabled; `skipped` when disabled). Postgres/Redis remain connectivity-only until full clients exist.
 
 Policy (defaults): `*_REQUIRED=false` until clients are integrated. Configure via `BERGAMA_POSTGRES_REQUIRED` / `REDIS` / `KAFKA`, hosts, and `BERGAMA_HEALTH_*_TIMEOUT_SECONDS`.
 
@@ -224,10 +244,10 @@ make typecheck
 make test-api
 make test-api-container
 make test-api-health
+make test-api-kafka-core
 ```
 
-## Out of scope (#207)
+## Out of scope (#208A)
 
-Full PostgreSQL/Redis/Kafka client runtimes, metrics, tracing, registry loader,
-business-domain checks, Helm/ArgoCD probe chart changes (no API Deployment yet),
-`apps/platform-console` changes.
+Market-data connectors, normalization, Iceberg, concrete DLQ, retry topics,
+Schema Registry, in-memory fake broker (#208B), `apps/platform-console` changes.

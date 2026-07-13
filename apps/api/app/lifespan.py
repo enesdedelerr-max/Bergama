@@ -43,6 +43,7 @@ async def on_startup(settings: AppSettings) -> None:
             environment=settings.environment.value,
             app_secret_key_configured=flags["app_secret_key_configured"],
             bootstrap_jwt_signing_key_configured=flags["bootstrap_jwt_signing_key_configured"],
+            kafka_enabled=settings.kafka.enabled,
         ),
     )
 
@@ -71,9 +72,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     previous = runtime.state
     try:
         await on_startup(settings)
+        if container.kafka_runtime is not None:
+            await container.kafka_runtime.start()
         runtime.mark_started()
         log_startup_state_change(runtime, previous=previous)
     except Exception:
+        if container.kafka_runtime is not None:
+            await container.kafka_runtime.stop()
         runtime.mark_failed()
         log_startup_state_change(runtime, previous=previous)
         raise
@@ -85,6 +90,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         if stopping_from is not RuntimeLifecycleState.STOPPING:
             log_startup_state_change(runtime, previous=stopping_from)
         await on_shutdown(settings)
+        # aclose stops kafka (workers → consumers → producer) then exit stack.
+        await container.aclose()
         runtime.mark_stopped()
         log_startup_state_change(runtime, previous=RuntimeLifecycleState.STOPPING)
-        await container.aclose()
