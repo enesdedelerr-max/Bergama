@@ -1,4 +1,4 @@
-"""Structured JSON logging configuration."""
+"""Structured JSON logging."""
 
 from __future__ import annotations
 
@@ -40,7 +40,6 @@ def configure_logging(*, level: str = "INFO", json_logs: bool = True) -> None:
         handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
     root.addHandler(handler)
 
-    # Keep uvicorn access logs consistent when attached.
     for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
         logging.getLogger(name).handlers.clear()
         logging.getLogger(name).propagate = True

@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 
 import pytest
-from app.config.settings import Settings
-from app.main import create_app
+from app.core.config import Settings
+from app.factory import create_app
 from httpx import ASGITransport, AsyncClient
 
 
@@ -14,6 +14,7 @@ from httpx import ASGITransport, AsyncClient
 def settings() -> Settings:
     return Settings(
         app_name="bergama-api-test",
+        app_version="0.2.0",
         environment="paper",
         debug=True,
         log_json=False,

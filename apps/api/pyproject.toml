@@ -1,7 +1,7 @@
 [project]
 name = "bergama-api"
 version = "0.2.0"
-description = "Bergama Trading Platform API — Sprint 2 FastAPI runtime foundation"
+description = "Bergama Trading Platform API — Sprint 2 Issue #201 runtime bootstrap"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

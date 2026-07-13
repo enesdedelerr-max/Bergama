@@ -1,1 +1,1 @@
-"""Shared runtime utilities (logging, lifespan, DI)."""
+"""Shared core utilities."""

@@ -1,4 +1,4 @@
-"""Liveness and readiness endpoints."""
+"""Liveness and readiness routers."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from app.core.deps import LoggerDep, SettingsDep
+from app.core.config import Settings, get_settings
 
 router = APIRouter(tags=["health"])
 
@@ -22,14 +22,13 @@ class ReadyResponse(BaseModel):
 
 
 @router.get("/health", response_model=HealthResponse)
-async def health(logger: LoggerDep) -> HealthResponse:
+async def health() -> HealthResponse:
     """Liveness probe — process is up."""
-    logger.debug("health check")
     return HealthResponse()
 
 
 @router.get("/ready", response_model=ReadyResponse)
-async def ready(settings: SettingsDep, logger: LoggerDep) -> ReadyResponse:
-    """Readiness probe — runtime config loaded; no external deps in #201."""
-    logger.debug("readiness check", extra={"environment": settings.environment})
+async def ready() -> ReadyResponse:
+    """Readiness probe — runtime is ready (no external deps in #201)."""
+    settings: Settings = get_settings()
     return ReadyResponse(environment=settings.environment)

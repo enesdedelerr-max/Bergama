@@ -1,4 +1,4 @@
-"""Environment-backed application settings (paper-safe defaults)."""
+"""Runtime configuration (paper-safe defaults)."""
 
 from functools import lru_cache
 from typing import Literal
@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Runtime configuration loaded from environment variables."""
+    """Environment-backed settings for the API process."""
 
     model_config = SettingsConfigDict(
         env_prefix="BERGAMA_",
@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = Field(default="bergama-api")
+    app_version: str = Field(default="0.2.0")
     environment: Literal["paper", "sandbox", "live"] = Field(default="paper")
     debug: bool = Field(default=False)
     host: str = Field(default="0.0.0.0")
@@ -28,5 +29,5 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    """Return cached settings instance for DI."""
+    """Return cached settings for the process."""
     return Settings()
