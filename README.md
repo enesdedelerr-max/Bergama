@@ -8,19 +8,18 @@ portfolio accounting and production operational governance.
 
 The repository is in implementation mode.
 
-**Sprint 1** (`v0.1.0-sprint1`) infrastructure foundation gate passed with live Kind runtime evidence.
+**Sprint 1** (`v0.1.0-sprint1`) — complete (infrastructure gate PASS).
 
-Current focus:
+**Sprint 2** — FastAPI runtime foundation in progress (`feature/sprint2-runtime`, Issue #201).
 
-```text
-Sprint 2 — Application runtime foundation (next)
+```bash
+make lint
+make typecheck
+make test-api
+make run-api
 ```
 
-Sprint 1 closure artifacts:
-
-- `CHANGELOG.md`
-- `releases/sprint-1/`
-- `docs/sprints/sprint-1/retrospective.md`
+API package: [`apps/api`](apps/api).
 
 ## Core principles
 
