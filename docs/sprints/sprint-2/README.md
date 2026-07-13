@@ -2,9 +2,10 @@
 
 ## Status
 
-🟡 Issue **#202 Configuration Layer** — in progress on `feature/sprint2-issue202-configuration-layer`
+🟡 Issue **#203 Structured Logging** — in progress on `feature/sprint2-issue203-structured-logging`
 
-✅ Issue **#201 Runtime Bootstrap**
+✅ Issue **#202** Configuration Layer  
+✅ Issue **#201** Runtime Bootstrap
 
 ## Goal
 
@@ -13,8 +14,8 @@ Establish the production FastAPI runtime that every later sprint builds on.
 ## Issue chain
 
 1. ✅ **#201** FastAPI Runtime Bootstrap
-2. 🟡 **#202** Configuration Layer
-3. ⏳ **#203** Logging
+2. ✅ **#202** Configuration Layer
+3. 🟡 **#203** Structured Logging
 4. ⏳ **#204** Settings
 5. ⏳ **#205** Auth Bootstrap
 6. ⏳ **#206** Dependency Injection
@@ -40,4 +41,4 @@ make run-api
 ## Constraints
 
 - Do not modify Sprint 1 infrastructure except for defects.
-- No market data, broker, JWT, DB, Redis, Kafka, or trading logic in #201/#202.
+- No market data, broker, JWT, DB, Redis, Kafka, or trading logic in #201–#203.
