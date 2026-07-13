@@ -1,4 +1,4 @@
-"""Typed application configuration (Pydantic Settings) — Issue #202."""
+"""Typed application configuration (Pydantic Settings) — Issues #202 / #204."""
 
 from __future__ import annotations
 
@@ -10,19 +10,22 @@ from typing import Any, Literal, Self
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import (
     BaseSettings,
+    DotEnvSettingsSource,
     PydanticBaseSettingsSource,
     SettingsConfigDict,
 )
 
 from app.core.environment import AppEnvironment
+from app.core.secrets import SecretSettings
 
 _ENV_PREFIX = "BERGAMA_"
 _DOTENV_NAME = ".env"
+_SECRETS_ENV_NAME = ".secrets.env"
 _LOG_LEVELS = frozenset({"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"})
 
 
 class AppSettings(BaseSettings):
-    """Single typed source of runtime configuration. No invented secrets in #202."""
+    """Typed runtime configuration with a nested secret boundary."""
 
     model_config = SettingsConfigDict(
         env_prefix=_ENV_PREFIX,
@@ -32,6 +35,7 @@ class AppSettings(BaseSettings):
         case_sensitive=False,
         extra="forbid",
         validate_default=True,
+        hide_input_in_errors=True,
     )
 
     app_name: str = Field(default="Bergama Trading API", min_length=1)
@@ -49,11 +53,12 @@ class AppSettings(BaseSettings):
 
     service_name: str = Field(default="bergama-api", min_length=1)
     instance_id: str = Field(default="local-1", min_length=1)
-    # Alias semantic for operators; mirrors environment for clarity in summaries.
     deployment_environment: AppEnvironment | None = Field(
         default=None,
         description="Optional override; defaults to `environment` when unset.",
     )
+
+    secrets: SecretSettings = Field(default_factory=SecretSettings)
 
     @field_validator("environment", "deployment_environment", mode="before")
     @classmethod
@@ -111,6 +116,7 @@ class AppSettings(BaseSettings):
             msg = "BERGAMA_LOG_LEVEL=DEBUG is not allowed in production"
             raise ValueError(msg)
 
+        self.secrets.validate_for_environment(production_like=self.environment.is_production_like)
         return self
 
     @classmethod
@@ -122,15 +128,28 @@ class AppSettings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        """Load `.env` only for the local profile; never for test/staging/production."""
+        """Priority: init > env > `.env` (local) > `.secrets.env` (local) > file secrets.
+
+        Staging/test/production never load `.env` or `.secrets.env`.
+        """
+        sources: list[PydanticBaseSettingsSource] = [init_settings, env_settings]
         if _should_load_dotenv():
-            return init_settings, env_settings, dotenv_settings, file_secret_settings
-        return init_settings, env_settings, file_secret_settings
+            sources.append(dotenv_settings)
+        if _should_load_secrets_file():
+            sources.append(
+                DotEnvSettingsSource(
+                    settings_cls,
+                    env_file=_SECRETS_ENV_NAME,
+                    env_file_encoding="utf-8",
+                )
+            )
+        sources.append(file_secret_settings)
+        return tuple(sources)
 
     def safe_summary(self) -> dict[str, Any]:
         """Operational summary with no secret material."""
         deployment = self.deployment_environment or self.environment
-        return {
+        summary: dict[str, Any] = {
             "app_name": self.app_name,
             "app_version": self.app_version,
             "environment": self.environment.value,
@@ -144,18 +163,36 @@ class AppSettings(BaseSettings):
             "shutdown_timeout_seconds": self.shutdown_timeout_seconds,
             "service_name": self.service_name,
             "instance_id": self.instance_id,
+            "secrets": self.secrets.safe_summary(),
         }
+        return summary
+
+
+def _resolved_environment_from_process() -> AppEnvironment | None:
+    raw = os.environ.get(f"{_ENV_PREFIX}ENVIRONMENT")
+    if raw is None:
+        return None
+    try:
+        return AppEnvironment(raw.strip().lower())
+    except ValueError:
+        return None
 
 
 def _should_load_dotenv() -> bool:
     """Deterministic dotenv gate using process env only (no .env peek for profile)."""
-    raw = os.environ.get(f"{_ENV_PREFIX}ENVIRONMENT")
-    if raw is None:
+    resolved = _resolved_environment_from_process()
+    if resolved is None:
         return Path(_DOTENV_NAME).is_file()
-    try:
-        return AppEnvironment(raw.strip().lower()).loads_dotenv and Path(_DOTENV_NAME).is_file()
-    except ValueError:
-        return False
+    return resolved.loads_dotenv and Path(_DOTENV_NAME).is_file()
+
+
+def _should_load_secrets_file() -> bool:
+    """Load `.secrets.env` only for the local profile when the file exists."""
+    resolved = _resolved_environment_from_process()
+    if resolved is None:
+        # Unset profile behaves like local for developer ergonomics.
+        return Path(_SECRETS_ENV_NAME).is_file()
+    return resolved is AppEnvironment.LOCAL and Path(_SECRETS_ENV_NAME).is_file()
 
 
 @lru_cache

@@ -42,6 +42,14 @@ def test_env_vars_override_defaults(clean_env: None, monkeypatch: pytest.MonkeyP
     monkeypatch.setenv("BERGAMA_APP_NAME", "Override API")
     monkeypatch.setenv("BERGAMA_DEBUG", "false")
     monkeypatch.setenv("BERGAMA_API_PREFIX", "/api/v2")
+    monkeypatch.setenv(
+        "BERGAMA_SECRETS__APP_SECRET_KEY",
+        "prod-valid-app-secret-key-value-0001",
+    )
+    monkeypatch.setenv(
+        "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY",
+        "prod-valid-jwt-signing-key-value-0001",
+    )
     settings = AppSettings()
     assert settings.environment is AppEnvironment.STAGING
     assert settings.app_name == "Override API"
@@ -108,6 +116,14 @@ def test_cache_reset_isolates_tests(clean_env: None, monkeypatch: pytest.MonkeyP
     first = get_settings()
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", "staging")
     monkeypatch.setenv("BERGAMA_DEBUG", "false")
+    monkeypatch.setenv(
+        "BERGAMA_SECRETS__APP_SECRET_KEY",
+        "prod-valid-app-secret-key-value-0001",
+    )
+    monkeypatch.setenv(
+        "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY",
+        "prod-valid-jwt-signing-key-value-0001",
+    )
     clear_settings_cache()
     second = get_settings()
     assert first is not second
@@ -115,22 +131,35 @@ def test_cache_reset_isolates_tests(clean_env: None, monkeypatch: pytest.MonkeyP
 
 
 def test_load_settings_bypasses_cache(clean_env: None, monkeypatch: pytest.MonkeyPatch) -> None:
+    from tests.conftest import make_production_secrets
+
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", "test")
     clear_settings_cache()
     cached = get_settings()
-    isolated = load_settings(environment=AppEnvironment.STAGING, debug=False)
+    isolated = load_settings(
+        environment=AppEnvironment.STAGING,
+        debug=False,
+        secrets=make_production_secrets(),
+    )
     assert isolated.environment is AppEnvironment.STAGING
     assert cached.environment is AppEnvironment.TEST
 
 
-def test_safe_summary_has_no_secret_keys(clean_env: None) -> None:
-    settings = AppSettings(environment=AppEnvironment.TEST)
+def test_safe_summary_has_no_secret_values(clean_env: None) -> None:
+    from tests.conftest import VALID_PROD_APP_SECRET, make_production_secrets
+
+    settings = AppSettings(
+        environment=AppEnvironment.STAGING,
+        debug=False,
+        secrets=make_production_secrets(),
+    )
     summary: dict[str, Any] = settings.safe_summary()
-    assert "secret" not in str(summary).lower()
-    assert summary["environment"] == "test"
-    assert summary["api_prefix"] == "/api/v1"
-    assert "docs_enabled" in summary
-    assert "openapi_enabled" in summary
+    blob = str(summary)
+    assert VALID_PROD_APP_SECRET not in blob
+    assert "get_secret_value" not in blob
+    assert summary["secrets"]["app_secret_key_configured"] is True
+    assert summary["secrets"]["bootstrap_jwt_signing_key_configured"] is True
+    assert summary["environment"] == "staging"
 
 
 def test_empty_app_version_fails(clean_env: None) -> None:

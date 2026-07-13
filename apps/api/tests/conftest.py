@@ -7,8 +7,21 @@ from collections.abc import AsyncIterator, Iterator
 import pytest
 from app.core.config import AppSettings, clear_settings_cache
 from app.core.environment import AppEnvironment
+from app.core.secrets import SecretSettings
 from app.factory import create_app
 from httpx import ASGITransport, AsyncClient
+
+# Deterministic test-only material (>= 32 chars, not placeholder equality).
+VALID_PROD_APP_SECRET = "prod-valid-app-secret-key-value-0001"
+VALID_PROD_JWT_SECRET = "prod-valid-jwt-signing-key-value-0001"
+
+
+def make_production_secrets() -> SecretSettings:
+    """Return valid production-like secrets for tests only."""
+    return SecretSettings(
+        app_secret_key=VALID_PROD_APP_SECRET,
+        bootstrap_jwt_signing_key=VALID_PROD_JWT_SECRET,
+    )
 
 
 @pytest.fixture(autouse=True)

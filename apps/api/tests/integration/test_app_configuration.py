@@ -11,6 +11,8 @@ from pydantic import ValidationError
 
 
 async def test_app_starts_with_explicit_settings() -> None:
+    from tests.conftest import make_production_secrets
+
     settings = AppSettings(
         app_name="Configured API",
         app_version="9.9.9",
@@ -22,6 +24,7 @@ async def test_app_starts_with_explicit_settings() -> None:
         api_prefix="/api/v1",
         service_name="configured",
         instance_id="i-1",
+        secrets=make_production_secrets(),
     )
     application = create_app(settings)
     assert application.title == "Configured API"

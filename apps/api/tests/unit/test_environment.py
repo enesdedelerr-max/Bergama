@@ -21,7 +21,14 @@ def test_unknown_environment_fails_validation() -> None:
 
 
 def test_environment_is_normalized_from_uppercase() -> None:
-    settings = AppSettings(environment="PRODUCTION", debug=False, log_level="INFO")
+    from tests.conftest import make_production_secrets
+
+    settings = AppSettings(
+        environment="PRODUCTION",
+        debug=False,
+        log_level="INFO",
+        secrets=make_production_secrets(),
+    )
     assert settings.environment is AppEnvironment.PRODUCTION
 
 
