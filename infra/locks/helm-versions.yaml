@@ -1,0 +1,10 @@
+schema_version: 1
+charts:
+  platform-foundation:
+    name: platform-foundation
+    version: "0.1.0"
+    appVersion: "0.1.0"
+    path: infra/helm/platform-foundation
+tools:
+  helm:
+    version: "v3.21.3"

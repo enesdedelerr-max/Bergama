@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "generated_note": "Digests must be resolved from a registry. Unresolved digests fail verify-locks. Do not invent digests.",
+  "forbidden_tags": [
+    "latest",
+    "stable",
+    "master",
+    "main"
+  ],
+  "images": {
+    "postgresql": {
+      "repository": "postgres",
+      "tag": "16.8",
+      "digest": "sha256:301bcb60b8a3ee4ab7e147932723e3abd1cef53516ce5210b39fd9fe5e3602ae",
+      "digest_status": "resolved"
+    },
+    "redis": {
+      "repository": "redis",
+      "tag": "7.4.2",
+      "digest": "sha256:fbdbaea47b9ae4ecc2082ecdb4e1cea81e32176ffb1dcf643d422ad07427e5d9",
+      "digest_status": "resolved"
+    },
+    "kafka": {
+      "repository": "apache/kafka",
+      "tag": "3.9.0",
+      "digest": "sha256:fbc7d7c428e3755cf36518d4976596002477e4c052d1f80b5b9eafd06d0fff2f",
+      "digest_status": "resolved"
+    },
+    "clickhouse": {
+      "repository": "clickhouse/clickhouse-server",
+      "tag": "25.3.2",
+      "digest": "sha256:8745843b17f92db1765025009772ec1d87dfdcaa95deabca6b802a66cb669d30",
+      "digest_status": "resolved"
+    },
+    "minio": {
+      "repository": "minio/minio",
+      "tag": "RELEASE.2025-04-22T22-12-26Z",
+      "digest": "sha256:a1ea29fa28355559ef137d71fc570e508a214ec84ff8083e39bc5428980b015e",
+      "digest_status": "resolved"
+    },
+    "prometheus": {
+      "repository": "prom/prometheus",
+      "tag": "v3.2.1",
+      "digest": "sha256:6927e0919a144aa7616fd0137d4816816d42f6b816de3af269ab065250859a62",
+      "digest_status": "resolved"
+    },
+    "grafana": {
+      "repository": "grafana/grafana",
+      "tag": "11.6.0",
+      "digest": "sha256:62d2b9d20a19714ebfe48d1bb405086081bc602aa053e28cf6d73c7537640dfb",
+      "digest_status": "resolved"
+    },
+    "loki": {
+      "repository": "grafana/loki",
+      "tag": "3.4.2",
+      "digest": "sha256:58a6c186ce78ba04d58bfe2a927eff296ba733a430df09645d56cdc158f3ba08",
+      "digest_status": "resolved"
+    },
+    "tempo": {
+      "repository": "grafana/tempo",
+      "tag": "2.7.1",
+      "digest": "sha256:4443be217c396b065ee34845534199c36fdba4dc619cb96550e228d73fba6e69",
+      "digest_status": "resolved"
+    },
+    "argocd": {
+      "repository": "quay.io/argoproj/argocd",
+      "tag": "v2.14.9",
+      "digest": "sha256:f5885af084da62a952e73cf68df355b28af62894e3779ef4da4ed93a717d8f70",
+      "digest_status": "resolved"
+    }
+  }
+}

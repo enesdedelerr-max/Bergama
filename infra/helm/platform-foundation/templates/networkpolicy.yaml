@@ -9,3 +9,19 @@ spec:
   podSelector: {}
   policyTypes:
     - Ingress
+  ingress:
+    # Sprint 1 Kind gate requires in-namespace service probes and GitOps workloads.
+    - from:
+        - podSelector: {}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: argocd

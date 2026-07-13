@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: clickhouse
+  namespace: platform
+  labels:
+    app.kubernetes.io/name: clickhouse
+    app.kubernetes.io/part-of: platform-foundation
+spec:
+  ports:
+    - name: http
+      port: 8123
+      targetPort: 8123
+    - name: native
+      port: 9000
+      targetPort: 9000
+  selector:
+    app.kubernetes.io/name: clickhouse
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: clickhouse
+  namespace: platform
+  labels:
+    app.kubernetes.io/name: clickhouse
+    app.kubernetes.io/part-of: platform-foundation
+spec:
+  serviceName: clickhouse
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: clickhouse
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: clickhouse
+        app.kubernetes.io/part-of: platform-foundation
+    spec:
+      containers:
+        - name: clickhouse
+          image: clickhouse/clickhouse-server@sha256:8745843b17f92db1765025009772ec1d87dfdcaa95deabca6b802a66cb669d30
+          ports:
+            - containerPort: 8123
+            - containerPort: 9000
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/clickhouse
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8123
+            initialDelaySeconds: 15
+            periodSeconds: 5
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          app.kubernetes.io/name: clickhouse
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

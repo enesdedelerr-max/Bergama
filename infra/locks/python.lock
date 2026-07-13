@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "python": {
+    "version": "3.13",
+    "note": "Target runtime for Sprint 2+. No application pyproject/requirements lock exists in Sprint 1."
+  },
+  "toolchain": {
+    "pip": null,
+    "requirements_hash": null,
+    "status": "no-python-app-lock"
+  },
+  "consistency": {
+    "requires_application_lock": false,
+    "sprint1_acceptable": true
+  }
+}

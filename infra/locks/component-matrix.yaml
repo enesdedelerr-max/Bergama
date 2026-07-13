@@ -1,0 +1,72 @@
+# Sprint 1 component matrix
+# Declares required platform components and lock ownership.
+
+schema_version: 1
+sprint: "1"
+release: "v0.1.0-sprint1"
+
+components:
+  - id: platform-foundation
+    kind: helm-chart
+    lock: helm-versions.yaml
+    required: true
+  - id: postgresql
+    kind: container
+    lock: images.lock
+    require_digest: true
+    required: true
+  - id: redis
+    kind: container
+    lock: images.lock
+    require_digest: true
+    required: true
+  - id: kafka
+    kind: container
+    lock: images.lock
+    require_digest: true
+    required: true
+  - id: clickhouse
+    kind: container
+    lock: images.lock
+    require_digest: true
+    required: true
+  - id: minio
+    kind: container
+    lock: images.lock
+    require_digest: true
+    required: true
+  - id: prometheus
+    kind: container
+    lock: images.lock
+    require_digest: true
+    required: true
+  - id: grafana
+    kind: container
+    lock: images.lock
+    require_digest: true
+    required: true
+  - id: loki
+    kind: container
+    lock: images.lock
+    require_digest: true
+    required: true
+  - id: tempo
+    kind: container
+    lock: images.lock
+    require_digest: true
+    required: true
+  - id: argocd
+    kind: container
+    lock: images.lock
+    require_digest: true
+    required: true
+  - id: platform-console
+    kind: node-app
+    lock: node.lock
+    path: apps/platform-console
+    required: true
+  - id: python-runtime
+    kind: python-toolchain
+    lock: python.lock
+    required: true
+    note: "No Python application package yet in Sprint 1; toolchain pin only."

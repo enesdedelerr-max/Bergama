@@ -8,19 +8,19 @@ portfolio accounting and production operational governance.
 
 The repository is in implementation mode.
 
+**Sprint 1** (`v0.1.0-sprint1`) infrastructure foundation gate passed with live Kind runtime evidence.
+
 Current focus:
 
 ```text
-Sprint 1 — Infrastructure Finalization
+Sprint 2 — Application runtime foundation (next)
 ```
 
-Sprint 2 is blocked until:
+Sprint 1 closure artifacts:
 
-```bash
-make gate-sprint1
-```
-
-passes completely.
+- `CHANGELOG.md`
+- `releases/sprint-1/`
+- `docs/sprints/sprint-1/retrospective.md`
 
 ## Core principles
 

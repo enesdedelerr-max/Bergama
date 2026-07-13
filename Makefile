@@ -1,54 +1,78 @@
-# Sprint 1 — Infrastructure foundation gate
-# Requires helm on PATH (recommended: $HOME/.local/bin/helm).
+# Sprint 1 — Infrastructure foundation gate (spec-aligned)
 
 export PATH := $(HOME)/.local/bin:$(PATH)
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 
 ROOT := $(abspath .)
-SCRIPTS := $(ROOT)/infra/scripts
 
-.PHONY: help helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1
+.PHONY: help helm-lint helm-template full-check verify-locks validate-secrets \
+	kind-bootstrap ingress-install argocd-bootstrap \
+	postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy \
+	backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1
 
 help:
-	@echo "Sprint 1 targets:"
-	@echo "  make helm-lint"
-	@echo "  make helm-template"
-	@echo "  make full-check"
-	@echo "  make verify-locks"
-	@echo "  make validate-secrets"
-	@echo "  make backup"
-	@echo "  make restore-smoke"
-	@echo "  make platform-validate"
-	@echo "  make build-release"
-	@echo "  make gate-sprint1"
+	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
+
+kind-bootstrap:
+	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
+
+ingress-install:
+	@bash "$(ROOT)/infra/bootstrap/ingress-install.sh"
+
+argocd-bootstrap:
+	@bash "$(ROOT)/infra/bootstrap/argocd-bootstrap.sh"
+
+postgres-deploy:
+	@bash "$(ROOT)/infra/bootstrap/platform-deploy.sh" postgresql
+
+redis-deploy:
+	@bash "$(ROOT)/infra/bootstrap/platform-deploy.sh" redis
+
+kafka-deploy:
+	@bash "$(ROOT)/infra/bootstrap/platform-deploy.sh" kafka
+
+clickhouse-deploy:
+	@bash "$(ROOT)/infra/bootstrap/platform-deploy.sh" clickhouse
+
+minio-deploy:
+	@bash "$(ROOT)/infra/bootstrap/platform-deploy.sh" minio
+
+iceberg-deploy:
+	@bash "$(ROOT)/infra/bootstrap/platform-deploy.sh" iceberg
+
+observability-deploy:
+	@bash "$(ROOT)/infra/bootstrap/platform-deploy.sh" observability
 
 helm-lint:
-	@bash "$(SCRIPTS)/helm-lint.sh"
+	@bash "$(ROOT)/infra/scripts/helm-lint.sh"
 
 helm-template:
-	@bash "$(SCRIPTS)/helm-template.sh"
+	@bash "$(ROOT)/infra/scripts/helm-template.sh"
 
 full-check:
-	@bash "$(SCRIPTS)/full-check.sh"
+	@bash "$(ROOT)/infra/scripts/full-check.sh"
 
 verify-locks:
-	@bash "$(SCRIPTS)/verify-locks.sh"
+	@ROOT="$(ROOT)" bash "$(ROOT)/infra/locks/scripts/verify-locks.sh"
 
 validate-secrets:
-	@bash "$(SCRIPTS)/validate-secrets.sh"
+	@ROOT="$(ROOT)" bash "$(ROOT)/infra/secrets/scripts/validate-secrets.sh"
 
 backup:
-	@bash "$(SCRIPTS)/backup.sh"
+	@bash "$(ROOT)/scripts/backup.sh"
 
 restore-smoke:
-	@bash "$(SCRIPTS)/restore-smoke.sh"
+	@bash "$(ROOT)/scripts/restore-smoke.sh"
 
 platform-validate:
-	@bash "$(SCRIPTS)/platform-validate.sh"
+	@bash "$(ROOT)/scripts/platform-validate.sh"
 
 build-release:
-	@bash "$(SCRIPTS)/build-release.sh"
+	@bash "$(ROOT)/scripts/build-release.sh"
 
 gate-sprint1:
-	@bash "$(SCRIPTS)/gate-sprint1.sh"
+	@bash "$(ROOT)/scripts/gates/gate-sprint1.sh"
+
+test-sprint1:
+	@python3 -m pytest -q tests/locks tests/secrets tests/backup tests/platform_validation tests/release

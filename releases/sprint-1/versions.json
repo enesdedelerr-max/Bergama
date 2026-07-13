@@ -1,0 +1,96 @@
+{
+  "generated_at": "2026-07-12T23:59:16Z",
+  "git": {
+    "branch": "feature/sprint1-gate",
+    "commit": "a3a7e9f2131c099954258fd39abe9635610f7814"
+  },
+  "helm": "schema_version: 1\ncharts:\n  platform-foundation:\n    name: platform-foundation\n    version: \"0.1.0\"\n    appVersion: \"0.1.0\"\n    path: infra/helm/platform-foundation\ntools:\n  helm:\n    version: \"v3.21.3\"\n",
+  "images": {
+    "argocd": {
+      "digest": "sha256:f5885af084da62a952e73cf68df355b28af62894e3779ef4da4ed93a717d8f70",
+      "digest_status": "resolved",
+      "repository": "quay.io/argoproj/argocd",
+      "tag": "v2.14.9"
+    },
+    "clickhouse": {
+      "digest": "sha256:8745843b17f92db1765025009772ec1d87dfdcaa95deabca6b802a66cb669d30",
+      "digest_status": "resolved",
+      "repository": "clickhouse/clickhouse-server",
+      "tag": "25.3.2"
+    },
+    "grafana": {
+      "digest": "sha256:62d2b9d20a19714ebfe48d1bb405086081bc602aa053e28cf6d73c7537640dfb",
+      "digest_status": "resolved",
+      "repository": "grafana/grafana",
+      "tag": "11.6.0"
+    },
+    "kafka": {
+      "digest": "sha256:fbc7d7c428e3755cf36518d4976596002477e4c052d1f80b5b9eafd06d0fff2f",
+      "digest_status": "resolved",
+      "repository": "apache/kafka",
+      "tag": "3.9.0"
+    },
+    "loki": {
+      "digest": "sha256:58a6c186ce78ba04d58bfe2a927eff296ba733a430df09645d56cdc158f3ba08",
+      "digest_status": "resolved",
+      "repository": "grafana/loki",
+      "tag": "3.4.2"
+    },
+    "minio": {
+      "digest": "sha256:a1ea29fa28355559ef137d71fc570e508a214ec84ff8083e39bc5428980b015e",
+      "digest_status": "resolved",
+      "repository": "minio/minio",
+      "tag": "RELEASE.2025-04-22T22-12-26Z"
+    },
+    "postgresql": {
+      "digest": "sha256:301bcb60b8a3ee4ab7e147932723e3abd1cef53516ce5210b39fd9fe5e3602ae",
+      "digest_status": "resolved",
+      "repository": "postgres",
+      "tag": "16.8"
+    },
+    "prometheus": {
+      "digest": "sha256:6927e0919a144aa7616fd0137d4816816d42f6b816de3af269ab065250859a62",
+      "digest_status": "resolved",
+      "repository": "prom/prometheus",
+      "tag": "v3.2.1"
+    },
+    "redis": {
+      "digest": "sha256:fbdbaea47b9ae4ecc2082ecdb4e1cea81e32176ffb1dcf643d422ad07427e5d9",
+      "digest_status": "resolved",
+      "repository": "redis",
+      "tag": "7.4.2"
+    },
+    "tempo": {
+      "digest": "sha256:4443be217c396b065ee34845534199c36fdba4dc619cb96550e228d73fba6e69",
+      "digest_status": "resolved",
+      "repository": "grafana/tempo",
+      "tag": "2.7.1"
+    }
+  },
+  "node": {
+    "application": "apps/platform-console",
+    "lockfileVersion": 3,
+    "node_engine": ">=20",
+    "note": "verify-locks computes package-lock sha256 and lockfileVersion at check time",
+    "package_lock": "apps/platform-console/package-lock.json",
+    "package_lock_sha256": "23165b4ef5f988e5201667a789581defd448041ed9146ff28d0b0d8960f99339",
+    "schema_version": 1
+  },
+  "python": {
+    "consistency": {
+      "requires_application_lock": false,
+      "sprint1_acceptable": true
+    },
+    "python": {
+      "note": "Target runtime for Sprint 2+. No application pyproject/requirements lock exists in Sprint 1.",
+      "version": "3.13"
+    },
+    "schema_version": 1,
+    "toolchain": {
+      "pip": null,
+      "requirements_hash": null,
+      "status": "no-python-app-lock"
+    }
+  },
+  "release": "v0.1.0-sprint1"
+}

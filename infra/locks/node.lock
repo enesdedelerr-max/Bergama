@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "application": "apps/platform-console",
+  "package_lock": "apps/platform-console/package-lock.json",
+  "node_engine": ">=20",
+  "lockfileVersion": 3,
+  "package_lock_sha256": "23165b4ef5f988e5201667a789581defd448041ed9146ff28d0b0d8960f99339",
+  "note": "verify-locks computes package-lock sha256 and lockfileVersion at check time"
+}

@@ -1,0 +1,10 @@
+release: v0.1.0-sprint1
+artifacts:
+  - release-notes.md
+  - known-issues.md
+  - risk-summary.md
+  - rollback-notes.md
+  - artifact-manifest.yaml
+  - versions.json
+  - checksums.txt
+  - sbom.spdx.json

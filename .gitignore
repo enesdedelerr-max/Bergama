@@ -10,10 +10,14 @@ test-results/
 .vercel
 *.tsbuildinfo
 
-# Sprint 1 generated artifacts
-infra/evidence/sprint1/backups/
-infra/evidence/sprint1/*.yaml
-infra/evidence/sprint1/*.txt
+# Sprint 1 generated runtime artifacts (not release package)
+infra/evidence/
+artifacts/
+reports/
+backup/*
+!backup/README.md
 releases/**/*.tar.gz
 releases/**/*.tar.gz.sha256
+__pycache__/
+.pytest_cache/
 

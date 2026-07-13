@@ -1,29 +1,26 @@
-# Sprint 1 summary
+# Sprint 1 — Finalization status
 
-## Status
+## Gate decision
 
-Foundation package and gate orchestration implemented.
+**GO for Sprint 2** (as of latest `make gate-sprint1` with live Kind runtime evidence).
 
-## Issues
+## What passed
 
-- #195 Version Lock — `infra/locks/versions.lock.yaml`, `make verify-locks`
-- #196 Secrets Foundation — `infra/secrets/`, `make validate-secrets`
-- #197 Backup Foundation — `make backup`, `make restore-smoke`
-- #198 Platform Validation — Helm chart + GitOps app + `make platform-validate`
-- #199 Sprint Release — `make build-release`, tag `v0.1.0-sprint1`, `make gate-sprint1`
+- `make helm-lint`
+- `make helm-template`
+- `make full-check`
+- `make verify-locks` (digests resolved via `docker buildx imagetools`)
+- `make validate-secrets`
+- `make backup` (live Kind cluster)
+- `make restore-smoke` (live Kind cluster)
+- `make platform-validate` (live Kind cluster + ArgoCD Healthy/Synced)
+- `make build-release` (Syft SPDX SBOM)
+- `make gate-sprint1` — **GO**
+- `make test-sprint1` — 12 passed
+- Git tag `v0.1.0-sprint1` — created locally (not pushed)
 
-## Gate command
+## Runtime notes
 
-```bash
-export PATH="$HOME/.local/bin:$PATH"
-make gate-sprint1
-```
-
-## Evidence
-
-Generated under `infra/evidence/sprint1/` and `releases/v0.1.0-sprint1/`.
-
-## Risks
-
-- Live Kind/ArgoCD controller sync is not executed by the required make sequence.
-- GitOps Healthy/Synced is asserted from Application manifest policy (automated + selfHeal), not live status.
+- Kind cluster: `bergama-sprint1`
+- ArgoCD app `platform-foundation` is **Healthy/Synced** and manages the foundation Helm chart only (namespaces, declarations, NetworkPolicy). Stateful/observability workloads are deployed via `infra/bootstrap/` Make targets for Sprint 1 local gate evidence.
+- Backup/restore is smoke-level only — not DR certification.
