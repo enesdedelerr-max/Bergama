@@ -55,8 +55,9 @@ class ConsumerWorker:
         task = self._task
         if task is None:
             return
-        task.cancel()
-        with contextlib.suppress(asyncio.CancelledError):
+        if not task.done():
+            task.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
             await task
         self._task = None
 
