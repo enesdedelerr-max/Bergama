@@ -1,27 +1,48 @@
-# Bergama API — Sprint 2 Issue #201 Runtime Bootstrap
+# Bergama API — Sprint 2 Runtime Foundation
 
-Production-grade FastAPI runtime foundation. This package is bootstrap only:
-no JWT, database, Redis, Kafka, market data, broker, or trading logic.
+FastAPI runtime for the AI Hedge Fund Operating System.
 
-## Layout
+## Issue status
 
-```text
-apps/api/
-├── app/
-│   ├── main.py           # process entry (`uv run app`)
-│   ├── factory.py        # FastAPI app factory
-│   ├── lifespan.py       # startup / shutdown
-│   ├── routers/
-│   │   └── health.py     # GET /health, GET /ready
-│   ├── middleware/       # reserved (empty in #201)
-│   ├── core/
-│   │   ├── config.py
-│   │   └── logging.py
-│   └── __init__.py
-├── tests/
-│   ├── smoke/
-│   └── unit/
-└── README.md
+- ✅ **#201** Runtime Bootstrap
+- 🟡 **#202** Configuration Layer (current)
+- Later: logging, auth, DI, DB, Kafka
+
+## Configuration (#202)
+
+| Item | Value |
+|------|--------|
+| Prefix | `BERGAMA_` |
+| Profiles | `local` \| `test` \| `staging` \| `production` |
+| Nested delimiter | `__` |
+| Extra env vars | forbidden (`extra=forbid`) |
+| Encoding | UTF-8 |
+
+### `.env` policy
+
+- **local** (or unset profile): may load `apps/api/.env` (gitignored)
+- **test / staging / production**: process env / injected config only — no `.env` fallback
+- Copy `.env.example` → `.env` for local work; never commit secrets
+
+### Fail-fast examples
+
+- `production` or `staging` with `BERGAMA_DEBUG=true`
+- `production` with `BERGAMA_LOG_LEVEL=DEBUG`
+- invalid `BERGAMA_API_PREFIX` (must start with `/`, no trailing `/` unless `/`)
+- unknown environment string
+- non-positive timeouts
+
+### Tests
+
+`clear_settings_cache()` runs automatically via an autouse fixture. Override with explicit `AppSettings(...)` or `monkeypatch.setenv`.
+
+### Local override
+
+```bash
+cd apps/api
+cp .env.example .env
+# edit BERGAMA_* values
+uv run app
 ```
 
 ## Setup
@@ -35,18 +56,15 @@ uv sync --group dev
 
 ```bash
 uv run app
-# or from repo root:
-make run-api
+# or from repo root: make run-api
 ```
-
-Default: `http://0.0.0.0:8000`
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /health` | Liveness |
-| `GET /ready` | Readiness (runtime ready; no external deps yet) |
-| `GET /docs` | Swagger UI |
-| `GET /openapi.json` | OpenAPI document |
+| `GET /health` | Liveness (unprefixed) |
+| `GET /ready` | Readiness (unprefixed) |
+| `GET /docs` | Swagger (if `BERGAMA_DOCS_ENABLED=true`) |
+| `GET /openapi.json` | OpenAPI (if `BERGAMA_OPENAPI_ENABLED=true`) |
 
 ## Quality gates
 
@@ -54,13 +72,8 @@ Default: `http://0.0.0.0:8000`
 make lint
 make typecheck
 make test-api
-# or: cd apps/api && uv run pytest
 ```
 
-## Configuration
+## Out of scope (#202)
 
-Environment variables use the `BERGAMA_` prefix. See `.env.example`.
-
-## Next
-
-Issue **#202 — Configuration Layer**
+JWT, PostgreSQL, Redis, Kafka, Vault, DI container, trading logic.

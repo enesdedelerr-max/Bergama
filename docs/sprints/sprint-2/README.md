@@ -2,7 +2,9 @@
 
 ## Status
 
-🟡 Issue **#201 Runtime Bootstrap** — in progress on `feature/sprint2-issue201-runtime-bootstrap`
+🟡 Issue **#202 Configuration Layer** — in progress on `feature/sprint2-issue202-configuration-layer`
+
+✅ Issue **#201 Runtime Bootstrap**
 
 ## Goal
 
@@ -10,17 +12,16 @@ Establish the production FastAPI runtime that every later sprint builds on.
 
 ## Issue chain
 
-1. 🟡 **#201** FastAPI Runtime Bootstrap
-2. ⏳ **#202** Configuration Layer
+1. ✅ **#201** FastAPI Runtime Bootstrap
+2. 🟡 **#202** Configuration Layer
 3. ⏳ **#203** Logging
 4. ⏳ **#204** Settings
 5. ⏳ **#205** Auth Bootstrap
 6. ⏳ **#206** Dependency Injection
 7. ⏳ **#207** Health Runtime
 8. ⏳ **#208** Kafka Runtime
-9. ⏳ **#209** Registry Loader
-10. ⏳ **#210** Runtime Smoke Tests
-11. **Sprint 2 Gate**
+9. ⏳ **#210** Runtime Smoke Tests
+10. **Sprint 2 Gate**
 
 ## Package
 
@@ -39,4 +40,4 @@ make run-api
 ## Constraints
 
 - Do not modify Sprint 1 infrastructure except for defects.
-- No market data, broker, JWT, DB, Redis, Kafka, or trading logic in #201.
+- No market data, broker, JWT, DB, Redis, Kafka, or trading logic in #201/#202.

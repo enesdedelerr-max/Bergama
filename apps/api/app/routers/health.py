@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
-from app.core.config import Settings, get_settings
+from app.core.config import AppSettings
 
 router = APIRouter(tags=["health"])
 
@@ -28,7 +28,7 @@ async def health() -> HealthResponse:
 
 
 @router.get("/ready", response_model=ReadyResponse)
-async def ready() -> ReadyResponse:
-    """Readiness probe — runtime is ready (no external deps in #201)."""
-    settings: Settings = get_settings()
-    return ReadyResponse(environment=settings.environment)
+async def ready(request: Request) -> ReadyResponse:
+    """Readiness probe — runtime config loaded (no external deps in #202)."""
+    settings: AppSettings = request.app.state.settings
+    return ReadyResponse(environment=settings.environment.value)

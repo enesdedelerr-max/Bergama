@@ -16,4 +16,4 @@ async def test_ready_returns_200(client: AsyncClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ready"
-    assert body["environment"] == "paper"
+    assert body["environment"] == "test"
