@@ -7,7 +7,7 @@ from typing import Literal
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
-from app.core.config import AppSettings
+from app.deps.container import get_app_container
 
 router = APIRouter(tags=["health"])
 
@@ -30,5 +30,5 @@ async def health() -> HealthResponse:
 @router.get("/ready", response_model=ReadyResponse)
 async def ready(request: Request) -> ReadyResponse:
     """Readiness probe — runtime config loaded (no external deps in #202)."""
-    settings: AppSettings = request.app.state.settings
+    settings = get_app_container(request).settings
     return ReadyResponse(environment=settings.environment.value)

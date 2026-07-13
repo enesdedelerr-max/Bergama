@@ -8,20 +8,31 @@ from fastapi import APIRouter, FastAPI
 from fastapi.openapi.utils import get_openapi
 
 from app.core.config import AppSettings, get_settings
+from app.core.container import AppContainer, build_container
 from app.core.exception_handlers import register_exception_handlers
 from app.core.logging import configure_logging
+from app.deps.container import attach_container
 from app.lifespan import lifespan
 from app.middleware.request_context import RequestContextMiddleware
 from app.routers import register_routers
 from app.routers.health import router as health_router
 
 
-def create_app(settings: AppSettings | None = None) -> FastAPI:
-    """Build and configure the FastAPI application from typed settings.
+def create_app(
+    settings: AppSettings | None = None,
+    container: AppContainer | None = None,
+) -> FastAPI:
+    """Build and configure the FastAPI application from a typed container.
 
-    Ownership: ``configure_logging`` is called only here (not in main/lifespan).
+    Ownership:
+    - ``configure_logging`` is called only here (not in main/lifespan).
+    - Long-lived dependencies live on ``app.state.container`` only.
+    - If ``container`` is supplied it is used as-is (never rebuilt).
+    - If both ``settings`` and ``container`` are supplied, they must be the
+      same settings instance.
     """
-    resolved = settings or get_settings()
+    resolved_container = _resolve_container(settings=settings, container=container)
+    resolved = resolved_container.settings
     configure_logging(resolved)
 
     docs_url = "/docs" if resolved.docs_enabled else None
@@ -41,7 +52,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         openapi_url=openapi_url,
         redoc_url=redoc_url,
     )
-    application.state.settings = resolved
+    attach_container(application.state, resolved_container)
     application.add_middleware(RequestContextMiddleware)
     register_exception_handlers(application)
 
@@ -54,6 +65,25 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
     _install_openapi(application)
     return application
+
+
+def _resolve_container(
+    *,
+    settings: AppSettings | None,
+    container: AppContainer | None,
+) -> AppContainer:
+    if container is not None and settings is not None:
+        if container.settings is not settings:
+            msg = (
+                "settings and container.settings must be the same instance "
+                "when both are passed to create_app"
+            )
+            raise ValueError(msg)
+        return container
+    if container is not None:
+        return container
+    resolved_settings = settings if settings is not None else get_settings()
+    return build_container(resolved_settings)
 
 
 def _install_openapi(application: FastAPI) -> None:

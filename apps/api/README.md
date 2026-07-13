@@ -8,8 +8,37 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#202** Configuration Layer
 - ✅ **#203** Structured Logging
 - ✅ **#204** Settings & Secrets
-- 🟡 **#205** JWT Bootstrap (current)
-- Later: DI, DB, Kafka
+- ✅ **#205** JWT Bootstrap
+- 🟡 **#206** Dependency Injection Container (current)
+- Later: Health Runtime, DB, Kafka
+
+## Dependency container (#206)
+
+Typed application-scoped container. No third-party DI library, no service locator.
+
+| Concern | Behavior |
+|---------|----------|
+| Type | `AppContainer` (`app/core/container.py`) |
+| Builder | `build_container(settings) -> AppContainer` |
+| Owns | `settings`, `clock`, `jti_generator`, `token_service` |
+| Not owned | request IDs, principals (stay request-scoped / contextvars) |
+| App state | `app.state.container` only (canonical) |
+| Access | `get_app_container(request)` — typed, fail-fast |
+| Factory | `create_app(settings=None, container=None)` |
+| Cleanup | `await container.aclose()` (idempotent; for future DB/Redis/Kafka) |
+| Tests | Pass an explicit container or build with `FixedClock` / `FixedJtiGenerator` |
+
+```python
+from app.core.container import build_container
+from app.factory import create_app
+
+container = build_container(settings, clock=FixedClock(...), jti_generator=FixedJtiGenerator("jti"))
+app = create_app(container=container)
+```
+
+Application-scope deps are created once per app instance. Request-scoped objects must not be stored on the container. There is no global mutable container registry.
+
+Future connection pools (PostgreSQL / Redis / Kafka) will be owned by the same container and released via `aclose()`.
 
 ## JWT bootstrap (#205)
 
@@ -89,7 +118,7 @@ uv run app
 | Redaction | Sensitive key names → `[REDACTED]` (nested dicts/lists) |
 | Bodies / auth | Never logged |
 
-Bootstrap owner: `create_app()` → `configure_logging(settings)` (not import-time, not `main.py`).
+Bootstrap owner: `create_app()` → `configure_logging(container.settings)` (not import-time, not `main.py`).
 
 ### Request ID policy
 
@@ -173,12 +202,10 @@ uv run app
 make lint
 make typecheck
 make test-api
-# or focused:
-cd apps/api && uv run pytest tests/unit/test_logging.py tests/unit/test_log_context.py tests/integration/test_request_logging.py
+make test-api-container
 ```
 
-## Out of scope (#203)
+## Out of scope (#206)
 
-JWT/OIDC, user identity logging, PostgreSQL/Redis/Kafka logging, OpenTelemetry exporters,
-Prometheus, DI container, audit/business-event logging, Loki/Helm/log shipping,
-`apps/platform-console` changes.
+PostgreSQL, Redis, Kafka clients, registry loading, readiness integrations,
+business logic, third-party DI frameworks, `apps/platform-console` changes.

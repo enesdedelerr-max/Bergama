@@ -1,4 +1,4 @@
-"""FastAPI authentication dependencies (Issue #205)."""
+"""FastAPI authentication dependencies (Issue #205 / #206)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.auth.errors import MISSING_TOKEN, AuthError
 from app.core.config import AppSettings
+from app.core.providers import provide_settings, provide_token_service
+from app.deps.container import get_app_container
 from app.schemas.auth import AuthenticatedPrincipal
 from app.services.token_service import TokenService
 
@@ -16,14 +18,13 @@ _bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def get_app_settings(request: Request) -> AppSettings:
-    """Resolve settings from application state."""
-    settings: AppSettings = request.app.state.settings
-    return settings
+    """Resolve settings from the application container."""
+    return provide_settings(get_app_container(request))
 
 
-def get_token_service(settings: Annotated[AppSettings, Depends(get_app_settings)]) -> TokenService:
-    """Build a request-scoped token service from settings."""
-    return TokenService(settings)
+def get_token_service(request: Request) -> TokenService:
+    """Resolve the application-scoped token service from the container."""
+    return provide_token_service(get_app_container(request))
 
 
 async def get_current_principal(

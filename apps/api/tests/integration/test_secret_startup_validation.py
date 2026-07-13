@@ -62,7 +62,7 @@ def test_production_startup_succeeds_without_bootstrap_secret(clean_env: None) -
             environment=AppEnvironment.PRODUCTION, debug=False, bootstrap_auth_enabled=False
         )
     )
-    assert application.state.settings.bootstrap_auth_enabled is False
+    assert application.state.container.settings.bootstrap_auth_enabled is False
 
 
 @pytest.mark.asyncio
