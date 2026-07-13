@@ -1,4 +1,4 @@
-"""Explicit application-scoped dependency container (Issues #206–#208A)."""
+"""Explicit application-scoped dependency container (Issues #206–#209)."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from app.health.protocol import HealthCheck
 from app.health.runtime_state import RuntimeState
 from app.health.service import HealthService, build_default_health_checks
 from app.infrastructure.kafka.runtime import KafkaRuntime, build_kafka_runtime
+from app.registry.service import RegistryService
 from app.services.token_service import TokenService
 
 logger = get_logger(__name__)
@@ -33,6 +34,7 @@ class AppContainer:
     health_service: HealthService
     topic_registry: TopicRegistry
     kafka_runtime: KafkaRuntime | None
+    registry_service: RegistryService
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -42,6 +44,7 @@ class AppContainer:
             return
         self._closed = True
         try:
+            await self.registry_service.close()
             if self.kafka_runtime is not None:
                 await self.kafka_runtime.stop()
             await self._exit_stack.aclose()
@@ -69,6 +72,7 @@ def build_container(
     kafka_runtime: KafkaRuntime | None = None,
     event_handler: EventHandler | None = None,
     retry_policy: RetryPolicy | None = None,
+    registry_service: RegistryService | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -96,10 +100,20 @@ def build_container(
     else:
         resolved_kafka = None
 
+    resolved_registry = (
+        registry_service
+        if registry_service is not None
+        else RegistryService(settings.registry, clock=resolved_clock)
+    )
+
     resolved_checks = (
         tuple(health_checks)
         if health_checks is not None
-        else build_default_health_checks(settings, kafka_runtime=resolved_kafka)
+        else build_default_health_checks(
+            settings,
+            kafka_runtime=resolved_kafka,
+            registry_service=resolved_registry,
+        )
     )
     resolved_health = (
         health_service
@@ -120,4 +134,5 @@ def build_container(
         health_service=resolved_health,
         topic_registry=topic_registry,
         kafka_runtime=resolved_kafka,
+        registry_service=resolved_registry,
     )

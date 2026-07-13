@@ -8,6 +8,7 @@ from app.core.container import AppContainer
 from app.events.topics import TopicRegistry
 from app.health.service import HealthService
 from app.infrastructure.kafka.runtime import KafkaRuntime
+from app.registry.service import RegistryService
 from app.services.token_service import TokenService
 
 
@@ -44,3 +45,8 @@ def provide_topic_registry(container: AppContainer) -> TopicRegistry:
 def provide_kafka_runtime(container: AppContainer) -> KafkaRuntime | None:
     """Return the Kafka runtime when enabled; otherwise None."""
     return container.kafka_runtime
+
+
+def provide_registry_service(container: AppContainer) -> RegistryService:
+    """Return the container-owned registry service."""
+    return container.registry_service

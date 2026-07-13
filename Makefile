@@ -13,11 +13,11 @@ API_DIR := $(ROOT)/apps/api
 	postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy \
 	backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1 \
 	lint typecheck test-api test-api-auth test-api-container test-api-health \
-	test-api-kafka-core test-api-kafka-test-runtime smoke-api-kafka run-api
+	test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka run-api
 
 help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
-	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime smoke-api-kafka run-api"
+	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka run-api"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -127,6 +127,14 @@ test-api-kafka-test-runtime:
 		tests/unit/test_fake_kafka_consumer.py \
 		tests/integration/test_in_memory_event_roundtrip.py \
 		tests/integration/test_consumer_worker_runtime.py
+
+test-api-registry:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_registry_models.py \
+		tests/unit/test_registry_loaders.py \
+		tests/unit/test_registry_validation.py \
+		tests/unit/test_registry_canonicalization.py \
+		tests/integration/test_registry_service.py
 
 smoke-api-kafka:
 	@cd "$(API_DIR)" && \

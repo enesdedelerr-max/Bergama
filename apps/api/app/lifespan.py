@@ -26,13 +26,17 @@ def _lifecycle_extra(settings: AppSettings, *, event: str) -> dict[str, object]:
     )
 
 
-async def on_startup(settings: AppSettings) -> None:
-    """Emit starting/started lifecycle logs without dumping settings or secrets."""
-    flags = settings.secrets.safe_summary()
+async def emit_application_starting(settings: AppSettings) -> None:
+    """Emit starting lifecycle log without dumping settings or secrets."""
     logger.info(
         "application starting",
         extra=_lifecycle_extra(settings, event="application.starting"),
     )
+
+
+async def emit_application_started(settings: AppSettings) -> None:
+    """Emit started lifecycle log after required startup dependencies succeed."""
+    flags = settings.secrets.safe_summary()
     logger.info(
         "application started",
         extra=structured_extra(
@@ -44,8 +48,15 @@ async def on_startup(settings: AppSettings) -> None:
             app_secret_key_configured=flags["app_secret_key_configured"],
             bootstrap_jwt_signing_key_configured=flags["bootstrap_jwt_signing_key_configured"],
             kafka_enabled=settings.kafka.enabled,
+            registry_enabled=settings.registry.enabled,
         ),
     )
+
+
+async def on_startup(settings: AppSettings) -> None:
+    """Backward-compatible startup logging helper."""
+    await emit_application_starting(settings)
+    await emit_application_started(settings)
 
 
 async def on_shutdown(settings: AppSettings) -> None:
@@ -71,14 +82,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     runtime = container.runtime_state
     previous = runtime.state
     try:
-        await on_startup(settings)
+        await emit_application_starting(settings)
+        if settings.registry.enabled and settings.registry.load_on_startup:
+            await container.registry_service.load()
         if container.kafka_runtime is not None:
             await container.kafka_runtime.start()
+        await emit_application_started(settings)
         runtime.mark_started()
         log_startup_state_change(runtime, previous=previous)
     except Exception:
         if container.kafka_runtime is not None:
             await container.kafka_runtime.stop()
+        await container.registry_service.close()
         runtime.mark_failed()
         log_startup_state_change(runtime, previous=previous)
         raise

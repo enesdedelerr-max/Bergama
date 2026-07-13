@@ -13,7 +13,42 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#207** Health Runtime
 - ✅ **#208A** Kafka Core Runtime
 - ✅ **#208B** Kafka Test Runtime
-- Later: #209 Registry Loader, #210 Smoke Gate
+- ✅ **#209** Registry Loader
+- Later: #210 Smoke Gate
+
+## Registry loader (#209)
+
+Typed local YAML/JSON registry loading. **Not** a plugin system, remote config service, or business validator.
+
+| Item | Behavior |
+|------|----------|
+| Formats | `.yaml` / `.yml` / `.json` via `yaml.safe_load` path + stdlib JSON |
+| Default | `BERGAMA_REGISTRY__ENABLED=false` |
+| Paths | Explicit `BERGAMA_REGISTRY__PATHS` only (no repo-wide scan) |
+| Schema | Major version `1` only; minor/patch accepted when document validates |
+| Fingerprint | SHA-256 over deterministic canonical JSON (not trusted from file) |
+| Dependencies | Shallow presence/constraint + cycle/self checks |
+| Startup | Loads when enabled + `load_on_startup`; required IDs fail-fast |
+| Health | Check name `registry` — skipped when disabled; pass/fail when enabled |
+| Out of scope | Remote fetch, hot reload, writes, dynamic imports, type-specific business rules |
+
+Example document shape:
+
+```yaml
+registry:
+  id: market-data-topics
+  type: topic
+  version: 1.0.0
+  schema_version: 1.0.0
+  owner: platform
+  created_at: 2026-01-01T00:00:00Z
+  dependencies: []
+  metadata: {}
+payload:
+  topics: [events, market-data]
+```
+
+Fixtures: `tests/fixtures/registries/`.
 
 ## Kafka test runtime (#208B)
 
@@ -264,14 +299,20 @@ make test-api-container
 make test-api-health
 make test-api-kafka-core
 make test-api-kafka-test-runtime
+make test-api-registry
 # optional live broker (skipped unless BERGAMA_KAFKA_SMOKE=1):
 # make smoke-api-kafka
 ```
 
+## Out of scope (#209)
+
+Remote registries, dynamic plugins, hot reload, registry writes, business registry
+semantics, UI management, `apps/platform-console` changes.
+
 ## Out of scope (#208B)
 
 Production fake fallback, market-data logic, real DLQ, retry topics, Iceberg,
-registry loader, `apps/platform-console` changes.
+`apps/platform-console` changes.
 
 ## Out of scope (#208A)
 

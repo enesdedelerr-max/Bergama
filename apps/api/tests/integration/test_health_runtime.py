@@ -84,7 +84,12 @@ async def test_health_ready_default_skipped_optional_is_ready(live_client: Async
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ready"
-    assert [c["name"] for c in body["checks"]] == ["postgres_tcp", "redis_tcp", "kafka"]
+    assert [c["name"] for c in body["checks"]] == [
+        "postgres_tcp",
+        "redis_tcp",
+        "kafka",
+        "registry",
+    ]
     assert all(c["status"] == "skipped" for c in body["checks"])
 
 
