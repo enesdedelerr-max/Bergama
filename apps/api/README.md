@@ -12,7 +12,7 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#206** Dependency Injection Container
 - ✅ **#207** Health Runtime
 - ✅ **#208A** Kafka Core Runtime
-- 🟡 **#208B** Kafka Test Runtime (current)
+- ✅ **#208B** Kafka Test Runtime
 - Later: #209 Registry Loader, #210 Smoke Gate
 
 ## Kafka test runtime (#208B)
