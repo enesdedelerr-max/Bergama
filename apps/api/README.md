@@ -171,6 +171,49 @@ make test-api-benzinga-news
 make smoke-api-benzinga
 ```
 
+## Cross-provider connector contracts (#304E)
+
+Offline quality gate proving Polygon, Finnhub, FRED, SEC and Benzinga adapters obey
+shared identity, PIT, key, Decimal, provenance, redaction, retry, pagination,
+lifecycle and EventEnvelope rules.
+
+| Item | Behavior |
+|------|----------|
+| Target | `make test-api-provider-contracts` (offline, no credentials) |
+| Fixtures | `tests/support/provider_contracts/` — synthetic only |
+| Assertions | Provider-agnostic helpers in `assertions.py` |
+| Included in | `make test-api` via `tests/contract/` discovery |
+| Out of scope | New connectors in #304E itself, Kafka, Iceberg, orchestration, #305 |
+
+```bash
+make test-api-provider-contracts
+```
+
+## Provider Onboarding Guide
+
+Full checklist: [`docs/sprints/sprint-3/NEW_PROVIDER_CHECKLIST.md`](../../docs/sprints/sprint-3/NEW_PROVIDER_CHECKLIST.md)
+
+Every new provider must include typed settings, explicit auth boundary, `SecretStr`
+credentials, async HTTP/WS transport, bounded retry, explicit pagination/streaming,
+provider schemas, canonical mapper, `SourceReference`, deterministic idempotency/
+dedup keys, container-owned lifecycle, offline fixtures, contract matrix entry,
+provider-focused tests, and optional live smoke.
+
+**Certification** (all required; live smoke may be SKIPPED):
+
+```bash
+make lint
+make typecheck
+make validate-secrets
+# make test-api-<provider-focused-target>
+make test-api-provider-contracts
+make test-api
+```
+
+Offline contract validation is mandatory. Live smoke never substitutes for it.
+Shared-runtime changes beyond provider-local modules require an explicit PR rationale.
+Do not add orchestration, Kafka, Iceberg, provider fallback, or #305 in a provider PR.
+
 ## Sprint 2 gate (#210)
 
 Fail-closed verification of the FastAPI Runtime Foundation:

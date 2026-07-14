@@ -9,8 +9,9 @@
 ✅ **Issue #304A** Finnhub Fundamentals Connector — profile2 + basic financials whitelist.  
 ✅ **Issue #304B** FRED Macro Connector — series + observations → MacroEvent.  
 ✅ **Issue #304C** SEC EDGAR Filings Connector — submissions → FilingEvent.  
-⏳ **Issue #304D** Benzinga News Connector — implemented on `feature/sprint3-issue304d-benzinga-news` (not yet merged).  
-⏳ **Issue #304E** Cross-Provider Connector Contract Tests — not started.
+✅ **Issue #304D** Benzinga News Connector — complete on `main`.  
+⏳ **Issue #304E** Cross-Provider Connector Contract Tests — implemented on feature branch (not yet merged).  
+⏳ **Issue #305** Market Data Orchestrator — not started.
 
 ## Goal
 
@@ -25,18 +26,47 @@ canonical contracts. Kafka publishing and Iceberg writes remain later issues.
 4. ✅ **#304A** Finnhub Fundamentals Connector
 5. ✅ **#304B** FRED Macro Connector
 6. ✅ **#304C** SEC EDGAR Filings Connector
-7. ⏳ **#304D** Benzinga News Connector
+7. ✅ **#304D** Benzinga News Connector
 8. ⏳ **#304E** Cross-Provider Connector Contract Tests
-9. Later: Kafka publish, Iceberg, …
+9. ⏳ **#305** Market Data Orchestrator
+10. Later: Kafka publish, Iceberg, …
 
-## #304D scope
+## #304E scope
 
-- Package: `apps/api/app/infrastructure/benzinga/`
-- Endpoint: `GET https://api.benzinga.com/api/v2/news`
-- Header-only `Authorization: token …`; `displayOutput` headline|abstract only
-- Map to `NewsEvent`; fan-out mapped tickers; caller `anchor_instrument` for others
-- Revision identity via `source_event_id = {id}:{updated}`; no fabricated revision links
-- No body mapping, scraping, channels catalog, news-removed, Kafka, Iceberg
+Shared offline contract suite across Polygon, Finnhub, FRED, SEC and Benzinga:
+
+- identity / PIT / keys / Decimal / provenance / redaction
+- retry taxonomy / pagination guards / container lifecycle
+- EventEnvelope serialize/deserialize round-trip from provider-mapped events
+
+### Contract philosophy
+
+- Assert observable contracts, not private methods.
+- Keep provider-specific semantics explicit (auth form, time policy, pagination model).
+- Future providers should only need a fixture module + parametrization rows.
+
+### Adding a new provider
+
+See the **Provider Onboarding Guide**:  
+[`docs/sprints/sprint-3/NEW_PROVIDER_CHECKLIST.md`](./NEW_PROVIDER_CHECKLIST.md)
+
+Also summarized in [`apps/api/README.md`](../../../apps/api/README.md)
+under **Provider Onboarding Guide**.
+
+Extension process: settings → transport → schemas → mapper → fixtures →
+contract matrix rows → focused tests → full provider gate.
+
+**Certification:** `lint`, `typecheck`, `validate-secrets`, provider-focused
+target, `test-api-provider-contracts`, and `test-api` must PASS. Live smoke may
+be SKIPPED; offline contracts remain mandatory.
+
+### Known intentional differences
+
+- `source.provider` literal `sec_edgar` (not `sec`)
+- Benzinga 403 → `entitlement_required`; others → `forbidden`
+- Pagination error naming: FRED `pagination_state` vs Polygon/Benzinga `pagination_loop`
+- Benzinga settings field `max_retry_after_seconds` vs others `retry_after_max_seconds`
+- Finnhub fundamentals from one response share `source_event_id` (response observation identity)
 
 ## Commands
 
@@ -51,18 +81,12 @@ make test-api-finnhub-fundamentals
 make test-api-fred-macro
 make test-api-sec-filings
 make test-api-benzinga-news
+make test-api-provider-contracts
 make test-api
-make smoke-api-polygon              # SKIPPED unless BERGAMA_POLYGON_SMOKE=1
-make smoke-api-polygon-realtime     # SKIPPED unless BERGAMA_POLYGON_WS_SMOKE=1
-make smoke-api-finnhub              # SKIPPED unless BERGAMA_FINNHUB_SMOKE=1
-make smoke-api-fred                 # SKIPPED unless BERGAMA_FRED_SMOKE=1
-make smoke-api-sec                  # SKIPPED unless BERGAMA_SEC_SMOKE=1
-make smoke-api-benzinga             # SKIPPED unless BERGAMA_BENZINGA_SMOKE=1
 ```
 
 ## Constraints
 
-- No Kafka publishing / Iceberg writers in #304D.
-- No article body scraping / paywall bypass / sentiment / catalyst scoring.
-- No trading / strategy / UI / #304E scope.
+- No Kafka / Iceberg / orchestrator / #305 in #304E.
+- No production connector refactors unless a genuine safety defect is proven.
 - Do not commit secrets or real API keys.
