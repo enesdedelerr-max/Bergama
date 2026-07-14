@@ -58,6 +58,8 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert isinstance(container.topic_registry, TopicRegistry)
     assert isinstance(container.registry_service, RegistryService)
     assert container.kafka_runtime is None
+    assert container.polygon_http is None
+    assert container.polygon_historical is None
     assert container.registry_service.settings.enabled is False
 
 
