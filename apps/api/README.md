@@ -127,6 +127,28 @@ make test-api-fred-macro
 make smoke-api-fred
 ```
 
+## SEC EDGAR filings connector (#304C)
+
+Company submissions (`GET /submissions/CIK##########.json`) map `filings.recent` rows to
+canonical `FilingEvent`. Archive file refs are preserved as metadata only.
+
+| Item | Behavior |
+|------|----------|
+| Default | `BERGAMA_SEC__ENABLED=false` (no HTTP client constructed) |
+| Auth | No API key — descriptive SEC User-Agent with contact email required when enabled |
+| Identity | Caller supplies `InstrumentId` + CIK; CIK only in `SourceReference` |
+| Accession | Preserved with dashes; dashless form used only for archive URL paths |
+| Time | `effective_at` = filingDate UTC midnight; `known_at`/`occurred_at` = acceptanceDateTime when present |
+| Rate limit | Conservative min-interval limiter (default 0.2s); official ceiling is 10 req/s |
+| Health | Omitted — submissions are filing-data payloads, not a cheap probe |
+| Live smoke | `make smoke-api-sec` — SKIPPED unless `BERGAMA_SEC_SMOKE=1` |
+| Out of scope | Document download, XBRL fact parse, archive backfill, Kafka, Iceberg, #304D |
+
+```bash
+make test-api-sec-filings
+make smoke-api-sec
+```
+
 ## Sprint 2 gate (#210)
 
 Fail-closed verification of the FastAPI Runtime Foundation:
