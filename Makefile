@@ -14,11 +14,13 @@ API_DIR := $(ROOT)/apps/api
 	backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1 \
 	lint typecheck test-api test-api-auth test-api-container test-api-health \
 	test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka run-api \
-	smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate
+	smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate \
+	test-api-market-contracts
 
 help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
 	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate run-api"
+	@echo "Sprint 3 targets: test-api-market-contracts"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -136,6 +138,11 @@ test-api-registry:
 		tests/unit/test_registry_validation.py \
 		tests/unit/test_registry_canonicalization.py \
 		tests/integration/test_registry_service.py
+
+test-api-market-contracts:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_market_data_contracts.py \
+		tests/contract/test_canonical_market_event_envelope.py
 
 smoke-api-kafka:
 	@cd "$(API_DIR)" && \
