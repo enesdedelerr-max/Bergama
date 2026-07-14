@@ -63,3 +63,23 @@ class PolygonPaginationLimitError(PolygonError):
 
 class PolygonMappingFailedError(PolygonError):
     code = "polygon.mapping_failed"
+
+
+class PolygonWebsocketError(PolygonError):
+    code = "polygon.websocket_error"
+
+
+class PolygonWebsocketAuthFailedError(PolygonAuthenticationFailedError):
+    code = "polygon.websocket_auth_failed"
+
+
+class PolygonWebsocketOverflowError(PolygonError):
+    code = "polygon.websocket_queue_overflow"
+
+
+class PolygonWebsocketProtocolError(PolygonError):
+    code = "polygon.websocket_protocol_error"
+
+
+class PolygonWebsocketReconnectExhaustedError(PolygonError):
+    code = "polygon.websocket_reconnect_exhausted"

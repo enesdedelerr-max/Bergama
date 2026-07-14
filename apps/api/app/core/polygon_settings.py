@@ -1,4 +1,4 @@
-"""Nested Polygon market-data settings (Issue #302)."""
+"""Nested Polygon market-data settings (Issues #302 / #303)."""
 
 from __future__ import annotations
 
@@ -8,11 +8,12 @@ from urllib.parse import urlparse
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 
 _DEFAULT_BASE_URL = "https://api.polygon.io"
+_DEFAULT_WS_URL = "wss://socket.polygon.io/stocks"
 _MAX_PROVIDER_PAGE = 50_000
 
 
 class PolygonSettings(BaseModel):
-    """Polygon REST connector configuration. Disabled by default."""
+    """Polygon REST + realtime connector configuration. Disabled by default."""
 
     model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
 
@@ -28,7 +29,17 @@ class PolygonSettings(BaseModel):
     default_adjusted: bool = True
     max_results_per_page: int = Field(default=5_000, ge=1, le=_MAX_PROVIDER_PAGE)
     max_pages: int = Field(default=20, ge=1, le=200)
-    user_agent: str = Field(default="bergama-api/0.2.0 (+polygon-historical)", min_length=1)
+    user_agent: str = Field(default="bergama-api/0.2.0 (+polygon)", min_length=1)
+
+    # Realtime WebSocket (#303)
+    websocket_enabled: bool = False
+    websocket_url: str = Field(default=_DEFAULT_WS_URL, min_length=1)
+    websocket_connect_timeout_seconds: float = Field(default=10.0, gt=0)
+    websocket_max_reconnect_attempts: int = Field(default=5, ge=1, le=50)
+    websocket_reconnect_initial_delay_seconds: float = Field(default=0.25, ge=0)
+    websocket_reconnect_max_delay_seconds: float = Field(default=8.0, ge=0)
+    websocket_max_queue_size: int = Field(default=1_000, ge=1, le=100_000)
+    websocket_auth_timeout_seconds: float = Field(default=10.0, gt=0)
 
     @field_validator("base_url")
     @classmethod
@@ -40,6 +51,16 @@ class PolygonSettings(BaseModel):
             raise ValueError(msg)
         if parsed.scheme != "https":
             msg = "BERGAMA_POLYGON__BASE_URL must use https"
+            raise ValueError(msg)
+        return text
+
+    @field_validator("websocket_url")
+    @classmethod
+    def validate_websocket_url(cls, value: str) -> str:
+        text = value.strip().rstrip("/")
+        parsed = urlparse(text)
+        if parsed.scheme != "wss" or not parsed.netloc:
+            msg = "BERGAMA_POLYGON__WEBSOCKET_URL must use wss and include host"
             raise ValueError(msg)
         return text
 
@@ -78,6 +99,15 @@ class PolygonSettings(BaseModel):
         if self.connect_timeout_seconds > self.request_timeout_seconds:
             msg = "connect_timeout_seconds must be <= request_timeout_seconds"
             raise ValueError(msg)
+        if (
+            self.websocket_reconnect_initial_delay_seconds
+            > self.websocket_reconnect_max_delay_seconds
+        ):
+            msg = (
+                "websocket_reconnect_initial_delay_seconds must be <= "
+                "websocket_reconnect_max_delay_seconds"
+            )
+            raise ValueError(msg)
         if self.enabled:
             if self.api_key is None:
                 msg = "BERGAMA_POLYGON__API_KEY is required when polygon is enabled"
@@ -85,6 +115,9 @@ class PolygonSettings(BaseModel):
             if len(self.api_key.get_secret_value()) < 8:
                 msg = "BERGAMA_POLYGON__API_KEY is too short"
                 raise ValueError(msg)
+        if self.websocket_enabled and not self.enabled:
+            msg = "BERGAMA_POLYGON__WEBSOCKET_ENABLED requires BERGAMA_POLYGON__ENABLED=true"
+            raise ValueError(msg)
         return self
 
     def safe_summary(self) -> dict[str, object]:
@@ -98,4 +131,8 @@ class PolygonSettings(BaseModel):
             "default_adjusted": self.default_adjusted,
             "max_results_per_page": self.max_results_per_page,
             "max_pages": self.max_pages,
+            "websocket_enabled": self.websocket_enabled,
+            "websocket_url": self.websocket_url,
+            "websocket_max_queue_size": self.websocket_max_queue_size,
+            "websocket_max_reconnect_attempts": self.websocket_max_reconnect_attempts,
         }

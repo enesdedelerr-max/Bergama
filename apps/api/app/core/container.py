@@ -1,4 +1,4 @@
-"""Explicit application-scoped dependency container (Issues #206–#209 / #302)."""
+"""Explicit application-scoped dependency container (Issues #206–#209 / #302–#303)."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from app.health.service import HealthService, build_default_health_checks
 from app.infrastructure.kafka.runtime import KafkaRuntime, build_kafka_runtime
 from app.infrastructure.polygon.historical import PolygonHistoricalConnector
 from app.infrastructure.polygon.http import PolygonHttpClient
+from app.infrastructure.polygon.realtime import PolygonRealtimeConnector
 from app.registry.service import RegistryService
 from app.services.token_service import TokenService
 
@@ -39,6 +40,7 @@ class AppContainer:
     registry_service: RegistryService
     polygon_http: PolygonHttpClient | None
     polygon_historical: PolygonHistoricalConnector | None
+    polygon_realtime: PolygonRealtimeConnector | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -51,6 +53,8 @@ class AppContainer:
             await self.registry_service.close()
             if self.kafka_runtime is not None:
                 await self.kafka_runtime.stop()
+            if self.polygon_realtime is not None:
+                await self.polygon_realtime.aclose()
             if self.polygon_http is not None:
                 await self.polygon_http.aclose()
             await self._exit_stack.aclose()
@@ -81,6 +85,7 @@ def build_container(
     registry_service: RegistryService | None = None,
     polygon_http: PolygonHttpClient | None = None,
     polygon_historical: PolygonHistoricalConnector | None = None,
+    polygon_realtime: PolygonRealtimeConnector | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -116,6 +121,7 @@ def build_container(
 
     resolved_polygon_http: PolygonHttpClient | None
     resolved_polygon_historical: PolygonHistoricalConnector | None
+    resolved_polygon_realtime: PolygonRealtimeConnector | None
     if polygon_http is not None:
         resolved_polygon_http = polygon_http
         resolved_polygon_historical = (
@@ -132,6 +138,16 @@ def build_container(
     else:
         resolved_polygon_http = None
         resolved_polygon_historical = None
+
+    if polygon_realtime is not None:
+        resolved_polygon_realtime = polygon_realtime
+    elif settings.polygon.enabled and settings.polygon.websocket_enabled:
+        resolved_polygon_realtime = PolygonRealtimeConnector(
+            settings.polygon,
+            clock=resolved_clock,
+        )
+    else:
+        resolved_polygon_realtime = None
 
     resolved_checks = (
         tuple(health_checks)
@@ -164,4 +180,5 @@ def build_container(
         registry_service=resolved_registry,
         polygon_http=resolved_polygon_http,
         polygon_historical=resolved_polygon_historical,
+        polygon_realtime=resolved_polygon_realtime,
     )

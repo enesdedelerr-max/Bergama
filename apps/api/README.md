@@ -18,7 +18,8 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - Out of gate: #211 Trading Engine Foundation (excluded)
 - ✅ **#301** Canonical Market Data Contract (Sprint 3)
 - ✅ **#302** Polygon Historical Connector (Sprint 3)
-- ⏳ **#303** Polygon Realtime Connector (not started)
+- ✅ **#303** Polygon Realtime Connector (Sprint 3)
+- ⏳ **#304** External Data Connectors (not started)
 
 ## Canonical market data (#301)
 
@@ -57,6 +58,26 @@ Stocks custom aggregate bars only (`/v2/aggs/ticker/.../range/...`). Maps to can
 ```bash
 make test-api-polygon-historical
 make smoke-api-polygon
+```
+
+## Polygon realtime connector (#303)
+
+Stocks WebSocket only (`T` / `Q` / `AM`). Transport-only — no Kafka publish.
+
+| Item | Behavior |
+|------|----------|
+| Default | `BERGAMA_POLYGON__WEBSOCKET_ENABLED=false` (requires `ENABLED=true`) |
+| Auth | `{"action":"auth","params":...}` after connect; never logged |
+| Channels | Explicit `T./Q./AM.` only; full resubscribe after reconnect |
+| Queue | Bounded; overflow fails closed (disconnect, no silent drop) |
+| Identity | Caller supplies InstrumentId, currency, venue; `sym` → SourceReference only |
+| Gaps | Reconnect gaps are not filled in #303 |
+| Live smoke | `make smoke-api-polygon-realtime` — SKIPPED unless `BERGAMA_POLYGON_WS_SMOKE=1` |
+| Out of scope | Kafka publish, Iceberg, gap-fill, second aggregates (`A`), other asset classes |
+
+```bash
+make test-api-polygon-realtime
+make smoke-api-polygon-realtime
 ```
 
 ## Sprint 2 gate (#210)
