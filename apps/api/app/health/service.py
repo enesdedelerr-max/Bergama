@@ -235,10 +235,13 @@ def build_default_health_checks(
     settings: AppSettings,
     *,
     kafka_runtime: KafkaRuntime | None = None,
+    registry_service: object | None = None,
 ) -> tuple[HealthCheck, ...]:
     """Register Sprint 2 dependency checks."""
     from app.health.checks import TcpConnectivityCheck
     from app.infrastructure.kafka.health import KafkaHealthCheck
+    from app.registry.health import RegistryHealthCheck
+    from app.registry.service import RegistryService
 
     timeout = settings.health_check_timeout_seconds
     postgres_required = bool(settings.postgres_required)
@@ -255,6 +258,17 @@ def build_default_health_checks(
         timeout_seconds=timeout,
         metadata_fetcher=_kafka_metadata if settings.kafka.enabled else None,
     )
+    if isinstance(registry_service, RegistryService):
+        registry_check: HealthCheck = RegistryHealthCheck(
+            service=registry_service,
+            timeout_seconds=timeout,
+        )
+    else:
+        # Disabled / absent: explicit skipped check via ephemeral service.
+        registry_check = RegistryHealthCheck(
+            service=RegistryService(settings.registry),
+            timeout_seconds=timeout,
+        )
     return (
         TcpConnectivityCheck(
             name="postgres_tcp",
@@ -271,6 +285,7 @@ def build_default_health_checks(
             port=settings.redis_port,
         ),
         kafka_check,
+        registry_check,
     )
 
 

@@ -1,0 +1,14 @@
+registry:
+  id: example-policy
+  type: policy
+  version: 1.0.0
+  schema_version: 1.0.0
+  owner: platform
+  created_at: 2026-01-01T00:00:00Z
+  dependencies:
+    - registry_id: market-data-topics
+      version_constraint: ">=1.0.0,<2.0.0"
+      required: true
+  metadata: {}
+payload:
+  rules: []

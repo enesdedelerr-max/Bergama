@@ -16,6 +16,7 @@ from app.events.topics import TopicRegistry
 from app.factory import create_app
 from app.health.runtime_state import RuntimeState
 from app.health.service import HealthService
+from app.registry.service import RegistryService
 from app.services.token_service import TokenService
 from fastapi import FastAPI, Request
 from starlette.requests import Request as StarletteRequest
@@ -55,7 +56,9 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert isinstance(container.runtime_state, RuntimeState)
     assert isinstance(container.health_service, HealthService)
     assert isinstance(container.topic_registry, TopicRegistry)
+    assert isinstance(container.registry_service, RegistryService)
     assert container.kafka_runtime is None
+    assert container.registry_service.settings.enabled is False
 
 
 def test_container_holds_same_settings_instance() -> None:
