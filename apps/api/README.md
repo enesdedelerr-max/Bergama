@@ -80,6 +80,30 @@ make test-api-polygon-realtime
 make smoke-api-polygon-realtime
 ```
 
+## Finnhub fundamentals connector (#304A)
+
+Company Profile 2 (`/stock/profile2`) → `ReferenceDataEvent` and Basic Financials
+(`/stock/metric?metric=all`) → `FundamentalEvent` via a closed Finnhub metric whitelist.
+
+| Item | Behavior |
+|------|----------|
+| Default | `BERGAMA_FINNHUB__ENABLED=false` (no HTTP client constructed) |
+| Auth | `X-Finnhub-Token` header only (`BERGAMA_FINNHUB__API_KEY` as `SecretStr`; never query `token`) |
+| Identity | Caller supplies `InstrumentId`; Finnhub ticker stays in `SourceReference` |
+| Profile attributes | Provider fields in bounded `attributes` only; no ISIN/CUSIP/MIC/sector invention |
+| Metrics | Explicit `SUPPORTED_METRICS` + period/unit tables; unknown keys ignored (DEBUG key only) |
+| Timestamps | One `observed_at = clock.now()` per response → all PIT fields (connector observation, not publication) |
+| Retry | Connect/timeout/429/5xx; bounded backoff; capped Retry-After; injectable sleeper |
+| Health | Omitted — no cheap honest Finnhub probe without authenticated quota |
+| Provenance | Provider HTTP request ID → `source.extras.http_request_id` (TD-MARKET-DATA-002) |
+| Live smoke | `make smoke-api-finnhub` — SKIPPED unless `BERGAMA_FINNHUB_SMOKE=1` |
+| Out of scope | Series mapping, news, earnings, WS, Kafka, Iceberg, cache, backfill, #304B |
+
+```bash
+make test-api-finnhub-fundamentals
+make smoke-api-finnhub
+```
+
 ## Sprint 2 gate (#210)
 
 Fail-closed verification of the FastAPI Runtime Foundation:

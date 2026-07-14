@@ -1,4 +1,4 @@
-"""Explicit application-scoped dependency container (Issues #206–#209 / #302–#303)."""
+"""Explicit application-scoped dependency container (Issues #206–#209 / #302–#304A)."""
 
 from __future__ import annotations
 
@@ -15,6 +15,9 @@ from app.events.topics import TopicRegistry
 from app.health.protocol import HealthCheck
 from app.health.runtime_state import RuntimeState
 from app.health.service import HealthService, build_default_health_checks
+from app.infrastructure.finnhub.fundamentals import FinnhubFundamentalsConnector
+from app.infrastructure.finnhub.http import FinnhubHttpClient
+from app.infrastructure.finnhub.reference import FinnhubReferenceConnector
 from app.infrastructure.kafka.runtime import KafkaRuntime, build_kafka_runtime
 from app.infrastructure.polygon.historical import PolygonHistoricalConnector
 from app.infrastructure.polygon.http import PolygonHttpClient
@@ -41,6 +44,9 @@ class AppContainer:
     polygon_http: PolygonHttpClient | None
     polygon_historical: PolygonHistoricalConnector | None
     polygon_realtime: PolygonRealtimeConnector | None
+    finnhub_http: FinnhubHttpClient | None
+    finnhub_reference: FinnhubReferenceConnector | None
+    finnhub_fundamentals: FinnhubFundamentalsConnector | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -57,6 +63,8 @@ class AppContainer:
                 await self.polygon_realtime.aclose()
             if self.polygon_http is not None:
                 await self.polygon_http.aclose()
+            if self.finnhub_http is not None:
+                await self.finnhub_http.aclose()
             await self._exit_stack.aclose()
         except Exception:
             logger.error(
@@ -86,6 +94,9 @@ def build_container(
     polygon_http: PolygonHttpClient | None = None,
     polygon_historical: PolygonHistoricalConnector | None = None,
     polygon_realtime: PolygonRealtimeConnector | None = None,
+    finnhub_http: FinnhubHttpClient | None = None,
+    finnhub_reference: FinnhubReferenceConnector | None = None,
+    finnhub_fundamentals: FinnhubFundamentalsConnector | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -149,6 +160,36 @@ def build_container(
     else:
         resolved_polygon_realtime = None
 
+    resolved_finnhub_http: FinnhubHttpClient | None
+    resolved_finnhub_reference: FinnhubReferenceConnector | None
+    resolved_finnhub_fundamentals: FinnhubFundamentalsConnector | None
+    if finnhub_http is not None:
+        resolved_finnhub_http = finnhub_http
+        resolved_finnhub_reference = (
+            finnhub_reference
+            if finnhub_reference is not None
+            else FinnhubReferenceConnector(finnhub_http, clock=resolved_clock)
+        )
+        resolved_finnhub_fundamentals = (
+            finnhub_fundamentals
+            if finnhub_fundamentals is not None
+            else FinnhubFundamentalsConnector(finnhub_http, clock=resolved_clock)
+        )
+    elif settings.finnhub.enabled:
+        resolved_finnhub_http = FinnhubHttpClient(settings.finnhub)
+        resolved_finnhub_reference = FinnhubReferenceConnector(
+            resolved_finnhub_http,
+            clock=resolved_clock,
+        )
+        resolved_finnhub_fundamentals = FinnhubFundamentalsConnector(
+            resolved_finnhub_http,
+            clock=resolved_clock,
+        )
+    else:
+        resolved_finnhub_http = None
+        resolved_finnhub_reference = None
+        resolved_finnhub_fundamentals = None
+
     resolved_checks = (
         tuple(health_checks)
         if health_checks is not None
@@ -181,4 +222,7 @@ def build_container(
         polygon_http=resolved_polygon_http,
         polygon_historical=resolved_polygon_historical,
         polygon_realtime=resolved_polygon_realtime,
+        finnhub_http=resolved_finnhub_http,
+        finnhub_reference=resolved_finnhub_reference,
+        finnhub_fundamentals=resolved_finnhub_fundamentals,
     )
