@@ -47,10 +47,18 @@ Shared offline contract suite across Polygon, Finnhub, FRED, SEC and Benzinga:
 
 ### Adding a new provider
 
-1. Add `tests/support/provider_contracts/<provider>.py` with synthetic fixtures.
-2. Extend each `tests/contract/test_provider_*_contracts.py` matrix.
-3. Keep assertions in `assertions.py` provider-agnostic.
-4. Run `make test-api-provider-contracts` then `make test-api`.
+See the **Provider Onboarding Guide**:  
+[`docs/sprints/sprint-3/NEW_PROVIDER_CHECKLIST.md`](./NEW_PROVIDER_CHECKLIST.md)
+
+Also summarized in [`apps/api/README.md`](../../../apps/api/README.md)
+under **Provider Onboarding Guide**.
+
+Extension process: settings → transport → schemas → mapper → fixtures →
+contract matrix rows → focused tests → full provider gate.
+
+**Certification:** `lint`, `typecheck`, `validate-secrets`, provider-focused
+target, `test-api-provider-contracts`, and `test-api` must PASS. Live smoke may
+be SKIPPED; offline contracts remain mandatory.
 
 ### Known intentional differences
 
