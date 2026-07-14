@@ -20,13 +20,14 @@ API_DIR := $(ROOT)/apps/api
 	test-api-benzinga-news test-api-provider-contracts test-api-market-orchestrator \
 	test-api-kafka-publish-adapter smoke-api-kafka-publish \
 	test-api-iceberg-writer smoke-api-iceberg-writer \
+	test-api-replay-engine smoke-api-replay-engine \
 	smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred \
 	smoke-api-sec smoke-api-benzinga
 
 help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
 	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate run-api"
-	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals test-api-fred-macro test-api-sec-filings test-api-benzinga-news test-api-provider-contracts test-api-market-orchestrator test-api-kafka-publish-adapter smoke-api-kafka-publish test-api-iceberg-writer smoke-api-iceberg-writer smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred smoke-api-sec smoke-api-benzinga"
+	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals test-api-fred-macro test-api-sec-filings test-api-benzinga-news test-api-provider-contracts test-api-market-orchestrator test-api-kafka-publish-adapter smoke-api-kafka-publish test-api-iceberg-writer smoke-api-iceberg-writer test-api-replay-engine smoke-api-replay-engine smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred smoke-api-sec smoke-api-benzinga"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -99,7 +100,7 @@ typecheck:
 	@cd "$(API_DIR)" && uv run mypy
 
 test-api:
-	@cd "$(API_DIR)" && uv run pytest -q -m "not kafka_integration and not iceberg_writer_smoke"
+	@cd "$(API_DIR)" && uv run pytest -q -m "not kafka_integration and not iceberg_writer_smoke and not replay_engine_smoke"
 
 test-api-auth:
 	@cd "$(API_DIR)" && uv run pytest -q \
@@ -226,6 +227,22 @@ smoke-api-iceberg-writer:
 		exit 0; \
 	fi; \
 	uv run pytest -q -m iceberg_writer_smoke tests/smoke/test_iceberg_writer_live.py
+
+test-api-replay-engine:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_replay_settings_and_request.py \
+		tests/unit/test_replay_reconstruction_and_ordering.py \
+		tests/unit/test_replay_engine_modes.py \
+		tests/contract/test_replay_engine_contract.py \
+		tests/integration/test_replay_engine_offline.py
+
+smoke-api-replay-engine:
+	@cd "$(API_DIR)" && \
+	if [ "$${BERGAMA_REPLAY_ENGINE_SMOKE}" != "1" ]; then \
+		echo "smoke-api-replay-engine SKIPPED (set BERGAMA_REPLAY_ENGINE_SMOKE=1 for local Iceberg dry-run)"; \
+		exit 0; \
+	fi; \
+	uv run pytest -q -m replay_engine_smoke tests/smoke/test_replay_engine_live.py
 
 smoke-api-polygon:
 	@cd "$(API_DIR)" && \

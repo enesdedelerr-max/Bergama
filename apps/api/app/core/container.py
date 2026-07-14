@@ -23,15 +23,17 @@ from app.infrastructure.finnhub.reference import FinnhubReferenceConnector
 from app.infrastructure.fred.http import FredHttpClient
 from app.infrastructure.fred.observations import FredObservationsConnector
 from app.infrastructure.fred.series import FredSeriesConnector
-from app.infrastructure.iceberg.catalog import require_tables_present
+from app.infrastructure.iceberg.catalog import build_catalog, require_tables_present
 from app.infrastructure.iceberg.consumer import IcebergWriterRuntime
 from app.infrastructure.iceberg.health import IcebergWriterHealthCheck
+from app.infrastructure.iceberg.replay_source import IcebergReplaySource
 from app.infrastructure.iceberg.runtime import build_iceberg_writer_runtime
 from app.infrastructure.kafka.market_data_publish import KafkaPublishAdapter
 from app.infrastructure.kafka.runtime import KafkaRuntime, build_kafka_runtime
 from app.infrastructure.polygon.historical import PolygonHistoricalConnector
 from app.infrastructure.polygon.http import PolygonHttpClient
 from app.infrastructure.polygon.realtime import PolygonRealtimeConnector
+from app.infrastructure.replay.file_checkpoint import FileCheckpointStore
 from app.infrastructure.sec.http import SecHttpClient
 from app.infrastructure.sec.submissions import SecSubmissionsConnector
 from app.market_data.orchestrator.errors import OrchestratorConfigurationError
@@ -40,6 +42,7 @@ from app.market_data.orchestrator.pipeline import (
     build_market_data_orchestrator,
 )
 from app.market_data.orchestrator.ports import PublishPort
+from app.market_data.replay.engine import ReplayEngine, build_replay_engine
 from app.registry.service import RegistryService
 from app.services.token_service import TokenService
 
@@ -74,6 +77,7 @@ class AppContainer:
     benzinga_news: BenzingaNewsConnector | None
     market_data_orchestrator: MarketDataOrchestrator | None
     iceberg_writer_runtime: IcebergWriterRuntime | None
+    replay_engine: ReplayEngine | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -87,6 +91,9 @@ class AppContainer:
             # Orchestrator before writers/Kafka so in-flight PublishPort work finishes.
             if self.market_data_orchestrator is not None:
                 await self.market_data_orchestrator.aclose()
+            # Replay Engine owns its source/checkpoint only — never starts on aclose (#308).
+            if self.replay_engine is not None:
+                await self.replay_engine.aclose()
             # Iceberg writer: stop intake → flush → snapshots → offsets → consumer → catalog
             # before shared Kafka runtime is stopped (#307).
             if self.iceberg_writer_runtime is not None:
@@ -147,6 +154,7 @@ def build_container(
     market_data_orchestrator: MarketDataOrchestrator | None = None,
     publish_port: PublishPort | None = None,
     iceberg_writer_runtime: IcebergWriterRuntime | None = None,
+    replay_engine: ReplayEngine | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -361,6 +369,34 @@ def build_container(
     else:
         resolved_iceberg = None
 
+    # Replay Engine: construct when enabled/injected. Never starts a run here (#308).
+    resolved_replay: ReplayEngine | None
+    if replay_engine is not None:
+        resolved_replay = replay_engine
+    elif settings.replay.enabled:
+        replay_catalog = build_catalog(settings.iceberg_writer)
+        replay_source = IcebergReplaySource(
+            replay_catalog,
+            settings.iceberg_writer,
+            owns_catalog=True,
+        )
+        checkpoint_store = None
+        if settings.replay.checkpoint_enabled:
+            if settings.replay.checkpoint_directory is None:
+                raise OrchestratorConfigurationError(
+                    "replay.checkpoint_directory_required",
+                    detail="checkpoint_directory required when checkpoint_enabled",
+                )
+            checkpoint_store = FileCheckpointStore(settings.replay.checkpoint_directory)
+        resolved_replay = build_replay_engine(
+            settings.replay,
+            clock=resolved_clock,
+            source=replay_source,
+            checkpoint_store=checkpoint_store,
+        )
+    else:
+        resolved_replay = None
+
     if health_checks is not None:
         resolved_checks: tuple[HealthCheck, ...] = tuple(health_checks)
     else:
@@ -428,4 +464,5 @@ def build_container(
         benzinga_news=resolved_benzinga_news,
         market_data_orchestrator=resolved_orchestrator,
         iceberg_writer_runtime=resolved_iceberg,
+        replay_engine=resolved_replay,
     )
