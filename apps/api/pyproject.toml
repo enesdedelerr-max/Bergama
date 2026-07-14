@@ -14,6 +14,7 @@ dependencies = [
     "aiokafka>=0.12.0",
     "pyyaml>=6.0.2",
     "websockets==16.1",
+    "pyiceberg[pyarrow,sql-sqlite]==0.11.1",
 ]
 
 [project.scripts]
@@ -41,6 +42,7 @@ asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 markers = [
     "kafka_integration: optional live Kafka broker smoke (requires BERGAMA_KAFKA_SMOKE=1)",
+    "iceberg_writer_smoke: optional live Kafka+Iceberg+MinIO smoke (requires BERGAMA_ICEBERG_WRITER_SMOKE=1)",
 ]
 
 [tool.ruff]
@@ -62,6 +64,10 @@ disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
 module = ["aiokafka", "aiokafka.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["pyiceberg", "pyiceberg.*", "pyarrow", "pyarrow.*"]
 ignore_missing_imports = true
 
 [tool.uv]

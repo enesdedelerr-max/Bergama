@@ -87,10 +87,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             await container.registry_service.load()
         if container.kafka_runtime is not None:
             await container.kafka_runtime.start()
+        # Iceberg writer starts after Kafka runtime; performs no writes until consume (#307).
+        if container.iceberg_writer_runtime is not None:
+            await container.iceberg_writer_runtime.start()
         await emit_application_started(settings)
         runtime.mark_started()
         log_startup_state_change(runtime, previous=previous)
     except Exception:
+        if container.iceberg_writer_runtime is not None:
+            await container.iceberg_writer_runtime.aclose()
         if container.kafka_runtime is not None:
             await container.kafka_runtime.stop()
         await container.registry_service.close()

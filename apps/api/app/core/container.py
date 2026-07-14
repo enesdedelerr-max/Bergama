@@ -23,6 +23,10 @@ from app.infrastructure.finnhub.reference import FinnhubReferenceConnector
 from app.infrastructure.fred.http import FredHttpClient
 from app.infrastructure.fred.observations import FredObservationsConnector
 from app.infrastructure.fred.series import FredSeriesConnector
+from app.infrastructure.iceberg.catalog import require_tables_present
+from app.infrastructure.iceberg.consumer import IcebergWriterRuntime
+from app.infrastructure.iceberg.health import IcebergWriterHealthCheck
+from app.infrastructure.iceberg.runtime import build_iceberg_writer_runtime
 from app.infrastructure.kafka.market_data_publish import KafkaPublishAdapter
 from app.infrastructure.kafka.runtime import KafkaRuntime, build_kafka_runtime
 from app.infrastructure.polygon.historical import PolygonHistoricalConnector
@@ -69,6 +73,7 @@ class AppContainer:
     benzinga_http: BenzingaHttpClient | None
     benzinga_news: BenzingaNewsConnector | None
     market_data_orchestrator: MarketDataOrchestrator | None
+    iceberg_writer_runtime: IcebergWriterRuntime | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -79,10 +84,13 @@ class AppContainer:
         self._closed = True
         try:
             await self.registry_service.close()
-            # Orchestrator before Kafka so in-flight PublishPort work finishes
-            # before the producer is stopped (#306).
+            # Orchestrator before writers/Kafka so in-flight PublishPort work finishes.
             if self.market_data_orchestrator is not None:
                 await self.market_data_orchestrator.aclose()
+            # Iceberg writer: stop intake → flush → snapshots → offsets → consumer → catalog
+            # before shared Kafka runtime is stopped (#307).
+            if self.iceberg_writer_runtime is not None:
+                await self.iceberg_writer_runtime.aclose()
             if self.kafka_runtime is not None:
                 await self.kafka_runtime.stop()
             if self.polygon_realtime is not None:
@@ -138,6 +146,7 @@ def build_container(
     benzinga_news: BenzingaNewsConnector | None = None,
     market_data_orchestrator: MarketDataOrchestrator | None = None,
     publish_port: PublishPort | None = None,
+    iceberg_writer_runtime: IcebergWriterRuntime | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -338,15 +347,52 @@ def build_container(
     else:
         resolved_orchestrator = None
 
-    resolved_checks = (
-        tuple(health_checks)
-        if health_checks is not None
-        else build_default_health_checks(
+    # Iceberg writer construction performs catalog/table metadata checks only —
+    # no appends and no Kafka consume until runtime.start() (#307).
+    resolved_iceberg: IcebergWriterRuntime | None
+    if iceberg_writer_runtime is not None:
+        resolved_iceberg = iceberg_writer_runtime
+    elif settings.iceberg_writer.enabled:
+        resolved_iceberg = build_iceberg_writer_runtime(
             settings,
-            kafka_runtime=resolved_kafka,
-            registry_service=resolved_registry,
+            clock=resolved_clock,
+            topic_registry=topic_registry,
         )
-    )
+    else:
+        resolved_iceberg = None
+
+    if health_checks is not None:
+        resolved_checks: tuple[HealthCheck, ...] = tuple(health_checks)
+    else:
+        base_checks: list[HealthCheck] = list(
+            build_default_health_checks(
+                settings,
+                kafka_runtime=resolved_kafka,
+                registry_service=resolved_registry,
+            )
+        )
+        if settings.iceberg_writer.enabled and resolved_iceberg is not None:
+            iceberg_runtime = resolved_iceberg
+
+            def _catalog_probe() -> None:
+                iceberg_runtime.catalog.list_namespaces()
+
+            def _tables_probe() -> None:
+                require_tables_present(
+                    iceberg_runtime.catalog,
+                    settings.iceberg_writer,
+                )
+
+            base_checks.append(
+                IcebergWriterHealthCheck(
+                    settings=settings.iceberg_writer,
+                    timeout_seconds=settings.health_check_timeout_seconds,
+                    catalog_probe=_catalog_probe,
+                    tables_probe=_tables_probe,
+                    worker_started=lambda: iceberg_runtime.started,
+                )
+            )
+        resolved_checks = tuple(base_checks)
     resolved_health = (
         health_service
         if health_service is not None
@@ -381,4 +427,5 @@ def build_container(
         benzinga_http=resolved_benzinga_http,
         benzinga_news=resolved_benzinga_news,
         market_data_orchestrator=resolved_orchestrator,
+        iceberg_writer_runtime=resolved_iceberg,
     )

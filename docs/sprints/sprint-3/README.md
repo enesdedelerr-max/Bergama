@@ -12,12 +12,13 @@
 ✅ **Issue #304D** Benzinga News Connector — complete on `main`.  
 ✅ **Issue #304E** Cross-Provider Connector Contract Tests — complete on `main`.  
 ✅ **Issue #305** Market Data Orchestrator — complete on `main` (PR #32).  
-⏳ **Issue #306** Kafka Publish Adapter — in progress on feature branch.
+✅ **Issue #306** Kafka Publish Adapter — complete on `main` (PR #33).  
+⏳ **Issue #307** Iceberg Writer — in progress on feature branch.
 
 ## Goal
 
 Ingest provider market data into provider-independent, point-in-time-safe
-canonical contracts. Iceberg writes remain a later issue.
+canonical contracts, publish EventEnvelope records to Kafka, and append into Iceberg.
 
 ## Issue chain (first slice)
 
@@ -30,46 +31,37 @@ canonical contracts. Iceberg writes remain a later issue.
 7. ✅ **#304D** Benzinga News Connector
 8. ✅ **#304E** Cross-Provider Connector Contract Tests
 9. ✅ **#305** Market Data Orchestrator
-10. ⏳ **#306** Kafka Publish Adapter
-11. Later: Iceberg writer, …
+10. ✅ **#306** Kafka Publish Adapter
+11. ⏳ **#307** Iceberg Writer
+12. Later: Replay Engine (#308), …
+
+## #307 scope
+
+`Kafka market-data → EventConsumer → EventEnvelope → canonical reconstruction → Iceberg append → snapshot → Kafka offset`
+
+- Append-only Iceberg snapshots (`pyiceberg[pyarrow,sql-sqlite]==0.11.1`)
+- Explicit table routing by canonical event type (eight tables)
+- Partition: `day(occurred_at)` — Decimal policy `decimal(38,18)`
+- Bounded micro-batch flush; multi-table snapshots in stable table-name order
+- Kafka offsets only after every affected table snapshot succeeds
+- Process-local committed-key index (TTL + max entries) — not durable across restart
+- At-least-once Kafka; no exactly-once / upsert / merge-on-read claims
+- Multi-table Iceberg commits are not one atomic transaction
+- Ordering preserved only within a Kafka partition
+- Disabled by default; auto-create tables local/test only
+- Shutdown: stop intake → flush → snapshots → offsets → writer consumer → catalog → Kafka runtime → providers
+
+```bash
+make test-api-iceberg-writer
+make smoke-api-iceberg-writer
+```
+
+Optional live smoke: `BERGAMA_ICEBERG_WRITER_SMOKE=1` with Kafka, REST catalog, MinIO,
+pre-created `market-data` topic and tables (or explicit local `auto_create_tables`).
 
 ## #306 scope
 
 `CanonicalMarketEvent → MarketDataOrchestrator → PublishPort → KafkaPublishAdapter → market_event_to_envelope → EventProducer → Kafka (market-data)`
-
-- Orchestrator core remains Kafka-free and EventEnvelope-free
-- All approved `market.*` routing keys map to `KafkaTopic.MARKET_DATA`
-- Deterministic Kafka record key = canonical idempotency key
-- At-least-once acknowledgement semantics (not exactly-once)
-- `publish_backend=kafka` is explicit; enabling Kafka alone does not select the adapter
-- Fail-closed when kafka mode lacks a producer
-- Shutdown: orchestrator → Kafka runtime → provider clients
-- Offline in-memory broker tests; optional live smoke via `BERGAMA_KAFKA_PUBLISH_SMOKE=1`
-
-```bash
-make test-api-kafka-publish-adapter
-make smoke-api-kafka-publish
-```
-
-## #305 scope
-
-Canonical-event pipeline after connectors:
-
-`CanonicalMarketEvent → validate → PIT → quality → per-stream acquire → dedup reserve → route → bounded in-flight admission → PublishPort → dedup commit/release → stream release`
-
-Settings: `enabled`, `dry_run`, `publish_backend`, `pipeline_name`, `max_in_flight`,
-`admission_timeout_seconds`, `dedup_ttl_seconds`, `dedup_max_entries`.
-
-```bash
-make test-api-market-orchestrator
-```
-
-## #304E scope
-
-Shared offline contract suite across Polygon, Finnhub, FRED, SEC and Benzinga.
-
-See the **Provider Onboarding Guide**:  
-[`docs/sprints/sprint-3/NEW_PROVIDER_CHECKLIST.md`](./NEW_PROVIDER_CHECKLIST.md)
 
 ## Commands
 
@@ -83,13 +75,16 @@ make test-api-market-orchestrator
 make test-api-kafka-core
 make test-api-kafka-test-runtime
 make test-api-kafka-publish-adapter
+make test-api-iceberg-writer
 make test-api
 make smoke-api-kafka-publish
+make smoke-api-iceberg-writer
 ```
 
 ## Constraints
 
-- Orchestrator accepts `CanonicalMarketEvent` only.
-- No Kafka imports inside the orchestrator package.
-- No Iceberg / consumer / DLQ in #306.
+- Writer consumes EventEnvelope only — no connector/orchestrator coupling.
+- No Kafka produce from the writer.
+- No upsert / merge-on-read / equality deletes in #307.
+- Do not claim exactly-once.
 - Do not commit secrets or real API keys.
