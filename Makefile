@@ -16,13 +16,13 @@ API_DIR := $(ROOT)/apps/api
 	test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka run-api \
 	smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate \
 	test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime \
-	test-api-finnhub-fundamentals smoke-api-polygon smoke-api-polygon-realtime \
-	smoke-api-finnhub
+	test-api-finnhub-fundamentals test-api-fred-macro smoke-api-polygon \
+	smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred
 
 help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
 	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate run-api"
-	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub"
+	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals test-api-fred-macro smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -159,6 +159,10 @@ test-api-finnhub-fundamentals:
 	@cd "$(API_DIR)" && uv run pytest -q \
 		tests/unit/test_finnhub_fundamentals.py
 
+test-api-fred-macro:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_fred_macro.py
+
 smoke-api-polygon:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_POLYGON_SMOKE}" != "1" ]; then \
@@ -182,6 +186,14 @@ smoke-api-finnhub:
 		exit 0; \
 	fi; \
 	uv run pytest -q tests/smoke/test_finnhub_fundamentals_live.py
+
+smoke-api-fred:
+	@cd "$(API_DIR)" && \
+	if [ "$${BERGAMA_FRED_SMOKE}" != "1" ]; then \
+		echo "smoke-api-fred SKIPPED (set BERGAMA_FRED_SMOKE=1 and BERGAMA_FRED__API_KEY)"; \
+		exit 0; \
+	fi; \
+	uv run pytest -q tests/smoke/test_fred_macro_live.py
 
 smoke-api-kafka:
 	@cd "$(API_DIR)" && \

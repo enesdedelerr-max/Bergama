@@ -104,6 +104,29 @@ make test-api-finnhub-fundamentals
 make smoke-api-finnhub
 ```
 
+## FRED macro connector (#304B)
+
+Series metadata (`/fred/series`) and observations (`/fred/series/observations`) map to
+canonical `MacroEvent` with ALFRED realtime vintage identity preserved.
+
+| Item | Behavior |
+|------|----------|
+| Default | `BERGAMA_FRED__ENABLED=false` (no HTTP client constructed) |
+| Auth | Query `api_key` per official FRED docs (`SecretStr`); URLs sanitized before logging |
+| Identity | Caller supplies `InstrumentId` + canonical `series_id`; FRED id → `SourceReference` |
+| Time | `effective_at`/`occurred_at` = observation date UTC midnight; `known_at` = `realtime_start` UTC midnight; `ingested_at` = clock per page |
+| Missing `.` | Skipped with WARNING + result counter; never coerced to zero |
+| Units | FRED unit strings in metadata only — no invented percentages/currency |
+| Frequency | Explicit map to daily/weekly/monthly/quarterly/annual; unknown kept raw in metadata |
+| Health | Omitted — no cheap honest FRED probe without authenticated quota |
+| Live smoke | `make smoke-api-fred` — SKIPPED unless `BERGAMA_FRED_SMOKE=1` |
+| Out of scope | Search, categories, aggregation transforms, Kafka, Iceberg, #304C |
+
+```bash
+make test-api-fred-macro
+make smoke-api-fred
+```
+
 ## Sprint 2 gate (#210)
 
 Fail-closed verification of the FastAPI Runtime Foundation:
