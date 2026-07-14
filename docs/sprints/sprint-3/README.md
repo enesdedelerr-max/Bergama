@@ -10,8 +10,8 @@
 ✅ **Issue #304B** FRED Macro Connector — series + observations → MacroEvent.  
 ✅ **Issue #304C** SEC EDGAR Filings Connector — submissions → FilingEvent.  
 ✅ **Issue #304D** Benzinga News Connector — complete on `main`.  
-⏳ **Issue #304E** Cross-Provider Connector Contract Tests — implemented on feature branch (not yet merged).  
-⏳ **Issue #305** Market Data Orchestrator — not started.
+✅ **Issue #304E** Cross-Provider Connector Contract Tests — complete on `main`.  
+⏳ **Issue #305** Market Data Orchestrator — in progress on feature branch.
 
 ## Goal
 
@@ -27,9 +27,34 @@ canonical contracts. Kafka publishing and Iceberg writes remain later issues.
 5. ✅ **#304B** FRED Macro Connector
 6. ✅ **#304C** SEC EDGAR Filings Connector
 7. ✅ **#304D** Benzinga News Connector
-8. ⏳ **#304E** Cross-Provider Connector Contract Tests
+8. ✅ **#304E** Cross-Provider Connector Contract Tests
 9. ⏳ **#305** Market Data Orchestrator
 10. Later: Kafka publish, Iceberg, …
+
+## #305 scope
+
+Canonical-event pipeline after connectors:
+
+`CanonicalMarketEvent → validate → PIT → quality → per-stream acquire → dedup reserve → route → bounded in-flight admission → PublishPort → dedup commit/release → stream release`
+
+Settings (minimal): `enabled`, `dry_run`, `pipeline_name`, `max_in_flight`,
+`admission_timeout_seconds`, `dedup_ttl_seconds`, `dedup_max_entries`.
+
+- Orchestrator **disabled by default** (`BERGAMA_ORCHESTRATOR__ENABLED=false`)
+- Enabled mode requires an explicit `PublishPort` (or explicit `dry_run=true`)
+- Dry-run is explicit and **never** reports `PUBLISHED`
+- **Bounded in-flight admission control** — admission timeout → fail-closed `BUFFER_OVERFLOW`
+- There is **no durable queue** and no background worker
+- Dedup lifecycle: `reserve → publish → commit`; failure/dry-run → reservation release
+- Dedup is **process-local**, TTL- and max-entry-bounded
+- **Per-stream sequencing** on `(instrument_key, event_type)` — serializes same-stream work; **not** global/event-time sorting; timestamps are never repaired
+- PIT events are never silently repaired; invalid PIT that cannot survive canonical construction surfaces as `REJECTED_VALIDATION`; `REJECTED_PIT` only when the PIT stage fails
+- Append-only terminal audit + process-local metrics (no Prometheus)
+- No Kafka / Iceberg / EventEnvelope adapter in #305 — a future Kafka adapter implements `PublishPort` without changing orchestration core
+
+```bash
+make test-api-market-orchestrator
+```
 
 ## #304E scope
 
@@ -82,11 +107,13 @@ make test-api-fred-macro
 make test-api-sec-filings
 make test-api-benzinga-news
 make test-api-provider-contracts
+make test-api-market-orchestrator
 make test-api
 ```
 
 ## Constraints
 
-- No Kafka / Iceberg / orchestrator / #305 in #304E.
-- No production connector refactors unless a genuine safety defect is proven.
+- No Kafka / Iceberg in #305.
+- Orchestrator accepts `CanonicalMarketEvent` only.
+- Connectors must not import the orchestrator.
 - Do not commit secrets or real API keys.

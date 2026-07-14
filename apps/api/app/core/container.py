@@ -29,6 +29,12 @@ from app.infrastructure.polygon.http import PolygonHttpClient
 from app.infrastructure.polygon.realtime import PolygonRealtimeConnector
 from app.infrastructure.sec.http import SecHttpClient
 from app.infrastructure.sec.submissions import SecSubmissionsConnector
+from app.market_data.orchestrator.errors import OrchestratorConfigurationError
+from app.market_data.orchestrator.pipeline import (
+    MarketDataOrchestrator,
+    build_market_data_orchestrator,
+)
+from app.market_data.orchestrator.ports import PublishPort
 from app.registry.service import RegistryService
 from app.services.token_service import TokenService
 
@@ -61,6 +67,7 @@ class AppContainer:
     sec_submissions: SecSubmissionsConnector | None
     benzinga_http: BenzingaHttpClient | None
     benzinga_news: BenzingaNewsConnector | None
+    market_data_orchestrator: MarketDataOrchestrator | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -73,6 +80,10 @@ class AppContainer:
             await self.registry_service.close()
             if self.kafka_runtime is not None:
                 await self.kafka_runtime.stop()
+            # Close orchestrator before provider clients so stream locks /
+            # reservations are released first.
+            if self.market_data_orchestrator is not None:
+                await self.market_data_orchestrator.aclose()
             if self.polygon_realtime is not None:
                 await self.polygon_realtime.aclose()
             if self.polygon_http is not None:
@@ -124,6 +135,8 @@ def build_container(
     sec_submissions: SecSubmissionsConnector | None = None,
     benzinga_http: BenzingaHttpClient | None = None,
     benzinga_news: BenzingaNewsConnector | None = None,
+    market_data_orchestrator: MarketDataOrchestrator | None = None,
+    publish_port: PublishPort | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -285,6 +298,20 @@ def build_container(
         resolved_benzinga_http = None
         resolved_benzinga_news = None
 
+    resolved_orchestrator: MarketDataOrchestrator | None
+    if market_data_orchestrator is not None:
+        resolved_orchestrator = market_data_orchestrator
+    elif settings.orchestrator.enabled:
+        if publish_port is None and not settings.orchestrator.dry_run:
+            raise OrchestratorConfigurationError("orchestrator.publish_port_required")
+        resolved_orchestrator = build_market_data_orchestrator(
+            settings.orchestrator,
+            clock=resolved_clock,
+            publish_port=publish_port,
+        )
+    else:
+        resolved_orchestrator = None
+
     resolved_checks = (
         tuple(health_checks)
         if health_checks is not None
@@ -327,4 +354,5 @@ def build_container(
         sec_submissions=resolved_sec_submissions,
         benzinga_http=resolved_benzinga_http,
         benzinga_news=resolved_benzinga_news,
+        market_data_orchestrator=resolved_orchestrator,
     )

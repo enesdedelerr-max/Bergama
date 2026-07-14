@@ -71,6 +71,8 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert container.sec_submissions is None
     assert container.benzinga_http is None
     assert container.benzinga_news is None
+    assert container.market_data_orchestrator is None
+    assert container.settings.orchestrator.enabled is False
     assert container.registry_service.settings.enabled is False
 
 

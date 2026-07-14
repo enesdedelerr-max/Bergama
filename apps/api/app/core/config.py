@@ -20,6 +20,7 @@ from app.core.environment import AppEnvironment
 from app.core.finnhub_settings import FinnhubSettings
 from app.core.fred_settings import FredSettings
 from app.core.kafka_settings import KafkaSettings
+from app.core.orchestrator_settings import OrchestratorSettings
 from app.core.polygon_settings import PolygonSettings
 from app.core.registry_settings import RegistrySettings
 from app.core.sec_settings import SecSettings
@@ -74,6 +75,7 @@ class AppSettings(BaseSettings):
     fred: FredSettings = Field(default_factory=FredSettings)
     sec: SecSettings = Field(default_factory=SecSettings)
     benzinga: BenzingaSettings = Field(default_factory=BenzingaSettings)
+    orchestrator: OrchestratorSettings = Field(default_factory=OrchestratorSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
@@ -250,6 +252,7 @@ class AppSettings(BaseSettings):
             "fred": self.fred.safe_summary(),
             "sec": self.sec.safe_summary(),
             "benzinga": self.benzinga.safe_summary(),
+            "orchestrator": self.orchestrator.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
         return summary
