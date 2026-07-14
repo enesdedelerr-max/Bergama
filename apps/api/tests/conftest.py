@@ -52,6 +52,7 @@ def settings() -> AppSettings:
 @pytest.fixture
 async def client(settings: AppSettings) -> AsyncIterator[AsyncClient]:
     application = create_app(settings)
-    transport = ASGITransport(app=application)
-    async with AsyncClient(transport=transport, base_url="http://test") as async_client:
-        yield async_client
+    async with application.router.lifespan_context(application):
+        transport = ASGITransport(app=application)
+        async with AsyncClient(transport=transport, base_url="http://test") as async_client:
+            yield async_client

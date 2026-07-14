@@ -28,7 +28,15 @@ _HEADER_CORRELATION_ID: Final = "x-correlation-id"
 _HEADER_CAUSATION_ID: Final = "x-causation-id"
 
 # Probe paths use DEBUG for start/complete to reduce noise; failures stay loud.
-_QUIET_PATHS: Final[frozenset[str]] = frozenset({"/health", "/ready"})
+_QUIET_PATHS: Final[frozenset[str]] = frozenset(
+    {
+        "/health",
+        "/ready",
+        "/health/live",
+        "/health/ready",
+        "/health/startup",
+    }
+)
 
 
 class RequestContextMiddleware:

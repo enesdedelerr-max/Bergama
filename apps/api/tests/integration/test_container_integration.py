@@ -82,7 +82,7 @@ async def test_app_starts_with_explicit_test_container(fixed_client: AsyncClient
 async def test_health_returns_200(auto_client: AsyncClient) -> None:
     response = await auto_client.get("/health")
     assert response.status_code == 200
-    assert response.json()["status"] == "ok"
+    assert response.json()["status"] == "healthy"
 
 
 @pytest.mark.asyncio

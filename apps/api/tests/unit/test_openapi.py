@@ -13,6 +13,9 @@ async def test_openapi_document_is_generated(client: AsyncClient) -> None:
     assert document["info"]["title"] == "bergama-api-test"
     assert "/health" in document["paths"]
     assert "/ready" in document["paths"]
+    assert "/health/live" in document["paths"]
+    assert "/health/ready" in document["paths"]
+    assert "/health/startup" in document["paths"]
 
 
 async def test_docs_ui_is_available(client: AsyncClient) -> None:

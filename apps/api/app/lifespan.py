@@ -10,6 +10,8 @@ from fastapi import FastAPI
 from app.core.config import AppSettings
 from app.core.container import AppContainer
 from app.core.logging import get_logger, structured_extra
+from app.health.runtime_state import RuntimeLifecycleState
+from app.health.service import log_startup_state_change
 
 logger = get_logger(__name__)
 
@@ -65,9 +67,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         msg = "application container is not configured on app.state.container"
         raise RuntimeError(msg)
     settings = container.settings
-    await on_startup(settings)
+    runtime = container.runtime_state
+    previous = runtime.state
+    try:
+        await on_startup(settings)
+        runtime.mark_started()
+        log_startup_state_change(runtime, previous=previous)
+    except Exception:
+        runtime.mark_failed()
+        log_startup_state_change(runtime, previous=previous)
+        raise
     try:
         yield
     finally:
+        stopping_from = runtime.state
+        runtime.mark_stopping()
+        if stopping_from is not RuntimeLifecycleState.STOPPING:
+            log_startup_state_change(runtime, previous=stopping_from)
         await on_shutdown(settings)
+        runtime.mark_stopped()
+        log_startup_state_change(runtime, previous=RuntimeLifecycleState.STOPPING)
         await container.aclose()
