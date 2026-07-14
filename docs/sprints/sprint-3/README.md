@@ -11,12 +11,13 @@
 ✅ **Issue #304C** SEC EDGAR Filings Connector — submissions → FilingEvent.  
 ✅ **Issue #304D** Benzinga News Connector — complete on `main`.  
 ✅ **Issue #304E** Cross-Provider Connector Contract Tests — complete on `main`.  
-⏳ **Issue #305** Market Data Orchestrator — in progress on feature branch.
+✅ **Issue #305** Market Data Orchestrator — complete on `main` (PR #32).  
+⏳ **Issue #306** Kafka Publish Adapter — in progress on feature branch.
 
 ## Goal
 
 Ingest provider market data into provider-independent, point-in-time-safe
-canonical contracts. Kafka publishing and Iceberg writes remain later issues.
+canonical contracts. Iceberg writes remain a later issue.
 
 ## Issue chain (first slice)
 
@@ -28,8 +29,27 @@ canonical contracts. Kafka publishing and Iceberg writes remain later issues.
 6. ✅ **#304C** SEC EDGAR Filings Connector
 7. ✅ **#304D** Benzinga News Connector
 8. ✅ **#304E** Cross-Provider Connector Contract Tests
-9. ⏳ **#305** Market Data Orchestrator
-10. Later: Kafka publish, Iceberg, …
+9. ✅ **#305** Market Data Orchestrator
+10. ⏳ **#306** Kafka Publish Adapter
+11. Later: Iceberg writer, …
+
+## #306 scope
+
+`CanonicalMarketEvent → MarketDataOrchestrator → PublishPort → KafkaPublishAdapter → market_event_to_envelope → EventProducer → Kafka (market-data)`
+
+- Orchestrator core remains Kafka-free and EventEnvelope-free
+- All approved `market.*` routing keys map to `KafkaTopic.MARKET_DATA`
+- Deterministic Kafka record key = canonical idempotency key
+- At-least-once acknowledgement semantics (not exactly-once)
+- `publish_backend=kafka` is explicit; enabling Kafka alone does not select the adapter
+- Fail-closed when kafka mode lacks a producer
+- Shutdown: orchestrator → Kafka runtime → provider clients
+- Offline in-memory broker tests; optional live smoke via `BERGAMA_KAFKA_PUBLISH_SMOKE=1`
+
+```bash
+make test-api-kafka-publish-adapter
+make smoke-api-kafka-publish
+```
 
 ## #305 scope
 
@@ -37,20 +57,8 @@ Canonical-event pipeline after connectors:
 
 `CanonicalMarketEvent → validate → PIT → quality → per-stream acquire → dedup reserve → route → bounded in-flight admission → PublishPort → dedup commit/release → stream release`
 
-Settings (minimal): `enabled`, `dry_run`, `pipeline_name`, `max_in_flight`,
+Settings: `enabled`, `dry_run`, `publish_backend`, `pipeline_name`, `max_in_flight`,
 `admission_timeout_seconds`, `dedup_ttl_seconds`, `dedup_max_entries`.
-
-- Orchestrator **disabled by default** (`BERGAMA_ORCHESTRATOR__ENABLED=false`)
-- Enabled mode requires an explicit `PublishPort` (or explicit `dry_run=true`)
-- Dry-run is explicit and **never** reports `PUBLISHED`
-- **Bounded in-flight admission control** — admission timeout → fail-closed `BUFFER_OVERFLOW`
-- There is **no durable queue** and no background worker
-- Dedup lifecycle: `reserve → publish → commit`; failure/dry-run → reservation release
-- Dedup is **process-local**, TTL- and max-entry-bounded
-- **Per-stream sequencing** on `(instrument_key, event_type)` — serializes same-stream work; **not** global/event-time sorting; timestamps are never repaired
-- PIT events are never silently repaired; invalid PIT that cannot survive canonical construction surfaces as `REJECTED_VALIDATION`; `REJECTED_PIT` only when the PIT stage fails
-- Append-only terminal audit + process-local metrics (no Prometheus)
-- No Kafka / Iceberg / EventEnvelope adapter in #305 — a future Kafka adapter implements `PublishPort` without changing orchestration core
 
 ```bash
 make test-api-market-orchestrator
@@ -58,40 +66,10 @@ make test-api-market-orchestrator
 
 ## #304E scope
 
-Shared offline contract suite across Polygon, Finnhub, FRED, SEC and Benzinga:
-
-- identity / PIT / keys / Decimal / provenance / redaction
-- retry taxonomy / pagination guards / container lifecycle
-- EventEnvelope serialize/deserialize round-trip from provider-mapped events
-
-### Contract philosophy
-
-- Assert observable contracts, not private methods.
-- Keep provider-specific semantics explicit (auth form, time policy, pagination model).
-- Future providers should only need a fixture module + parametrization rows.
-
-### Adding a new provider
+Shared offline contract suite across Polygon, Finnhub, FRED, SEC and Benzinga.
 
 See the **Provider Onboarding Guide**:  
 [`docs/sprints/sprint-3/NEW_PROVIDER_CHECKLIST.md`](./NEW_PROVIDER_CHECKLIST.md)
-
-Also summarized in [`apps/api/README.md`](../../../apps/api/README.md)
-under **Provider Onboarding Guide**.
-
-Extension process: settings → transport → schemas → mapper → fixtures →
-contract matrix rows → focused tests → full provider gate.
-
-**Certification:** `lint`, `typecheck`, `validate-secrets`, provider-focused
-target, `test-api-provider-contracts`, and `test-api` must PASS. Live smoke may
-be SKIPPED; offline contracts remain mandatory.
-
-### Known intentional differences
-
-- `source.provider` literal `sec_edgar` (not `sec`)
-- Benzinga 403 → `entitlement_required`; others → `forbidden`
-- Pagination error naming: FRED `pagination_state` vs Polygon/Benzinga `pagination_loop`
-- Benzinga settings field `max_retry_after_seconds` vs others `retry_after_max_seconds`
-- Finnhub fundamentals from one response share `source_event_id` (response observation identity)
 
 ## Commands
 
@@ -100,20 +78,18 @@ make lint
 make typecheck
 make validate-secrets
 make test-api-market-contracts
-make test-api-polygon-historical
-make test-api-polygon-realtime
-make test-api-finnhub-fundamentals
-make test-api-fred-macro
-make test-api-sec-filings
-make test-api-benzinga-news
 make test-api-provider-contracts
 make test-api-market-orchestrator
+make test-api-kafka-core
+make test-api-kafka-test-runtime
+make test-api-kafka-publish-adapter
 make test-api
+make smoke-api-kafka-publish
 ```
 
 ## Constraints
 
-- No Kafka / Iceberg in #305.
 - Orchestrator accepts `CanonicalMarketEvent` only.
-- Connectors must not import the orchestrator.
+- No Kafka imports inside the orchestrator package.
+- No Iceberg / consumer / DLQ in #306.
 - Do not commit secrets or real API keys.

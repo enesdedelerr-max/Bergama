@@ -222,6 +222,7 @@ Provider-independent pipeline after connectors have produced `CanonicalMarketEve
 |---------|---------|-------|
 | `BERGAMA_ORCHESTRATOR__ENABLED` | `false` | No active orchestrator when disabled |
 | `BERGAMA_ORCHESTRATOR__DRY_RUN` | `false` | Requires enabled; never reports `PUBLISHED` |
+| `BERGAMA_ORCHESTRATOR__PUBLISH_BACKEND` | `none` | `none` or `kafka` (#306); Kafka alone never auto-selects |
 | `BERGAMA_ORCHESTRATOR__PIPELINE_NAME` | `market-data-orchestrator` | Audit / metrics identity |
 | `BERGAMA_ORCHESTRATOR__MAX_IN_FLIGHT` | `64` | Bounded in-flight admission control |
 | `BERGAMA_ORCHESTRATOR__ADMISSION_TIMEOUT_SECONDS` | `0.05` | Timeout → `BUFFER_OVERFLOW` |
@@ -230,17 +231,41 @@ Provider-independent pipeline after connectors have produced `CanonicalMarketEve
 
 Rules:
 
-- Enabled mode requires an explicit `PublishPort` injection (fail-closed otherwise).
+- Enabled + `publish_backend=none` requires an explicit `PublishPort` injection (fail-closed otherwise).
+- Enabled + `publish_backend=kafka` requires Kafka enabled with a producer (`KafkaPublishAdapter`).
+- Dry-run is explicit and cannot combine with `publish_backend=kafka`.
 - There is **no durable queue** — only bounded in-flight admission control.
 - Dedup: `reserve → publish → commit`; failure/dry-run releases the reservation. Dedup is process-local and TTL/max-entry bounded.
 - Per-stream sequencing `(instrument_key, event_type)` serializes same-stream work; it is **not** global or event-time ordering.
 - PIT timestamps are never repaired. Canonical model construction may reject invalid PIT before the PIT stage (`REJECTED_VALIDATION`); `REJECTED_PIT` is only when the PIT stage itself fails.
 - Terminal outcomes emit exactly one append-only audit record and process-local metrics (no Prometheus; no payload/secret labels).
-- `aclose()` is idempotent and closes process-local state only (no background tasks). Separate containers do not share dedup, sequencing, admission, audit, or metrics; an injected `PublishPort` is shared only when the caller injects the same instance.
-- No Kafka / Iceberg in #305. A future Kafka adapter implements `PublishPort` without changing the orchestration core.
+- Shutdown order: orchestrator → Kafka runtime → provider clients.
+- No Iceberg in #305/#306. Kafka consumer / DLQ remain out of scope for #306.
 
 ```bash
 make test-api-market-orchestrator
+```
+
+## Kafka Publish Adapter (#306)
+
+Infrastructure `PublishPort` implementation: `KafkaPublishAdapter`.
+
+Flow:
+
+`CanonicalMarketEvent → orchestrator → PublishPort → KafkaPublishAdapter → market_event_to_envelope → EventProducer → Kafka topic market-data`
+
+| Concern | Policy |
+|---------|--------|
+| Topic | All approved `market.*` routing keys → `KafkaTopic.MARKET_DATA` |
+| Record key | Canonical `idempotency_key` (deterministic; never random UUID) |
+| Delivery | At-least-once broker acknowledgement |
+| `idempotency_acknowledged` | Broker accepted the record with that key — not exactly-once |
+| Metadata | `topic` / `partition` / `offset` only in `PublishResult.safe_metadata` |
+| Retries | No orchestrator/adapter retry layer; fail closed and release dedup reservation |
+
+```bash
+make test-api-kafka-publish-adapter
+make smoke-api-kafka-publish   # SKIPPED unless BERGAMA_KAFKA_PUBLISH_SMOKE=1
 ```
 
 ## Sprint 2 gate (#210)
