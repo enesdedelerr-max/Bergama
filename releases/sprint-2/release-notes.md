@@ -2,8 +2,8 @@
 
 Release: `v0.2.0-sprint2`
 Branch: `feature/sprint2-issue210-runtime-gate`
-Commit: `18836c0b1a5b1c4083b30562a6e74301297dcd5b`
-Generated: `2026-07-14T03:28:32Z`
+Commit: `7f6c6f2c64f546a0a1229023561815b390a279e7`
+Generated: `2026-07-14T03:29:25Z`
 
 ## Delivered runtime capabilities
 
