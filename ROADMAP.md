@@ -26,9 +26,15 @@ Status: complete. Tag `v0.1.0-sprint1`. Gate: `make gate-sprint1` PASS.
 
 ### Sprint 2 — FastAPI runtime
 
-Status: in progress. Branch `feature/sprint2-runtime`. Current issue: **#201 FastAPI Runtime Bootstrap**.
+Status: complete. Tag `v0.2.0-sprint2`. Gate: `make gate-sprint2` PASS (GO FOR SPRINT 3).
 
 See [`docs/sprints/sprint-2/README.md`](docs/sprints/sprint-2/README.md).
+
+### Sprint 3 — Market Data Plane
+
+Status: in progress. Current issue: **#301 Canonical Market Data Contract**.
+
+See [`docs/sprints/sprint-3/README.md`](docs/sprints/sprint-3/README.md).
 
 ## Sprint sequence
 

@@ -49,14 +49,11 @@ local simulation
 
 Execution mode.
 
-The current work should follow the sprint backlog.
+Sprint 1 infrastructure is complete (`v0.1.0-sprint1`).
+Sprint 2 FastAPI runtime foundation is complete (`v0.2.0-sprint2`).
 
-Do not add broad speculative features.
-
-Sprint 1 infrastructure finalization is complete (`v0.1.0-sprint1`).
-
-The immediate objective is Sprint 2 — FastAPI runtime foundation, starting with
-Issue **#201 FastAPI Runtime Bootstrap** on branch `feature/sprint2-runtime`.
+The immediate objective is Sprint 3 — Market Data Plane, starting with
+Issue **#301 Canonical Market Data Contract**.
 
 ## Current sprint
 

@@ -16,6 +16,25 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#209** Registry Loader
 - ✅ **#210** Runtime Smoke Tests and Sprint 2 Gate
 - Out of gate: #211 Trading Engine Foundation (excluded)
+- 🟡 **#301** Canonical Market Data Contract (Sprint 3)
+
+## Canonical market data (#301)
+
+Provider-independent PIT-safe contracts under `app/market_data/`.
+
+| Item | Behavior |
+|------|----------|
+| Identity | `InstrumentId.instrument_key` is canonical; provider symbols stay on `SourceReference` |
+| Time | Payload carries `occurred_at`, `effective_at`, `known_at`, `ingested_at` (UTC) |
+| Envelope map | `EventEnvelope.occurred_at` ← event `occurred_at`; `ingested_at` ← event `ingested_at` |
+| Money | Decimal-native models; transport uses canonical Decimal strings |
+| Events | quote, trade, bar, reference_data, fundamental, macro, filing, news |
+| Keys | Deterministic idempotency + deduplication builders |
+| Out of scope | Provider connectors, Kafka publish, Iceberg, features/strategies |
+
+```bash
+make test-api-market-contracts
+```
 
 ## Sprint 2 gate (#210)
 
