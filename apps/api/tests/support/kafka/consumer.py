@@ -12,7 +12,11 @@ from tests.support.kafka.broker import BrokerRecord, InMemoryEventBroker
 
 
 class FakeEventConsumer:
-    """Implements EventConsumer. One active consumer per group is assumed."""
+    """Implements EventConsumer. One active consumer per group is assumed.
+
+    Fetch position advances independently of commit position (Kafka-like), so
+    batched handlers can accumulate records without re-reading the same offset.
+    """
 
     def __init__(
         self,
@@ -36,6 +40,8 @@ class FakeEventConsumer:
         self._poll_interval = poll_interval_seconds
         self._started = False
         self._scan_index = 0
+        # (topic, partition) -> next fetch offset
+        self._fetch_positions: dict[tuple[str, int], int] = {}
 
     @property
     def started(self) -> bool:
@@ -52,6 +58,12 @@ class FakeEventConsumer:
             if not self._broker.has_topic(topic):
                 msg = f"unknown topic: {topic}"
                 raise KafkaNotConfiguredError(msg)
+        self._fetch_positions.clear()
+        for topic, partition in self._partition_pairs():
+            committed = self._broker.committed_offset(
+                group_id=self._group_id, topic=topic, partition=partition
+            )
+            self._fetch_positions[(topic, partition)] = committed
         self._started = True
 
     async def stop(self) -> None:
@@ -103,12 +115,11 @@ class FakeEventConsumer:
         start = self._scan_index % len(pairs)
         for step in range(len(pairs)):
             topic, partition = pairs[(start + step) % len(pairs)]
-            record = self._broker.read(
-                group_id=self._group_id,
-                topic=topic,
-                partition=partition,
-            )
-            if record is not None:
+            records = self._broker.records(topic, partition)
+            fetch_at = self._fetch_positions.get((topic, partition), 0)
+            if fetch_at < len(records):
+                record = records[fetch_at]
+                self._fetch_positions[(topic, partition)] = fetch_at + 1
                 self._scan_index = (start + step + 1) % len(pairs)
                 return record
         return None

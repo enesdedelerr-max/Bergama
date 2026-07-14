@@ -19,6 +19,7 @@ from app.core.benzinga_settings import BenzingaSettings
 from app.core.environment import AppEnvironment
 from app.core.finnhub_settings import FinnhubSettings
 from app.core.fred_settings import FredSettings
+from app.core.iceberg_writer_settings import IcebergWriterSettings
 from app.core.kafka_settings import KafkaSettings
 from app.core.orchestrator_settings import OrchestratorSettings
 from app.core.polygon_settings import PolygonSettings
@@ -76,6 +77,7 @@ class AppSettings(BaseSettings):
     sec: SecSettings = Field(default_factory=SecSettings)
     benzinga: BenzingaSettings = Field(default_factory=BenzingaSettings)
     orchestrator: OrchestratorSettings = Field(default_factory=OrchestratorSettings)
+    iceberg_writer: IcebergWriterSettings = Field(default_factory=IcebergWriterSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
@@ -185,6 +187,16 @@ class AppSettings(BaseSettings):
             msg = (
                 "BERGAMA_HEALTH_TOTAL_TIMEOUT_SECONDS must be >= "
                 "BERGAMA_HEALTH_CHECK_TIMEOUT_SECONDS"
+            )
+            raise ValueError(msg)
+
+        if self.iceberg_writer.enabled and not self.kafka.enabled:
+            msg = "BERGAMA_ICEBERG_WRITER__ENABLED=true requires BERGAMA_KAFKA__ENABLED=true"
+            raise ValueError(msg)
+
+        if self.iceberg_writer.auto_create_tables and self.environment.is_production_like:
+            msg = (
+                "BERGAMA_ICEBERG_WRITER__AUTO_CREATE_TABLES is not allowed in staging or production"
             )
             raise ValueError(msg)
 

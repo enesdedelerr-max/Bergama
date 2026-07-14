@@ -268,6 +268,35 @@ make test-api-kafka-publish-adapter
 make smoke-api-kafka-publish   # SKIPPED unless BERGAMA_KAFKA_PUBLISH_SMOKE=1
 ```
 
+## Iceberg Writer (#307)
+
+Append-only Kafka → Iceberg sink for canonical market-data envelopes.
+
+Flow:
+
+`Kafka market-data → EventConsumer → EventEnvelope → canonical event → Iceberg append → snapshot → Kafka offset`
+
+| Concern | Policy |
+|---------|--------|
+| Client | `pyiceberg[pyarrow,sql-sqlite]==0.11.1` (no Spark/Flink) |
+| Tables | Eight tables by event family (`market_quotes`, …); unknown type fail-closed |
+| Partition | `day(occurred_at)` only |
+| Decimal | Fixed `decimal(38,18)` — no float coercion |
+| Delivery | At-least-once Kafka; append-only Iceberg |
+| Dedup | Process-local committed-key index (TTL + max entries); duplicates may reappear after restart |
+| Multi-table | Snapshots in stable table-name order; **not** one atomic transaction across tables |
+| Offsets | Committed only after every affected table snapshot succeeds |
+| Ordering | Within Kafka partition only |
+| Defaults | Writer disabled; `auto_create_tables=false` (local/test only when true) |
+| Shutdown | intake stop → flush → snapshots → offsets → writer consumer → catalog → Kafka runtime → providers |
+
+No upsert, merge-on-read, equality deletes, or exactly-once claims.
+
+```bash
+make test-api-iceberg-writer
+make smoke-api-iceberg-writer   # SKIPPED unless BERGAMA_ICEBERG_WRITER_SMOKE=1
+```
+
 ## Sprint 2 gate (#210)
 
 Fail-closed verification of the FastAPI Runtime Foundation:
