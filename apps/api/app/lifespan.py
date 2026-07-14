@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.core.config import AppSettings
+from app.core.container import AppContainer
 from app.core.logging import get_logger, structured_extra
 
 logger = get_logger(__name__)
@@ -58,10 +59,15 @@ async def on_shutdown(settings: AppSettings) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """FastAPI lifespan context separating startup and shutdown."""
-    settings: AppSettings = app.state.settings
+    """FastAPI lifespan using the same container attached at factory time."""
+    container = getattr(app.state, "container", None)
+    if not isinstance(container, AppContainer):
+        msg = "application container is not configured on app.state.container"
+        raise RuntimeError(msg)
+    settings = container.settings
     await on_startup(settings)
     try:
         yield
     finally:
         await on_shutdown(settings)
+        await container.aclose()

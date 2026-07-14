@@ -79,5 +79,5 @@ async def test_app_factory_uses_cached_settings(monkeypatch: pytest.MonkeyPatch)
     clear_settings_cache()
     settings = get_settings()
     application = create_app()
-    assert application.state.settings is settings
+    assert application.state.container.settings is settings
     assert application.title == "from-env-api"
