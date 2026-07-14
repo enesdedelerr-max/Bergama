@@ -297,6 +297,31 @@ make test-api-iceberg-writer
 make smoke-api-iceberg-writer   # SKIPPED unless BERGAMA_ICEBERG_WRITER_SMOKE=1
 ```
 
+## Replay Engine (#308)
+
+Deterministic replay of persisted Iceberg canonical market-data rows.
+
+Flow:
+
+`ReplayRequest → IcebergReplaySource → reconstruct → order → isolated MarketDataOrchestrator → explicit sink or none → audit → checkpoint`
+
+| Concern | Policy |
+|--------|--------|
+| Source | Iceberg eight tables only (no Kafka rewind, no arbitrary SQL/paths) |
+| Default mode | `dry_run` — no sink, never reports published |
+| Modes | `dry_run`, `validate_only`, `republish`, `custom_sink` |
+| Side effects | Require explicit per-run sink; never auto-select production Kafka adapter |
+| Ordering | `(occurred_at, event_type, instrument_key, idempotency_key)` — replay order, not Kafka order |
+| Identity | Preserve original `idempotency_key` and PIT timestamps; at-least-once republish only |
+| Reconstruction | Lossy for unstored fields; synthetic `symbol_effective_from` from `effective_at`/`occurred_at` when missing |
+| Checkpoint | Atomic file JSON; resume after last successful cursor; fingerprint must match |
+| Lifecycle | Disabled by default; construct only when enabled; explicit `run()` only |
+
+```bash
+make test-api-replay-engine
+make smoke-api-replay-engine   # SKIPPED unless BERGAMA_REPLAY_ENGINE_SMOKE=1
+```
+
 ## Sprint 2 gate (#210)
 
 Fail-closed verification of the FastAPI Runtime Foundation:

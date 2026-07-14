@@ -24,6 +24,7 @@ from app.core.kafka_settings import KafkaSettings
 from app.core.orchestrator_settings import OrchestratorSettings
 from app.core.polygon_settings import PolygonSettings
 from app.core.registry_settings import RegistrySettings
+from app.core.replay_settings import ReplaySettings
 from app.core.sec_settings import SecSettings
 from app.core.secrets import SecretSettings
 from app.core.security import JWT_ALGORITHM_HS256, JwtAlgorithm
@@ -78,6 +79,7 @@ class AppSettings(BaseSettings):
     benzinga: BenzingaSettings = Field(default_factory=BenzingaSettings)
     orchestrator: OrchestratorSettings = Field(default_factory=OrchestratorSettings)
     iceberg_writer: IcebergWriterSettings = Field(default_factory=IcebergWriterSettings)
+    replay: ReplaySettings = Field(default_factory=ReplaySettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
@@ -197,6 +199,15 @@ class AppSettings(BaseSettings):
         if self.iceberg_writer.auto_create_tables and self.environment.is_production_like:
             msg = (
                 "BERGAMA_ICEBERG_WRITER__AUTO_CREATE_TABLES is not allowed in staging or production"
+            )
+            raise ValueError(msg)
+
+        if self.replay.enabled and (
+            not self.iceberg_writer.catalog_uri or not self.iceberg_writer.warehouse
+        ):
+            msg = (
+                "BERGAMA_REPLAY__ENABLED=true requires Iceberg catalog_uri and warehouse "
+                "(BERGAMA_ICEBERG_WRITER__CATALOG_URI / WAREHOUSE)"
             )
             raise ValueError(msg)
 
