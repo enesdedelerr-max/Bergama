@@ -14,9 +14,40 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#208A** Kafka Core Runtime
 - ✅ **#208B** Kafka Test Runtime
 - ✅ **#209** Registry Loader
-- Later: #210 Smoke Gate
+- ✅ **#210** Runtime Smoke Tests and Sprint 2 Gate
+- Out of gate: #211 Trading Engine Foundation (excluded)
 
-## Registry loader (#209)
+## Sprint 2 gate (#210)
+
+Fail-closed verification of the FastAPI Runtime Foundation:
+
+```bash
+make gate-sprint2
+```
+
+| Item | Behavior |
+|------|----------|
+| Required | lint, typecheck, secrets, all API/auth/container/health/Kafka/registry tests, OpenAPI, runtime smoke, release package |
+| Optional | `make smoke-api-kafka` — SKIPPED unless `BERGAMA_KAFKA_SMOKE=1` |
+| Live Kafka SKIPPED | Does **not** fail the gate |
+| Live Kafka FAIL | Fails the gate when explicitly enabled |
+| Evidence | `artifacts/sprint2/` |
+| Report | `reports/sprint2-runtime-validation.json` |
+| Release | `releases/sprint-2/` |
+| Decision | `GO FOR SPRINT 3` or `NO-GO FOR SPRINT 3` |
+
+Helper targets:
+
+```bash
+make smoke-api-runtime
+make validate-api-openapi
+make build-sprint2-release
+make test-sprint2-gate
+```
+
+Sprint 3 is authorized only when the gate prints **GO FOR SPRINT 3**.
+
+Known limitations remain: no production OIDC, optional live Kafka often unverified, no persistent DLQ/retry topics, no application PostgreSQL/Redis clients, registry loader is local-file/read-only.
 
 Typed local YAML/JSON registry loading. **Not** a plugin system, remote config service, or business validator.
 
@@ -300,8 +331,12 @@ make test-api-health
 make test-api-kafka-core
 make test-api-kafka-test-runtime
 make test-api-registry
+make validate-api-openapi
+make smoke-api-runtime
 # optional live broker (skipped unless BERGAMA_KAFKA_SMOKE=1):
 # make smoke-api-kafka
+make build-sprint2-release
+make gate-sprint2
 ```
 
 ## Out of scope (#209)
