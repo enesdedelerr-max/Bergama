@@ -60,12 +60,14 @@ def test_container_disabled_by_default_has_no_orchestrator() -> None:
     assert set(summary) == {
         "enabled",
         "dry_run",
+        "publish_backend",
         "pipeline_name",
         "max_in_flight",
         "admission_timeout_seconds",
         "dedup_ttl_seconds",
         "dedup_max_entries",
     }
+    assert summary["publish_backend"] == "none"
 
 
 def test_container_enabled_without_publish_port_fails_closed() -> None:

@@ -23,6 +23,7 @@ from app.infrastructure.finnhub.reference import FinnhubReferenceConnector
 from app.infrastructure.fred.http import FredHttpClient
 from app.infrastructure.fred.observations import FredObservationsConnector
 from app.infrastructure.fred.series import FredSeriesConnector
+from app.infrastructure.kafka.market_data_publish import KafkaPublishAdapter
 from app.infrastructure.kafka.runtime import KafkaRuntime, build_kafka_runtime
 from app.infrastructure.polygon.historical import PolygonHistoricalConnector
 from app.infrastructure.polygon.http import PolygonHttpClient
@@ -78,12 +79,12 @@ class AppContainer:
         self._closed = True
         try:
             await self.registry_service.close()
-            if self.kafka_runtime is not None:
-                await self.kafka_runtime.stop()
-            # Close orchestrator before provider clients so stream locks /
-            # reservations are released first.
+            # Orchestrator before Kafka so in-flight PublishPort work finishes
+            # before the producer is stopped (#306).
             if self.market_data_orchestrator is not None:
                 await self.market_data_orchestrator.aclose()
+            if self.kafka_runtime is not None:
+                await self.kafka_runtime.stop()
             if self.polygon_realtime is not None:
                 await self.polygon_realtime.aclose()
             if self.polygon_http is not None:
@@ -302,12 +303,37 @@ def build_container(
     if market_data_orchestrator is not None:
         resolved_orchestrator = market_data_orchestrator
     elif settings.orchestrator.enabled:
-        if publish_port is None and not settings.orchestrator.dry_run:
+        resolved_publish_port: PublishPort | None
+        if publish_port is not None:
+            # Explicit injection always wins (caller chose to share/own the sink).
+            resolved_publish_port = publish_port
+        elif settings.orchestrator.dry_run:
+            resolved_publish_port = None
+        elif settings.orchestrator.publish_backend == "kafka":
+            if (
+                not settings.kafka.enabled
+                or not settings.kafka.producer_enabled
+                or resolved_kafka is None
+                or resolved_kafka.producer is None
+            ):
+                raise OrchestratorConfigurationError(
+                    "orchestrator.kafka_publish_unavailable",
+                    detail=(
+                        "publish_backend=kafka requires Kafka enabled with a producer "
+                        "(BERGAMA_KAFKA__ENABLED=true, BERGAMA_KAFKA__PRODUCER_ENABLED=true)"
+                    ),
+                )
+            resolved_publish_port = KafkaPublishAdapter(
+                producer=resolved_kafka.producer,
+                topic_registry=topic_registry,
+                clock=resolved_clock,
+            )
+        else:
             raise OrchestratorConfigurationError("orchestrator.publish_port_required")
         resolved_orchestrator = build_market_data_orchestrator(
             settings.orchestrator,
             clock=resolved_clock,
-            publish_port=publish_port,
+            publish_port=resolved_publish_port,
         )
     else:
         resolved_orchestrator = None
