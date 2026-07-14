@@ -69,6 +69,8 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert container.fred_observations is None
     assert container.sec_http is None
     assert container.sec_submissions is None
+    assert container.benzinga_http is None
+    assert container.benzinga_news is None
     assert container.registry_service.settings.enabled is False
 
 

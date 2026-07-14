@@ -17,13 +17,14 @@ API_DIR := $(ROOT)/apps/api
 	smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate \
 	test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime \
 	test-api-finnhub-fundamentals test-api-fred-macro test-api-sec-filings \
+	test-api-benzinga-news \
 	smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred \
-	smoke-api-sec
+	smoke-api-sec smoke-api-benzinga
 
 help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
 	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate run-api"
-	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals test-api-fred-macro test-api-sec-filings smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred smoke-api-sec"
+	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals test-api-fred-macro test-api-sec-filings test-api-benzinga-news smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred smoke-api-sec smoke-api-benzinga"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -168,6 +169,10 @@ test-api-sec-filings:
 	@cd "$(API_DIR)" && uv run pytest -q \
 		tests/unit/test_sec_filings.py
 
+test-api-benzinga-news:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_benzinga_news.py
+
 smoke-api-polygon:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_POLYGON_SMOKE}" != "1" ]; then \
@@ -207,6 +212,14 @@ smoke-api-sec:
 		exit 0; \
 	fi; \
 	uv run pytest -q tests/smoke/test_sec_filings_live.py
+
+smoke-api-benzinga:
+	@cd "$(API_DIR)" && \
+	if [ "$${BERGAMA_BENZINGA_SMOKE}" != "1" ]; then \
+		echo "smoke-api-benzinga SKIPPED (set BERGAMA_BENZINGA_SMOKE=1 and BERGAMA_BENZINGA__API_KEY)"; \
+		exit 0; \
+	fi; \
+	uv run pytest -q tests/smoke/test_benzinga_news_live.py
 
 smoke-api-kafka:
 	@cd "$(API_DIR)" && \

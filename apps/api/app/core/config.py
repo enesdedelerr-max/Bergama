@@ -15,6 +15,7 @@ from pydantic_settings import (
     SettingsConfigDict,
 )
 
+from app.core.benzinga_settings import BenzingaSettings
 from app.core.environment import AppEnvironment
 from app.core.finnhub_settings import FinnhubSettings
 from app.core.fred_settings import FredSettings
@@ -72,6 +73,7 @@ class AppSettings(BaseSettings):
     finnhub: FinnhubSettings = Field(default_factory=FinnhubSettings)
     fred: FredSettings = Field(default_factory=FredSettings)
     sec: SecSettings = Field(default_factory=SecSettings)
+    benzinga: BenzingaSettings = Field(default_factory=BenzingaSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
@@ -247,6 +249,7 @@ class AppSettings(BaseSettings):
             "finnhub": self.finnhub.safe_summary(),
             "fred": self.fred.safe_summary(),
             "sec": self.sec.safe_summary(),
+            "benzinga": self.benzinga.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
         return summary
