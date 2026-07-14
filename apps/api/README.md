@@ -7,10 +7,28 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#201** Runtime Bootstrap
 - ✅ **#202** Configuration Layer
 - ✅ **#203** Structured Logging
+- ✅ **#204** Secret Handling
+- ✅ **#205** JWT Bootstrap
 - ✅ **#206** Dependency Injection Container
 - ✅ **#207** Health Runtime
-- 🟡 **#208A** Kafka Core Runtime (current)
-- Later: #208B Kafka Test Runtime, #209 Registry Loader, #210 Smoke Gate
+- ✅ **#208A** Kafka Core Runtime
+- ✅ **#208B** Kafka Test Runtime
+- Later: #209 Registry Loader, #210 Smoke Gate
+
+## Kafka test runtime (#208B)
+
+Broker-free deterministic harness under `tests/support/kafka/` for validating #208A semantics.
+
+| Item | Behavior |
+|------|----------|
+| Placement | **Tests only** — never selected by `build_container()` |
+| Components | `InMemoryEventBroker`, `FakeEventProducer`, `FakeEventConsumer`, `FakeDlqPublisher` |
+| Offsets | Monotonic per topic-partition |
+| Partitions | SHA-256(key) mod N; no-key round-robin |
+| Commit | Manual; same fail-closed rules as #208A (incl. no commit after DLQ) |
+| Live smoke | `make smoke-api-kafka` with `BERGAMA_KAFKA_SMOKE=1` + real bootstrap; topic must exist |
+
+This harness is **not** Kafka and must not be reported as `kafka` health.
 
 ## Kafka core runtime (#208A)
 
@@ -245,9 +263,17 @@ make test-api
 make test-api-container
 make test-api-health
 make test-api-kafka-core
+make test-api-kafka-test-runtime
+# optional live broker (skipped unless BERGAMA_KAFKA_SMOKE=1):
+# make smoke-api-kafka
 ```
+
+## Out of scope (#208B)
+
+Production fake fallback, market-data logic, real DLQ, retry topics, Iceberg,
+registry loader, `apps/platform-console` changes.
 
 ## Out of scope (#208A)
 
 Market-data connectors, normalization, Iceberg, concrete DLQ, retry topics,
-Schema Registry, in-memory fake broker (#208B), `apps/platform-console` changes.
+Schema Registry (beyond TopicRegistry), `apps/platform-console` changes.

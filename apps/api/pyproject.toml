@@ -36,6 +36,9 @@ packages = ["app"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+markers = [
+    "kafka_integration: optional live Kafka broker smoke (requires BERGAMA_KAFKA_SMOKE=1)",
+]
 
 [tool.ruff]
 target-version = "py313"
