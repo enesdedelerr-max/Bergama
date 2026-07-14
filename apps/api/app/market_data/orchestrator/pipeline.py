@@ -1,18 +1,21 @@
 """Market Data Orchestrator pipeline (#305).
 
-Accepts CanonicalMarketEvent only. Pipeline:
+Accepts CanonicalMarketEvent only.
 
-validate → PIT → quality → dedup reserve → ordering → routing →
-bounded in-flight admission → PublishPort → dedup commit/release
+validate → PIT → quality → per-stream acquire → dedup reserve → routing →
+bounded in-flight admission → PublishPort → dedup commit/release →
+per-stream release
 
-No provider SDK, Kafka, durable buffer, or scheduler.
+No provider SDK, Kafka, durable queue, scheduler, or EventEnvelope coupling.
+``aclose()`` closes internal process-local state only (no background tasks).
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import timedelta
+from time import perf_counter
 from typing import Any
 
 from app.core.clock import Clock
@@ -26,19 +29,21 @@ from app.market_data.orchestrator.admission import (
 from app.market_data.orchestrator.audit import AuditSink, InMemoryAuditSink
 from app.market_data.orchestrator.context import PipelineContext
 from app.market_data.orchestrator.dedup import BoundedDedupStore, DedupReserveOutcome
-from app.market_data.orchestrator.errors import OrchestratorConfigurationError
-from app.market_data.orchestrator.ordering import OrderingTracker
+from app.market_data.orchestrator.errors import (
+    OrchestratorClosedError,
+    OrchestratorConfigurationError,
+)
+from app.market_data.orchestrator.metrics import OrchestratorMetrics
 from app.market_data.orchestrator.policies import TERMINAL_DECISIONS, PipelineDecision
 from app.market_data.orchestrator.ports import DryRunPublishPort, PublishPort
+from app.market_data.orchestrator.sequencing import PerStreamSequencer, StreamLease
 from app.market_data.orchestrator.stages import (
-    finalize_buffer_overflow,
-    finalize_dry_run,
-    finalize_publish_failed,
-    finalize_published,
+    apply_sequence,
+    build_terminal_audit,
+    finalize_decision,
     initial_context,
     mark_accepted,
     run_dedup_stage,
-    run_ordering_stage,
     run_pit_stage,
     run_quality_stage,
     run_routing_stage,
@@ -48,32 +53,16 @@ from app.market_data.orchestrator.stages import (
 logger = get_logger(__name__)
 
 
-@dataclass(slots=True)
-class PipelineMetrics:
-    """In-process counters for orchestrator observability."""
+@dataclass(frozen=True, slots=True)
+class ProcessResult:
+    """Terminal result of processing one canonical event."""
 
-    accepted: int = 0
-    published: int = 0
-    duplicate_suppressed: int = 0
-    rejected_validation: int = 0
-    rejected_pit: int = 0
-    buffer_overflow: int = 0
-    publish_failed: int = 0
-    dry_run: int = 0
-    processed: int = 0
+    decision: PipelineDecision
+    context: PipelineContext
 
-    def snapshot(self) -> Mapping[str, int]:
-        return {
-            "accepted": self.accepted,
-            "published": self.published,
-            "duplicate_suppressed": self.duplicate_suppressed,
-            "rejected_validation": self.rejected_validation,
-            "rejected_pit": self.rejected_pit,
-            "buffer_overflow": self.buffer_overflow,
-            "publish_failed": self.publish_failed,
-            "dry_run": self.dry_run,
-            "processed": self.processed,
-        }
+    @property
+    def correlation_id(self) -> str | None:
+        return self.context.correlation_id
 
 
 @dataclass(slots=True)
@@ -84,10 +73,10 @@ class MarketDataOrchestrator:
     clock: Clock
     publish_port: PublishPort
     audit_sink: AuditSink = field(default_factory=InMemoryAuditSink)
-    metrics: PipelineMetrics = field(default_factory=PipelineMetrics)
+    metrics: OrchestratorMetrics = field(default_factory=OrchestratorMetrics)
     _dedup: BoundedDedupStore = field(init=False, repr=False)
     _admission: InFlightAdmissionController = field(init=False, repr=False)
-    _ordering: OrderingTracker = field(init=False, repr=False)
+    _sequencer: PerStreamSequencer = field(init=False, repr=False)
     _closed: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -104,7 +93,7 @@ class MarketDataOrchestrator:
             max_in_flight=self.settings.max_in_flight,
             timeout_seconds=self.settings.admission_timeout_seconds,
         )
-        self._ordering = OrderingTracker()
+        self._sequencer = PerStreamSequencer()
 
     @property
     def pipeline_id(self) -> str:
@@ -115,14 +104,15 @@ class MarketDataOrchestrator:
         return self._closed
 
     def aclose_sync(self) -> None:
-        """Release in-memory state. Idempotent."""
+        """Close process-local state. Idempotent. No background tasks to cancel."""
         if self._closed:
             return
         self._closed = True
         self._admission.clear()
         self._dedup.clear()
-        self._ordering.clear()
+        self._sequencer.clear()
         self.audit_sink.clear()
+        self.metrics.clear()
 
     async def aclose(self) -> None:
         self.aclose_sync()
@@ -132,137 +122,183 @@ class MarketDataOrchestrator:
         event: CanonicalMarketEvent,
         *,
         correlation_id: str | None = None,
-    ) -> PipelineContext:
+    ) -> ProcessResult:
         """Process a single canonical event through the full pipeline."""
         if self._closed:
-            msg = "orchestrator is closed"
-            raise RuntimeError(msg)
+            raise OrchestratorClosedError("orchestrator.closed")
 
         context = initial_context(event, clock=self.clock, correlation_id=correlation_id)
         context = run_validation_stage(context, pipeline_id=self.pipeline_id)
-        context = run_pit_stage(context, pipeline_id=self.pipeline_id)
-        context = run_quality_stage(context)
-        context, reserve = await run_dedup_stage(
-            context,
-            pipeline_id=self.pipeline_id,
-            store=self._dedup,
-        )
-        context = run_ordering_stage(context, tracker=self._ordering)
-        context = run_routing_stage(context)
-
         if context.decision in TERMINAL_DECISIONS:
-            self._observe(context)
-            return context
+            return self._finish(context)
 
-        reserved = reserve is not None and reserve.outcome is DedupReserveOutcome.RESERVED
-        dedup_key = context.dedup_key
+        context = run_pit_stage(context, pipeline_id=self.pipeline_id)
+        if context.decision in TERMINAL_DECISIONS:
+            return self._finish(context)
 
+        context = run_quality_stage(context)
+
+        lease: StreamLease | None = None
+        reserved = False
+        dedup_key: str | None = None
+        admitted = False
         try:
-            await self._admission.acquire()
-        except AdmissionTimeoutError as exc:
-            if reserved and dedup_key is not None:
-                await self._dedup.release(dedup_key)
-            overflow = finalize_buffer_overflow(
-                context,
-                pipeline_id=self.pipeline_id,
-                detail=str(exc),
-            )
-            self._observe(overflow)
-            return overflow
+            lease = await self._sequencer.acquire(event)
+            context = apply_sequence(context, info=lease.info)
 
-        context = mark_accepted(context, pipeline_id=self.pipeline_id)
-        # Intermediate ACCEPTED is counted separately from terminal outcomes.
-        self.metrics.accepted += 1
+            context, reserve = await run_dedup_stage(context, store=self._dedup)
+            if context.decision in TERMINAL_DECISIONS:
+                return self._finish(context)
 
-        assert context.routing_key is not None
-        try:
-            result = await self.publish_port.publish(
-                context.event,
-                routing_key=context.routing_key,
-                context=context,
-            )
-        except Exception as exc:
-            logger.error(
-                "publish port raised",
-                exc_info=True,
-                extra=structured_extra(
-                    event="market_data.orchestrator.publish_error",
-                    source="market_data.orchestrator",
-                    detail=str(exc),
-                ),
-            )
+            reserved = reserve is not None and reserve.outcome is DedupReserveOutcome.RESERVED
+            dedup_key = context.dedup_key
+            context = run_routing_stage(context)
+
+            try:
+                await self._admission.acquire()
+            except AdmissionTimeoutError:
+                if reserved and dedup_key is not None:
+                    await self._dedup.release(dedup_key)
+                context = finalize_decision(
+                    context,
+                    decision=PipelineDecision.BUFFER_OVERFLOW,
+                    reason_code="admission_timeout",
+                    error_type="AdmissionTimeoutError",
+                )
+                return self._finish(context)
+
+            admitted = True
+            self.metrics.in_flight_current += 1
+            context = mark_accepted(context)
+            self.metrics.admitted_total += 1
+
+            routing_key = context.routing_key
+            if routing_key is None:
+                msg = "routing_key missing after routing stage"
+                raise RuntimeError(msg)
+
+            if self.settings.dry_run:
+                # Explicit dry-run — never report PUBLISHED even if a sink is invoked.
+                await self.publish_port.publish(
+                    context.event,
+                    routing_key=routing_key,
+                    context=context,
+                )
+                if reserved and dedup_key is not None:
+                    await self._dedup.release(dedup_key)
+                context = finalize_decision(
+                    context,
+                    decision=PipelineDecision.DRY_RUN,
+                    reason_code="dry_run",
+                )
+                return self._finish(context)
+
+            started = perf_counter()
+            try:
+                result = await self.publish_port.publish(
+                    context.event,
+                    routing_key=routing_key,
+                    context=context,
+                )
+            except Exception as exc:
+                logger.error(
+                    "publish port raised",
+                    exc_info=True,
+                    extra=structured_extra(
+                        event="market_data.orchestrator.publish_error",
+                        source="market_data.orchestrator",
+                        detail=type(exc).__name__,
+                    ),
+                )
+                if reserved and dedup_key is not None:
+                    await self._dedup.release(dedup_key)
+                context = finalize_decision(
+                    context,
+                    decision=PipelineDecision.PUBLISH_FAILED,
+                    reason_code="publish_raised",
+                    error_type=type(exc).__name__,
+                )
+                return self._finish(context)
+            finally:
+                latency_ms = (perf_counter() - started) * 1000.0
+                self.metrics.record_publish_latency_ms(latency_ms)
+
+            if not result.succeeded:
+                if reserved and dedup_key is not None:
+                    await self._dedup.release(dedup_key)
+                context = finalize_decision(
+                    context,
+                    decision=PipelineDecision.PUBLISH_FAILED,
+                    reason_code="publish_not_succeeded",
+                    error_type="PublishResult",
+                    sink_message_id=result.sink_message_id,
+                )
+                return self._finish(context)
+
             if reserved and dedup_key is not None:
-                await self._dedup.release(dedup_key)
-            failed = finalize_publish_failed(
+                await self._dedup.commit(dedup_key, now=self.clock.now())
+            context = finalize_decision(
                 context,
-                pipeline_id=self.pipeline_id,
-                detail=f"publish raised: {exc}",
+                decision=PipelineDecision.PUBLISHED,
+                reason_code="published",
+                sink_message_id=result.sink_message_id,
             )
-            self._observe(failed)
-            return failed
+            return self._finish(context)
         finally:
-            self._admission.release()
-
-        if result.mode == "dry_run":
-            if reserved and dedup_key is not None:
-                await self._dedup.release(dedup_key)
-            dry = finalize_dry_run(
-                context,
-                pipeline_id=self.pipeline_id,
-                detail=result.detail or "dry_run",
-            )
-            self._observe(dry)
-            return dry
-
-        if not result.ok:
-            if reserved and dedup_key is not None:
-                await self._dedup.release(dedup_key)
-            failed = finalize_publish_failed(
-                context,
-                pipeline_id=self.pipeline_id,
-                detail=result.detail or "publish returned ok=false",
-            )
-            self._observe(failed)
-            return failed
-
-        if reserved and dedup_key is not None:
-            await self._dedup.commit(dedup_key, now=self.clock.now())
-        published = finalize_published(context, pipeline_id=self.pipeline_id)
-        self._observe(published)
-        return published
+            if admitted:
+                self._admission.release()
+                self.metrics.in_flight_current = max(0, self.metrics.in_flight_current - 1)
+            if lease is not None:
+                await lease.release()
 
     async def process_batch(
         self,
         events: Sequence[CanonicalMarketEvent],
         *,
         correlation_id: str | None = None,
-    ) -> list[PipelineContext]:
-        """Process events in given order — never globally sorted."""
-        results: list[PipelineContext] = []
+    ) -> list[ProcessResult]:
+        """Process events in given submission order — never globally sorted."""
+        results: list[ProcessResult] = []
         for event in events:
             results.append(await self.process(event, correlation_id=correlation_id))
         return results
 
-    def _observe(self, context: PipelineContext) -> None:
-        self.metrics.processed += 1
+    def _finish(self, context: PipelineContext) -> ProcessResult:
         decision = context.decision
-        if decision is PipelineDecision.PUBLISHED:
-            self.metrics.published += 1
-        elif decision is PipelineDecision.DUPLICATE_SUPPRESSED:
-            self.metrics.duplicate_suppressed += 1
-        elif decision is PipelineDecision.REJECTED_VALIDATION:
-            self.metrics.rejected_validation += 1
-        elif decision is PipelineDecision.REJECTED_PIT:
-            self.metrics.rejected_pit += 1
-        elif decision is PipelineDecision.BUFFER_OVERFLOW:
-            self.metrics.buffer_overflow += 1
-        elif decision is PipelineDecision.PUBLISH_FAILED:
-            self.metrics.publish_failed += 1
-        elif decision is PipelineDecision.DRY_RUN:
-            self.metrics.dry_run += 1
+        if decision not in TERMINAL_DECISIONS:
+            msg = f"non-terminal decision at finish: {decision!r}"
+            raise RuntimeError(msg)
 
-        if context.audit:
-            self.audit_sink.record(context.audit[-1])
+        completed_at = self.clock.now()
+        error_type = context.metadata.get("error_type")
+        sink_message_id = context.metadata.get("sink_message_id")
+        record = build_terminal_audit(
+            context,
+            pipeline_id=self.pipeline_id,
+            decision=decision,
+            reason_code=context.reason or decision.value,
+            completed_at=completed_at,
+            error_type=error_type,
+            sink_message_id=sink_message_id,
+        )
+        # Exactly one terminal audit entry for this result.
+        self.audit_sink.record(record)
+        context = context.evolve(audit=(record,))
+
+        if decision is PipelineDecision.PUBLISHED:
+            self.metrics.published_total += 1
+        elif decision is PipelineDecision.DRY_RUN:
+            self.metrics.dry_run_total += 1
+        elif decision is PipelineDecision.DUPLICATE_SUPPRESSED:
+            self.metrics.duplicate_suppressed_total += 1
+        elif decision is PipelineDecision.REJECTED_VALIDATION:
+            self.metrics.rejected_validation_total += 1
+        elif decision is PipelineDecision.REJECTED_PIT:
+            self.metrics.rejected_pit_total += 1
+        elif decision is PipelineDecision.BUFFER_OVERFLOW:
+            self.metrics.admission_overflow_total += 1
+        elif decision is PipelineDecision.PUBLISH_FAILED:
+            self.metrics.publish_failed_total += 1
 
         logger.info(
             "market data orchestrator decision",
@@ -278,6 +314,7 @@ class MarketDataOrchestrator:
                 reason=context.reason,
             ),
         )
+        return ProcessResult(decision=decision, context=context)
 
 
 def build_market_data_orchestrator(
@@ -327,4 +364,5 @@ def orchestrator_safe_summary(orchestrator: MarketDataOrchestrator) -> dict[str,
             "overflow_count": admission.overflow_count,
         },
         "dedup_size": len(orchestrator._dedup),
+        "stream_count": len(orchestrator._sequencer),
     }

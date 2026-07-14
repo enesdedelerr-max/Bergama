@@ -80,6 +80,10 @@ class AppContainer:
             await self.registry_service.close()
             if self.kafka_runtime is not None:
                 await self.kafka_runtime.stop()
+            # Close orchestrator before provider clients so stream locks /
+            # reservations are released first.
+            if self.market_data_orchestrator is not None:
+                await self.market_data_orchestrator.aclose()
             if self.polygon_realtime is not None:
                 await self.polygon_realtime.aclose()
             if self.polygon_http is not None:
@@ -92,8 +96,6 @@ class AppContainer:
                 await self.sec_http.aclose()
             if self.benzinga_http is not None:
                 await self.benzinga_http.aclose()
-            if self.market_data_orchestrator is not None:
-                await self.market_data_orchestrator.aclose()
             await self._exit_stack.aclose()
         except Exception:
             logger.error(

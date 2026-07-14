@@ -35,18 +35,22 @@ canonical contracts. Kafka publishing and Iceberg writes remain later issues.
 
 Canonical-event pipeline after connectors:
 
-`CanonicalMarketEvent → validate → PIT → quality → dedup reserve → ordering → route → bounded in-flight admission → PublishPort → dedup commit/release`
+`CanonicalMarketEvent → validate → PIT → quality → per-stream acquire → dedup reserve → route → bounded in-flight admission → PublishPort → dedup commit/release → stream release`
 
-- Immutable `PipelineContext`
-- Dedup reserve before publish; commit only after successful live delivery; release on failure/dry-run
-- Ordering per `(instrument_key, event_type)` — no global sort
-- Routing by canonical event type only (no Kafka topic names)
-- **Bounded in-flight admission control** (`max_in_flight`, `admission_timeout_seconds`) — not a durable buffer or async queue
-- Terminal delivery success is `PUBLISHED` (not `ACCEPTED`)
-- Abstract `PublishPort` only — no Kafka / EventEnvelope / Iceberg in this issue
-- Orchestrator disabled by default (`BERGAMA_ORCHESTRATOR__ENABLED=false`)
+Settings (minimal): `enabled`, `dry_run`, `pipeline_name`, `max_in_flight`,
+`admission_timeout_seconds`, `dedup_ttl_seconds`, `dedup_max_entries`.
+
+- Orchestrator **disabled by default** (`BERGAMA_ORCHESTRATOR__ENABLED=false`)
 - Enabled mode requires an explicit `PublishPort` (or explicit `dry_run=true`)
-- Dry-run never reports a successful live publish
+- Dry-run is explicit and **never** reports `PUBLISHED`
+- **Bounded in-flight admission control** — admission timeout → fail-closed `BUFFER_OVERFLOW`
+- There is **no durable queue** and no background worker
+- Dedup lifecycle: `reserve → publish → commit`; failure/dry-run → reservation release
+- Dedup is **process-local**, TTL- and max-entry-bounded
+- **Per-stream sequencing** on `(instrument_key, event_type)` — serializes same-stream work; **not** global/event-time sorting; timestamps are never repaired
+- PIT events are never silently repaired; invalid PIT that cannot survive canonical construction surfaces as `REJECTED_VALIDATION`; `REJECTED_PIT` only when the PIT stage fails
+- Append-only terminal audit + process-local metrics (no Prometheus)
+- No Kafka / Iceberg / EventEnvelope adapter in #305 — a future Kafka adapter implements `PublishPort` without changing orchestration core
 
 ```bash
 make test-api-market-orchestrator

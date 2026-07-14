@@ -16,82 +16,78 @@ from app.market_data.orchestrator.dedup import (
     DedupReserveOutcome,
     DedupReserveResult,
 )
-from app.market_data.orchestrator.ordering import OrderingTracker
 from app.market_data.orchestrator.policies import PipelineDecision
 from app.market_data.orchestrator.routing import routing_key_for
+from app.market_data.orchestrator.sequencing import StreamSequenceInfo
 from app.market_data.timing import validate_point_in_time_order
 
 
-def _audit(
+def build_terminal_audit(
     context: PipelineContext,
     *,
     pipeline_id: str,
     decision: PipelineDecision,
-    reason: str,
-    decided_at: datetime,
+    reason_code: str,
+    completed_at: datetime,
+    error_type: str | None = None,
+    sink_message_id: str | None = None,
 ) -> AuditRecord:
+    """Build a single terminal audit record (no payloads / secrets)."""
+    event = context.event
     return AuditRecord(
         pipeline_id=pipeline_id,
-        decision=decision,
-        routing_key=context.routing_key,
+        event_type=event.event_type.value,
+        instrument_key=event.instrument.instrument_key,
         dedup_key=context.dedup_key,
         idempotency_key=context.idempotency_key,
-        received_at=context.received_at,
-        decided_at=decided_at,
+        routing_key=context.routing_key,
         correlation_id=context.correlation_id,
-        reason=reason,
+        received_at=context.received_at,
+        completed_at=completed_at,
+        decision=decision,
+        reason_code=reason_code,
+        error_type=error_type,
+        sink_message_id=sink_message_id,
     )
 
 
-_PIT_ERROR_MARKERS = (
-    "occurred_at must be",
-    "known_at must be",
-    "revisions require",
-    "revision_of_event_id requires",
-)
-
-
-def _looks_like_pit_failure(exc: BaseException) -> bool:
-    texts = [str(exc).lower()]
-    if isinstance(exc, ValidationError):
-        texts.extend(err.get("msg", "").lower() for err in exc.errors())
-    return any(any(marker in text for marker in _PIT_ERROR_MARKERS) for text in texts if text)
-
-
 def run_validation_stage(context: PipelineContext, *, pipeline_id: str) -> PipelineContext:
-    """Re-validate canonical schema/decimals; defer PIT violations to PIT stage."""
-    decided_at = context.pipeline_clock.now()
+    """Re-validate canonical schema/decimals/types. Never weaken model rules.
+
+    Canonical Pydantic construction rejects invalid PIT orderings. Those failures
+    surface here as ``REJECTED_VALIDATION`` because the event never formed a
+    valid canonical instance for the PIT stage. See sprint docs.
+    """
+    _ = pipeline_id
+    if context.decision is not PipelineDecision.PENDING:
+        return context
     try:
         payload = context.event.model_dump(mode="python")
         parsed = parse_canonical_market_event(payload)
     except (ValidationError, ValueError, TypeError) as exc:
-        causes: list[BaseException] = [exc]
-        if exc.__cause__ is not None:
-            causes.append(exc.__cause__)
-        if any(_looks_like_pit_failure(item) for item in causes):
-            # Keep PENDING so PITStage owns the decision taxonomy.
-            return context
         decision = PipelineDecision.REJECTED_VALIDATION
-        record = _audit(
-            context,
-            pipeline_id=pipeline_id,
-            decision=decision,
-            reason=f"validation failed: {exc}",
-            decided_at=decided_at,
-        )
         return context.evolve(
             decision=decision,
-            reason=str(exc),
-            audit=(*context.audit, record),
+            reason="rejected_validation",
+            metadata={
+                **dict(context.metadata),
+                "error_type": type(exc).__name__,
+                "error_detail": str(exc)[:256],
+            },
         )
     return context.evolve(event=parsed, quality=parsed.quality)
 
 
 def run_pit_stage(context: PipelineContext, *, pipeline_id: str) -> PipelineContext:
-    """Re-run PIT ordering checks without repairing timestamps."""
+    """Recheck point-in-time policy for a valid canonical event. Never repairs.
+
+    ``REJECTED_PIT`` is only used when this stage fails. Invalid PIT orderings
+    that cannot survive canonical model construction are rejected earlier as
+    validation failures.
+    """
+    _ = pipeline_id
     if context.decision is not PipelineDecision.PENDING:
         return context
-    decided_at = context.pipeline_clock.now()
     event = context.event
     try:
         validate_point_in_time_order(
@@ -102,18 +98,14 @@ def run_pit_stage(context: PipelineContext, *, pipeline_id: str) -> PipelineCont
             quality=event.quality,
         )
     except ValueError as exc:
-        decision = PipelineDecision.REJECTED_PIT
-        record = _audit(
-            context,
-            pipeline_id=pipeline_id,
-            decision=decision,
-            reason=f"pit validation failed: {exc}",
-            decided_at=decided_at,
-        )
         return context.evolve(
-            decision=decision,
-            reason=str(exc),
-            audit=(*context.audit, record),
+            decision=PipelineDecision.REJECTED_PIT,
+            reason="rejected_pit",
+            metadata={
+                **dict(context.metadata),
+                "error_type": type(exc).__name__,
+                "error_detail": str(exc)[:256],
+            },
         )
     return context
 
@@ -128,7 +120,6 @@ def run_quality_stage(context: PipelineContext) -> PipelineContext:
 async def run_dedup_stage(
     context: PipelineContext,
     *,
-    pipeline_id: str,
     store: BoundedDedupStore,
 ) -> tuple[PipelineContext, DedupReserveResult | None]:
     """Reserve dedup key (do not commit). Revisions skip reservation."""
@@ -150,57 +141,35 @@ async def run_dedup_stage(
             metadata={**dict(enriched.metadata), "dedup_revision_skip": "true"},
         ), result
     if result.outcome is DedupReserveOutcome.DUPLICATE:
-        decision = PipelineDecision.DUPLICATE_SUPPRESSED
-        record = _audit(
-            enriched,
-            pipeline_id=pipeline_id,
-            decision=decision,
-            reason=(
-                "duplicate dedup_key already "
-                f"{result.existing_state.value if result.existing_state else 'present'}"
-            ),
-            decided_at=decided_at,
-        )
         return enriched.evolve(
-            decision=decision,
+            decision=PipelineDecision.DUPLICATE_SUPPRESSED,
             reason="duplicate_suppressed",
-            audit=(*enriched.audit, record),
         ), result
     if result.outcome is DedupReserveOutcome.CAPACITY_EXHAUSTED:
-        decision = PipelineDecision.BUFFER_OVERFLOW
-        record = _audit(
-            enriched,
-            pipeline_id=pipeline_id,
-            decision=decision,
-            reason="dedup_store_capacity_exhausted",
-            decided_at=decided_at,
-        )
         return enriched.evolve(
-            decision=decision,
+            decision=PipelineDecision.BUFFER_OVERFLOW,
             reason="dedup_store_capacity_exhausted",
-            audit=(*enriched.audit, record),
         ), result
     return enriched, result
 
 
-def run_ordering_stage(
+def apply_sequence(
     context: PipelineContext,
     *,
-    tracker: OrderingTracker,
+    info: StreamSequenceInfo,
 ) -> PipelineContext:
-    """Annotate per-(instrument, event_type) sequence without reordering."""
+    """Annotate per-stream sequence without reordering timestamps."""
     if context.decision is not PipelineDecision.PENDING:
         return context
-    decision = tracker.observe(context.event)
     return context.evolve(
-        order_scope=decision.scope,
-        order_sequence=decision.sequence,
-        out_of_order=decision.out_of_order,
+        order_scope=info.stream_key,
+        order_sequence=info.sequence,
+        out_of_order=info.out_of_order,
         metadata={
             **dict(context.metadata),
-            "order_scope": decision.scope,
-            "order_sequence": str(decision.sequence),
-            "out_of_order": "true" if decision.out_of_order else "false",
+            "stream_key": info.stream_key,
+            "order_sequence": str(info.sequence),
+            "out_of_order": "true" if info.out_of_order else "false",
         },
     )
 
@@ -212,109 +181,27 @@ def run_routing_stage(context: PipelineContext) -> PipelineContext:
     return context.evolve(routing_key=routing_key_for(context.event))
 
 
-def mark_accepted(
+def mark_accepted(context: PipelineContext, *, reason: str = "admitted") -> PipelineContext:
+    """Intermediate admission marker — never a terminal audit decision."""
+    return context.evolve(decision=PipelineDecision.ACCEPTED, reason=reason)
+
+
+def finalize_decision(
     context: PipelineContext,
     *,
-    pipeline_id: str,
-    reason: str = "admitted",
+    decision: PipelineDecision,
+    reason_code: str,
+    error_type: str | None = None,
+    sink_message_id: str | None = None,
 ) -> PipelineContext:
-    """Intermediate admission — not a successful delivery outcome."""
-    decided_at = context.pipeline_clock.now()
-    decision = PipelineDecision.ACCEPTED
-    record = _audit(
-        context,
-        pipeline_id=pipeline_id,
-        decision=decision,
-        reason=reason,
-        decided_at=decided_at,
-    )
     return context.evolve(
         decision=decision,
-        reason=reason,
-        audit=(*context.audit, record),
-    )
-
-
-def finalize_published(
-    context: PipelineContext,
-    *,
-    pipeline_id: str,
-    reason: str = "published",
-) -> PipelineContext:
-    decided_at = context.pipeline_clock.now()
-    decision = PipelineDecision.PUBLISHED
-    record = _audit(
-        context,
-        pipeline_id=pipeline_id,
-        decision=decision,
-        reason=reason,
-        decided_at=decided_at,
-    )
-    return context.evolve(
-        decision=decision,
-        reason=reason,
-        audit=(*context.audit, record),
-    )
-
-
-def finalize_buffer_overflow(
-    context: PipelineContext, *, pipeline_id: str, detail: str
-) -> PipelineContext:
-    decided_at = context.pipeline_clock.now()
-    decision = PipelineDecision.BUFFER_OVERFLOW
-    record = _audit(
-        context,
-        pipeline_id=pipeline_id,
-        decision=decision,
-        reason=detail,
-        decided_at=decided_at,
-    )
-    return context.evolve(
-        decision=decision,
-        reason=detail,
-        audit=(*context.audit, record),
-    )
-
-
-def finalize_publish_failed(
-    context: PipelineContext, *, pipeline_id: str, detail: str
-) -> PipelineContext:
-    decided_at = context.pipeline_clock.now()
-    decision = PipelineDecision.PUBLISH_FAILED
-    record = _audit(
-        context,
-        pipeline_id=pipeline_id,
-        decision=decision,
-        reason=detail,
-        decided_at=decided_at,
-    )
-    return context.evolve(
-        decision=decision,
-        reason=detail,
-        audit=(*context.audit, record),
-    )
-
-
-def finalize_dry_run(
-    context: PipelineContext,
-    *,
-    pipeline_id: str,
-    detail: str = "dry_run",
-) -> PipelineContext:
-    """Observable dry-run terminal state — never counted as a live publish."""
-    decided_at = context.pipeline_clock.now()
-    decision = PipelineDecision.DRY_RUN
-    record = _audit(
-        context,
-        pipeline_id=pipeline_id,
-        decision=decision,
-        reason=detail,
-        decided_at=decided_at,
-    )
-    return context.evolve(
-        decision=decision,
-        reason=detail,
-        audit=(*context.audit, record),
+        reason=reason_code,
+        metadata={
+            **dict(context.metadata),
+            **({"error_type": error_type} if error_type else {}),
+            **({"sink_message_id": sink_message_id} if sink_message_id else {}),
+        },
     )
 
 

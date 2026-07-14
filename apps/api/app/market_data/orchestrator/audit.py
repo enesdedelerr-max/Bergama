@@ -1,4 +1,7 @@
-"""Append-only pipeline audit records (#305)."""
+"""Append-only pipeline audit records (#305).
+
+Never store full payloads, provider bodies, or credentials.
+"""
 
 from __future__ import annotations
 
@@ -9,20 +12,42 @@ from typing import Protocol
 
 from app.market_data.orchestrator.policies import PipelineDecision
 
+# Terminal decisions that may appear in the audit sink.
+TERMINAL_AUDIT_DECISIONS: frozenset[PipelineDecision] = frozenset(
+    {
+        PipelineDecision.PUBLISHED,
+        PipelineDecision.DRY_RUN,
+        PipelineDecision.DUPLICATE_SUPPRESSED,
+        PipelineDecision.REJECTED_VALIDATION,
+        PipelineDecision.REJECTED_PIT,
+        PipelineDecision.BUFFER_OVERFLOW,
+        PipelineDecision.PUBLISH_FAILED,
+    }
+)
+
 
 @dataclass(frozen=True, slots=True)
 class AuditRecord:
-    """Minimum observable processing trail for one pipeline decision."""
+    """One append-only terminal (or diagnostic) processing trail entry."""
 
     pipeline_id: str
-    decision: PipelineDecision
-    routing_key: str | None
+    event_type: str
+    instrument_key: str
     dedup_key: str | None
     idempotency_key: str | None
-    received_at: datetime
-    decided_at: datetime
+    routing_key: str | None
     correlation_id: str | None
-    reason: str
+    received_at: datetime
+    completed_at: datetime
+    decision: PipelineDecision
+    reason_code: str
+    error_type: str | None = None
+    sink_message_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.decision not in TERMINAL_AUDIT_DECISIONS:
+            msg = f"audit decision must be terminal, got {self.decision!r}"
+            raise ValueError(msg)
 
 
 class AuditSink(Protocol):
@@ -46,6 +71,9 @@ class InMemoryAuditSink:
         self._entries: list[AuditRecord] = []
 
     def record(self, entry: AuditRecord) -> None:
+        if entry.decision not in TERMINAL_AUDIT_DECISIONS:
+            msg = f"refusing non-terminal audit decision {entry.decision!r}"
+            raise ValueError(msg)
         self._entries.append(entry)
         overflow = len(self._entries) - self._max_records
         if overflow > 0:

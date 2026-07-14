@@ -214,6 +214,35 @@ Offline contract validation is mandatory. Live smoke never substitutes for it.
 Shared-runtime changes beyond provider-local modules require an explicit PR rationale.
 Do not add orchestration, Kafka, Iceberg, provider fallback, or #305 in a provider PR.
 
+## Market Data Orchestrator (#305)
+
+Provider-independent pipeline after connectors have produced `CanonicalMarketEvent`.
+
+| Setting | Default | Notes |
+|---------|---------|-------|
+| `BERGAMA_ORCHESTRATOR__ENABLED` | `false` | No active orchestrator when disabled |
+| `BERGAMA_ORCHESTRATOR__DRY_RUN` | `false` | Requires enabled; never reports `PUBLISHED` |
+| `BERGAMA_ORCHESTRATOR__PIPELINE_NAME` | `market-data-orchestrator` | Audit / metrics identity |
+| `BERGAMA_ORCHESTRATOR__MAX_IN_FLIGHT` | `64` | Bounded in-flight admission control |
+| `BERGAMA_ORCHESTRATOR__ADMISSION_TIMEOUT_SECONDS` | `0.05` | Timeout → `BUFFER_OVERFLOW` |
+| `BERGAMA_ORCHESTRATOR__DEDUP_TTL_SECONDS` | `3600` | Process-local committed TTL |
+| `BERGAMA_ORCHESTRATOR__DEDUP_MAX_ENTRIES` | `50000` | Bounded store with deterministic eviction |
+
+Rules:
+
+- Enabled mode requires an explicit `PublishPort` injection (fail-closed otherwise).
+- There is **no durable queue** — only bounded in-flight admission control.
+- Dedup: `reserve → publish → commit`; failure/dry-run releases the reservation. Dedup is process-local and TTL/max-entry bounded.
+- Per-stream sequencing `(instrument_key, event_type)` serializes same-stream work; it is **not** global or event-time ordering.
+- PIT timestamps are never repaired. Canonical model construction may reject invalid PIT before the PIT stage (`REJECTED_VALIDATION`); `REJECTED_PIT` is only when the PIT stage itself fails.
+- Terminal outcomes emit exactly one append-only audit record and process-local metrics (no Prometheus; no payload/secret labels).
+- `aclose()` is idempotent and closes process-local state only (no background tasks). Separate containers do not share dedup, sequencing, admission, audit, or metrics; an injected `PublishPort` is shared only when the caller injects the same instance.
+- No Kafka / Iceberg in #305. A future Kafka adapter implements `PublishPort` without changing the orchestration core.
+
+```bash
+make test-api-market-orchestrator
+```
+
 ## Sprint 2 gate (#210)
 
 Fail-closed verification of the FastAPI Runtime Foundation:

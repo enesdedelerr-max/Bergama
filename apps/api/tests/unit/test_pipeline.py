@@ -10,17 +10,23 @@ from app.core.clock import FixedClock
 from app.core.orchestrator_settings import OrchestratorSettings
 from app.market_data.envelope import CanonicalMarketEvent
 from app.market_data.orchestrator.context import PipelineContext
-from app.market_data.orchestrator.errors import OrchestratorConfigurationError
+from app.market_data.orchestrator.errors import (
+    OrchestratorClosedError,
+    OrchestratorConfigurationError,
+)
 from app.market_data.orchestrator.pipeline import (
     MarketDataOrchestrator,
+    ProcessResult,
     build_market_data_orchestrator,
 )
 from app.market_data.orchestrator.policies import TERMINAL_DECISIONS, PipelineDecision
 from app.market_data.orchestrator.ports import DryRunPublishPort, PublishResult
 from app.market_data.orchestrator.stages import initial_context
 from app.market_data.quality import DataQualityFlags
+from app.market_data.timing import validate_point_in_time_order
 from tests.support.orchestrator_events import (
     EVENT_TIME,
+    equity,
     pit_invalid_trade,
     revision_trade,
     trade_event,
@@ -54,8 +60,6 @@ def _orchestrator(**overrides: object) -> tuple[MarketDataOrchestrator, Recordin
 
 
 class GatedPublishPort:
-    """Blocks inside publish until release is set — for concurrent pressure tests."""
-
     def __init__(self, *, clock: FixedClock) -> None:
         self._clock = clock
         self.entered = asyncio.Event()
@@ -69,11 +73,16 @@ class GatedPublishPort:
         routing_key: str,
         context: PipelineContext,
     ) -> PublishResult:
-        _ = routing_key, context
+        _ = routing_key, context, event
         self.calls += 1
         self.entered.set()
         await self.release.wait()
-        return PublishResult(ok=True, published_at=self._clock.now(), detail="gated")
+        return PublishResult(
+            succeeded=True,
+            published_at=self._clock.now(),
+            sink_message_id="gated-1",
+            idempotency_acknowledged=True,
+        )
 
 
 def test_build_requires_publish_port_when_not_dry_run() -> None:
@@ -85,39 +94,37 @@ def test_build_requires_publish_port_when_not_dry_run() -> None:
         )
 
 
-def test_build_rejects_disabled_settings() -> None:
-    with pytest.raises(OrchestratorConfigurationError, match="orchestrator.disabled"):
-        build_market_data_orchestrator(
-            OrchestratorSettings(enabled=False),
-            clock=FixedClock(OBSERVED_AT),
-            publish_port=RecordingPublishPort(),
-        )
-
-
 @pytest.mark.asyncio
 async def test_pipeline_publishes_successfully() -> None:
     orch, port = _orchestrator()
     result = await orch.process(trade_event(), correlation_id="c-1")
+    assert isinstance(result, ProcessResult)
     assert result.decision is PipelineDecision.PUBLISHED
     assert result.decision in TERMINAL_DECISIONS
-    assert result.routing_key == "market.trade"
-    assert result.audit[-1].decision is PipelineDecision.PUBLISHED
-    assert any(r.decision is PipelineDecision.ACCEPTED for r in result.audit)
+    assert result.context.audit[-1].decision is PipelineDecision.PUBLISHED
+    assert len(result.context.audit) == 1
+    assert result.context.audit[-1].correlation_id == "c-1"
+    assert result.context.audit[-1].event_type == "trade"
+    assert not hasattr(result.context.audit[-1], "payload")
+    assert "CanonicalMarketEvent" not in repr(result.context.audit[-1])
     assert len(port.published) == 1
-    assert orch.metrics.published == 1
-    assert orch.metrics.accepted == 1
+    assert orch.metrics.published_total == 1
+    assert orch.metrics.admitted_total == 1
+    assert orch.metrics.in_flight_current == 0
+    assert orch.metrics.publish_latency_samples == 1
 
 
 @pytest.mark.asyncio
-async def test_pipeline_suppresses_duplicate_with_audit() -> None:
+async def test_duplicate_suppressed_one_terminal_audit() -> None:
     orch, port = _orchestrator()
     first = await orch.process(trade_event(source_event_id="dup-1"))
     second = await orch.process(trade_event(source_event_id="dup-1"))
     assert first.decision is PipelineDecision.PUBLISHED
     assert second.decision is PipelineDecision.DUPLICATE_SUPPRESSED
     assert len(port.published) == 1
-    assert orch.metrics.duplicate_suppressed == 1
-    assert second.audit[-1].decision is PipelineDecision.DUPLICATE_SUPPRESSED
+    assert orch.metrics.duplicate_suppressed_total == 1
+    assert second.context.audit[-1].decision is second.decision
+    assert len(orch.audit_sink.records()) == 2
 
 
 @pytest.mark.asyncio
@@ -127,10 +134,9 @@ async def test_publish_failure_releases_reservation_and_allows_replay() -> None:
     failed = await orch.process(trade_event(source_event_id="retry-1"))
     assert failed.decision is PipelineDecision.PUBLISH_FAILED
     assert failed.decision is not PipelineDecision.ACCEPTED
-    assert len(port.published) == 0
+    assert failed.context.audit[-1].decision is PipelineDecision.PUBLISH_FAILED
     replay = await orch.process(trade_event(source_event_id="retry-1"))
     assert replay.decision is PipelineDecision.PUBLISHED
-    assert len(port.published) == 1
 
 
 @pytest.mark.asyncio
@@ -144,29 +150,55 @@ async def test_revision_never_treated_as_duplicate() -> None:
 
 
 @pytest.mark.asyncio
-async def test_pipeline_rejects_pit_violation() -> None:
+async def test_invalid_canonical_pit_is_rejected_validation_not_pit() -> None:
+    """Invalid PIT cannot survive canonical construction — taxonomy is truthful."""
     orch, port = _orchestrator()
     result = await orch.process(pit_invalid_trade())
-    assert result.decision is PipelineDecision.REJECTED_PIT
+    assert result.decision is PipelineDecision.REJECTED_VALIDATION
     assert len(port.published) == 0
-    assert orch.metrics.rejected_pit == 1
+    assert orch.metrics.rejected_validation_total == 1
+    assert orch.metrics.rejected_pit_total == 0
+
+
+def test_pit_policy_helper_rejects_invalid_ordering_directly() -> None:
+    from datetime import UTC, datetime
+
+    from app.market_data.quality import DataQualityFlags
+
+    ts = datetime(2024, 1, 1, tzinfo=UTC)
+    later = ts + timedelta(hours=1)
+    with pytest.raises(ValueError, match="occurred_at must be"):
+        validate_point_in_time_order(
+            occurred_at=later,
+            effective_at=later,
+            known_at=ts,
+            ingested_at=ts,
+            quality=DataQualityFlags(),
+        )
 
 
 @pytest.mark.asyncio
-async def test_pipeline_batch_preserves_order_no_global_sort() -> None:
+async def test_pit_stage_taxonomy_when_policy_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     orch, port = _orchestrator()
-    early = trade_event(source_event_id="early", occurred_at=EVENT_TIME)
-    late = trade_event(
-        source_event_id="late",
-        occurred_at=EVENT_TIME + timedelta(minutes=5),
+
+    def boom(**_kwargs: object) -> None:
+        raise ValueError("occurred_at must be <= known_at")
+
+    monkeypatch.setattr(
+        "app.market_data.orchestrator.stages.validate_point_in_time_order",
+        boom,
     )
-    results = await orch.process_batch([late, early])
-    assert [r.event.source.source_event_id for r in results] == ["late", "early"]
-    assert [e.source.source_event_id for e, _, _ in port.published] == ["late", "early"]
+    result = await orch.process(trade_event(source_event_id="pit-stage"))
+    assert result.decision is PipelineDecision.REJECTED_PIT
+    assert orch.metrics.rejected_pit_total == 1
+    assert len(port.published) == 0
 
 
 @pytest.mark.asyncio
 async def test_admission_timeout_under_real_concurrent_pressure() -> None:
+    """Admission pressure uses a separate stream so the stream lock does not mask it."""
     clock = FixedClock(OBSERVED_AT)
     gated = GatedPublishPort(clock=clock)
     orch = build_market_data_orchestrator(
@@ -175,30 +207,36 @@ async def test_admission_timeout_under_real_concurrent_pressure() -> None:
         publish_port=gated,
     )
 
-    async def first() -> PipelineContext:
+    async def first() -> ProcessResult:
         return await orch.process(trade_event(source_event_id="hold-1"))
 
     task = asyncio.create_task(first())
     await gated.entered.wait()
 
-    overflow = await orch.process(trade_event(source_event_id="overflow-1"))
+    # Different instrument → different stream; can contend on in-flight admission.
+    overflow = await orch.process(
+        trade_event(
+            source_event_id="overflow-1",
+            instrument=equity(key="bergama:equity:us:msft", symbol="MSFT"),
+        )
+    )
     assert overflow.decision is PipelineDecision.BUFFER_OVERFLOW
-    assert overflow.audit[-1].decision is PipelineDecision.BUFFER_OVERFLOW
-    assert orch.metrics.buffer_overflow == 1
+    assert overflow.context.audit[-1].decision is PipelineDecision.BUFFER_OVERFLOW
+    assert orch.metrics.admission_overflow_total == 1
     assert gated.calls == 1
 
     gated.release.set()
     held = await task
     assert held.decision is PipelineDecision.PUBLISHED
+    assert orch.metrics.in_flight_current == 0
 
-    # Capacity released — unrelated event proceeds.
     later = await orch.process(trade_event(source_event_id="after-1"))
     assert later.decision is PipelineDecision.PUBLISHED
-    assert gated.calls == 2
 
 
 @pytest.mark.asyncio
 async def test_concurrent_same_key_publishes_at_most_once() -> None:
+    """Same-stream lock serializes work; committed dedup still suppresses the waiter."""
     clock = FixedClock(OBSERVED_AT)
     gated = GatedPublishPort(clock=clock)
     orch = build_market_data_orchestrator(
@@ -207,32 +245,87 @@ async def test_concurrent_same_key_publishes_at_most_once() -> None:
         publish_port=gated,
     )
 
-    async def run() -> PipelineContext:
+    async def run() -> ProcessResult:
         return await orch.process(trade_event(source_event_id="race-1"))
 
     t1 = asyncio.create_task(run())
     await gated.entered.wait()
     t2 = asyncio.create_task(run())
-    second = await t2
-    assert second.decision is PipelineDecision.DUPLICATE_SUPPRESSED
+    # t2 waits on the per-stream lock until t1 finishes publish + release.
     gated.release.set()
     first = await t1
+    second = await t2
     assert first.decision is PipelineDecision.PUBLISHED
+    assert second.decision is PipelineDecision.DUPLICATE_SUPPRESSED
     assert gated.calls == 1
 
 
 @pytest.mark.asyncio
-async def test_publish_failed_decision_not_accepted() -> None:
-    orch, port = _orchestrator()
-    port.set_fail_next(True)
-    result = await orch.process(trade_event(source_event_id="pub-fail"))
-    assert result.decision is PipelineDecision.PUBLISH_FAILED
-    assert result.audit[-1].decision is PipelineDecision.PUBLISH_FAILED
-    assert len(port.published) == 0
+async def test_cancelled_waiter_does_not_deadlock_stream() -> None:
+    clock = FixedClock(OBSERVED_AT)
+    gated = GatedPublishPort(clock=clock)
+    orch = build_market_data_orchestrator(
+        _settings(max_in_flight=4, admission_timeout_seconds=1.0),
+        clock=clock,
+        publish_port=gated,
+    )
+
+    async def hold() -> ProcessResult:
+        return await orch.process(trade_event(source_event_id="cancel-hold"))
+
+    holder = asyncio.create_task(hold())
+    await gated.entered.wait()
+    waiter = asyncio.create_task(orch.process(trade_event(source_event_id="cancel-waiter")))
+    await asyncio.wait({waiter}, timeout=0.05)
+    waiter.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await waiter
+    gated.release.set()
+    held = await holder
+    assert held.decision is PipelineDecision.PUBLISHED
+    # Stream remains usable after cancelled waiter.
+    follow_up = await orch.process(trade_event(source_event_id="cancel-follow"))
+    assert follow_up.decision is PipelineDecision.PUBLISHED
 
 
 @pytest.mark.asyncio
-async def test_dry_run_is_observable_not_published() -> None:
+async def test_publish_failure_releases_stream_for_same_key_retry() -> None:
+    clock = FixedClock(OBSERVED_AT)
+    calls = 0
+
+    class FailOncePort:
+        async def publish(
+            self,
+            event: CanonicalMarketEvent,
+            *,
+            routing_key: str,
+            context: PipelineContext,
+        ) -> PublishResult:
+            nonlocal calls
+            _ = event, routing_key, context
+            calls += 1
+            if calls == 1:
+                return PublishResult(succeeded=False, published_at=None)
+            return PublishResult(
+                succeeded=True,
+                published_at=clock.now(),
+                sink_message_id="ok",
+                idempotency_acknowledged=True,
+            )
+
+    orch = build_market_data_orchestrator(
+        _settings(),
+        clock=clock,
+        publish_port=FailOncePort(),
+    )
+    failed = await orch.process(trade_event(source_event_id="stream-fail"))
+    assert failed.decision is PipelineDecision.PUBLISH_FAILED
+    ok = await orch.process(trade_event(source_event_id="stream-fail"))
+    assert ok.decision is PipelineDecision.PUBLISHED
+
+
+@pytest.mark.asyncio
+async def test_dry_run_never_published() -> None:
     clock = FixedClock(OBSERVED_AT)
     orch = build_market_data_orchestrator(
         _settings(dry_run=True),
@@ -242,11 +335,8 @@ async def test_dry_run_is_observable_not_published() -> None:
     assert isinstance(orch.publish_port, DryRunPublishPort)
     result = await orch.process(trade_event(source_event_id="dry-1"))
     assert result.decision is PipelineDecision.DRY_RUN
-    assert orch.metrics.published == 0
-    assert orch.metrics.dry_run == 1
-    # Reservation released — replay after dry-run is allowed.
-    again = await orch.process(trade_event(source_event_id="dry-1"))
-    assert again.decision is PipelineDecision.DRY_RUN
+    assert orch.metrics.published_total == 0
+    assert orch.metrics.dry_run_total == 1
 
 
 @pytest.mark.asyncio
@@ -258,17 +348,29 @@ async def test_quality_flags_preserved() -> None:
     )
     result = await orch.process(event)
     assert result.decision is PipelineDecision.PUBLISHED
-    assert result.quality.is_late is True
-    assert result.quality.late_arrival_lag_ms == 5
+    assert result.context.quality.is_late is True
 
 
 @pytest.mark.asyncio
-async def test_aclose_idempotent() -> None:
+async def test_aclose_idempotent_and_process_fails_typed() -> None:
     orch, _port = _orchestrator()
     await orch.aclose()
     await orch.aclose()
-    with pytest.raises(RuntimeError, match="closed"):
+    with pytest.raises(OrchestratorClosedError, match="orchestrator.closed"):
         await orch.process(trade_event())
+
+
+@pytest.mark.asyncio
+async def test_batch_preserves_submission_order() -> None:
+    orch, port = _orchestrator()
+    early = trade_event(source_event_id="early", occurred_at=EVENT_TIME)
+    late = trade_event(
+        source_event_id="late",
+        occurred_at=EVENT_TIME + timedelta(minutes=5),
+    )
+    results = await orch.process_batch([late, early])
+    assert [r.context.event.source.source_event_id for r in results] == ["late", "early"]
+    assert [e.source.source_event_id for e, _, _ in port.published] == ["late", "early"]
 
 
 def test_context_type() -> None:

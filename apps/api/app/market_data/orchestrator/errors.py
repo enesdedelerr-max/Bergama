@@ -19,3 +19,9 @@ class OrchestratorConfigurationError(OrchestratorError):
     """Fail-closed configuration error (missing PublishPort, invalid wiring)."""
 
     code = "orchestrator.configuration_error"
+
+
+class OrchestratorClosedError(OrchestratorError):
+    """Raised when process is called after aclose()."""
+
+    code = "orchestrator.closed"
