@@ -26,8 +26,9 @@ _include_exception_stacks: bool = True
 _SENSITIVE_KEY_PATTERN: Final = re.compile(
     r"("
     r"password|passwd|secret|token|authorization|api[_-]?key|api-key|"
-    r"access[_-]?token|refresh[_-]?token|private[_-]?key|"
-    r"client[_-]?secret|cookie|set-cookie|session|credential|bearer"
+    r"access[_-]?token|refresh[_-]?token|private[_-]?key|signing[_-]?key|"
+    r"client[_-]?secret|cookie|set-cookie|session|credential|bearer|"
+    r"app_secret_key|bootstrap_jwt_signing_key"
     r")",
     re.IGNORECASE,
 )
@@ -64,6 +65,9 @@ def _utc_timestamp() -> str:
 
 def is_sensitive_key(key: str) -> bool:
     """Return True when a key name should be redacted."""
+    # Boolean configuration indicators must remain visible in ops logs.
+    if key.endswith("_configured"):
+        return False
     return bool(_SENSITIVE_KEY_PATTERN.search(key))
 
 

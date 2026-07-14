@@ -27,6 +27,7 @@ from app.core.logging import (
     use_json_logs,
 )
 from app.lifespan import on_startup
+from tests.conftest import make_production_secrets
 
 
 @pytest.fixture
@@ -41,8 +42,26 @@ def capture_handler() -> tuple[logging.Handler, StringIO]:
 def test_use_json_logs_by_environment() -> None:
     assert use_json_logs(AppSettings(environment=AppEnvironment.LOCAL)) is False
     assert use_json_logs(AppSettings(environment=AppEnvironment.TEST)) is False
-    assert use_json_logs(AppSettings(environment=AppEnvironment.STAGING)) is True
-    assert use_json_logs(AppSettings(environment=AppEnvironment.PRODUCTION)) is True
+    assert (
+        use_json_logs(
+            AppSettings(
+                environment=AppEnvironment.STAGING,
+                debug=False,
+                secrets=make_production_secrets(),
+            )
+        )
+        is True
+    )
+    assert (
+        use_json_logs(
+            AppSettings(
+                environment=AppEnvironment.PRODUCTION,
+                debug=False,
+                secrets=make_production_secrets(),
+            )
+        )
+        is True
+    )
 
 
 def test_local_format_is_human_readable_production_is_json(
@@ -60,6 +79,7 @@ def test_local_format_is_human_readable_production_is_json(
             environment=AppEnvironment.PRODUCTION,
             log_level="INFO",
             debug=False,
+            secrets=make_production_secrets(),
         )
     )
     get_logger("test.prod").info("prod-line", extra=structured_extra(event="prod.check"))
@@ -71,7 +91,16 @@ def test_local_format_is_human_readable_production_is_json(
 
 def test_use_color_logs_false_outside_local_tty() -> None:
     assert use_color_logs(AppSettings(environment=AppEnvironment.TEST)) is False
-    assert use_color_logs(AppSettings(environment=AppEnvironment.STAGING)) is False
+    assert (
+        use_color_logs(
+            AppSettings(
+                environment=AppEnvironment.STAGING,
+                debug=False,
+                secrets=make_production_secrets(),
+            )
+        )
+        is False
+    )
 
 
 def test_redaction_nested_does_not_mutate_and_preserves_safe_values() -> None:
@@ -119,6 +148,7 @@ def test_json_formatter_outputs_valid_json_with_required_fields_and_utc(
             service_name="bergama-api",
             app_version="0.2.0",
             debug=False,
+            secrets=make_production_secrets(),
         )
     )
     logger = get_logger("test.json")
@@ -231,6 +261,7 @@ async def test_startup_logs_do_not_expose_settings_secrets(
         service_name="bergama-api",
         app_version="0.2.0",
         debug=False,
+        secrets=make_production_secrets(),
     )
     configure_logging(settings)
     await on_startup(settings)
@@ -240,10 +271,9 @@ async def test_startup_logs_do_not_expose_settings_secrets(
     assert "application.starting" in events
     assert "application.started" in events
     for payload in payloads:
-        assert "password" not in payload
-        assert "secret" not in payload
-        assert "model_dump" not in json.dumps(payload)
         dumped = json.dumps(payload)
+        assert "prod-valid-app-secret-key-value-0001" not in dumped
+        assert "model_dump" not in dumped
         assert "AppSettings" not in dumped
         assert payload.get("service") == "bergama-api"
         assert payload.get("version") == "0.2.0" or payload.get("app_version") == "0.2.0"
@@ -255,7 +285,12 @@ def test_log_exception_includes_error_type(
 ) -> None:
     handler, stream = capture_handler
     configure_logging(
-        AppSettings(environment=AppEnvironment.STAGING, log_level="ERROR", debug=False)
+        AppSettings(
+            environment=AppEnvironment.STAGING,
+            log_level="ERROR",
+            debug=False,
+            secrets=make_production_secrets(),
+        )
     )
     logger = get_logger("test.exc")
     logger.handlers.clear()

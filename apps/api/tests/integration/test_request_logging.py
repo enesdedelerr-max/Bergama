@@ -13,6 +13,7 @@ from app.core.log_context import get_log_context
 from app.core.logging import configure_logging
 from app.factory import create_app
 from httpx import ASGITransport, AsyncClient
+from tests.conftest import make_production_secrets
 
 
 @pytest.fixture
@@ -28,6 +29,7 @@ def json_settings() -> AppSettings:
         api_prefix="/api/v1",
         service_name="bergama-api-test",
         instance_id="test-1",
+        secrets=make_production_secrets(),
     )
 
 

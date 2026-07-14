@@ -6,8 +6,42 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 
 - ✅ **#201** Runtime Bootstrap
 - ✅ **#202** Configuration Layer
-- 🟡 **#203** Structured Logging (current)
-- Later: auth, DI, DB, Kafka
+- ✅ **#203** Structured Logging
+- 🟡 **#204** Settings & Secrets (current)
+- Later: JWT auth, DI, DB, Kafka
+
+## Secrets (#204)
+
+| Concern | Behavior |
+|---------|----------|
+| Model | Nested `AppSettings.secrets` (`SecretSettings`) |
+| Types | `pydantic.SecretStr` only |
+| Env names | `BERGAMA_SECRETS__APP_SECRET_KEY`, `BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY` |
+| Local file | `.secrets.env` (gitignored); template `.secrets.example` |
+| Non-secret local | `.env` (gitignored); template `.env.example` |
+| Test / staging / production | No `.secrets.env` fallback — inject env only |
+| Production/staging | Both secrets required; reject placeholders; min length 32 |
+| Access | `settings.secrets.bootstrap_jwt_signing_key.get_secret_value()` |
+| Summaries / logs | Configured flags only — never raw values |
+
+### Local setup
+
+```bash
+cd apps/api
+cp .env.example .env
+cp .secrets.example .secrets.env
+# edit local-only values; never commit .secrets.env
+uv run app
+```
+
+### Fail-fast (staging/production)
+
+- Missing `BERGAMA_SECRETS__*`
+- Placeholder equality: `changeme`, `password`, `secret`, `default`, `example`, `test`
+- Cryptographic secrets shorter than 32 characters
+- Leading/trailing whitespace on secret values
+
+JWT verification is **not** implemented in #204 — keys are reserved for #205.
 
 ## Structured logging (#203)
 

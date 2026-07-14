@@ -10,3 +10,6 @@ dist/
 *.egg-info/
 .env
 !.env.example
+.secrets.env
+.secrets.env.*
+!.secrets.example
