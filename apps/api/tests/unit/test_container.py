@@ -64,6 +64,9 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert container.finnhub_http is None
     assert container.finnhub_reference is None
     assert container.finnhub_fundamentals is None
+    assert container.fred_http is None
+    assert container.fred_series is None
+    assert container.fred_observations is None
     assert container.registry_service.settings.enabled is False
 
 

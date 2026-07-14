@@ -17,6 +17,7 @@ from pydantic_settings import (
 
 from app.core.environment import AppEnvironment
 from app.core.finnhub_settings import FinnhubSettings
+from app.core.fred_settings import FredSettings
 from app.core.kafka_settings import KafkaSettings
 from app.core.polygon_settings import PolygonSettings
 from app.core.registry_settings import RegistrySettings
@@ -68,6 +69,7 @@ class AppSettings(BaseSettings):
     registry: RegistrySettings = Field(default_factory=RegistrySettings)
     polygon: PolygonSettings = Field(default_factory=PolygonSettings)
     finnhub: FinnhubSettings = Field(default_factory=FinnhubSettings)
+    fred: FredSettings = Field(default_factory=FredSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
@@ -241,6 +243,7 @@ class AppSettings(BaseSettings):
             "registry": self.registry.safe_summary(),
             "polygon": self.polygon.safe_summary(),
             "finnhub": self.finnhub.safe_summary(),
+            "fred": self.fred.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
         return summary

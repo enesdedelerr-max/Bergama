@@ -1,4 +1,4 @@
-"""Explicit application-scoped dependency container (Issues #206–#209 / #302–#304A)."""
+"""Explicit application-scoped dependency container (Issues #206–#209 / #302–#304B)."""
 
 from __future__ import annotations
 
@@ -18,6 +18,9 @@ from app.health.service import HealthService, build_default_health_checks
 from app.infrastructure.finnhub.fundamentals import FinnhubFundamentalsConnector
 from app.infrastructure.finnhub.http import FinnhubHttpClient
 from app.infrastructure.finnhub.reference import FinnhubReferenceConnector
+from app.infrastructure.fred.http import FredHttpClient
+from app.infrastructure.fred.observations import FredObservationsConnector
+from app.infrastructure.fred.series import FredSeriesConnector
 from app.infrastructure.kafka.runtime import KafkaRuntime, build_kafka_runtime
 from app.infrastructure.polygon.historical import PolygonHistoricalConnector
 from app.infrastructure.polygon.http import PolygonHttpClient
@@ -47,6 +50,9 @@ class AppContainer:
     finnhub_http: FinnhubHttpClient | None
     finnhub_reference: FinnhubReferenceConnector | None
     finnhub_fundamentals: FinnhubFundamentalsConnector | None
+    fred_http: FredHttpClient | None
+    fred_series: FredSeriesConnector | None
+    fred_observations: FredObservationsConnector | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -65,6 +71,8 @@ class AppContainer:
                 await self.polygon_http.aclose()
             if self.finnhub_http is not None:
                 await self.finnhub_http.aclose()
+            if self.fred_http is not None:
+                await self.fred_http.aclose()
             await self._exit_stack.aclose()
         except Exception:
             logger.error(
@@ -97,6 +105,9 @@ def build_container(
     finnhub_http: FinnhubHttpClient | None = None,
     finnhub_reference: FinnhubReferenceConnector | None = None,
     finnhub_fundamentals: FinnhubFundamentalsConnector | None = None,
+    fred_http: FredHttpClient | None = None,
+    fred_series: FredSeriesConnector | None = None,
+    fred_observations: FredObservationsConnector | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -190,6 +201,36 @@ def build_container(
         resolved_finnhub_reference = None
         resolved_finnhub_fundamentals = None
 
+    resolved_fred_http: FredHttpClient | None
+    resolved_fred_series: FredSeriesConnector | None
+    resolved_fred_observations: FredObservationsConnector | None
+    if fred_http is not None:
+        resolved_fred_http = fred_http
+        resolved_fred_series = (
+            fred_series
+            if fred_series is not None
+            else FredSeriesConnector(fred_http, clock=resolved_clock)
+        )
+        resolved_fred_observations = (
+            fred_observations
+            if fred_observations is not None
+            else FredObservationsConnector(fred_http, clock=resolved_clock)
+        )
+    elif settings.fred.enabled:
+        resolved_fred_http = FredHttpClient(settings.fred)
+        resolved_fred_series = FredSeriesConnector(
+            resolved_fred_http,
+            clock=resolved_clock,
+        )
+        resolved_fred_observations = FredObservationsConnector(
+            resolved_fred_http,
+            clock=resolved_clock,
+        )
+    else:
+        resolved_fred_http = None
+        resolved_fred_series = None
+        resolved_fred_observations = None
+
     resolved_checks = (
         tuple(health_checks)
         if health_checks is not None
@@ -225,4 +266,7 @@ def build_container(
         finnhub_http=resolved_finnhub_http,
         finnhub_reference=resolved_finnhub_reference,
         finnhub_fundamentals=resolved_finnhub_fundamentals,
+        fred_http=resolved_fred_http,
+        fred_series=resolved_fred_series,
+        fred_observations=resolved_fred_observations,
     )
