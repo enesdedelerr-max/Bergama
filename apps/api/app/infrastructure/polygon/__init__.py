@@ -1,9 +1,11 @@
-"""Polygon REST infrastructure (Issue #302) — historical stocks bars only.
+"""Polygon REST + realtime infrastructure (Issues #302 / #303).
 
-Health check intentionally omitted: no safe zero/low-cost Polygon probe is
-documented for readiness without consuming authenticated quota. Configuration
-validation remains settings-side (`PolygonSettings`) and must not be labeled
-provider health.
+Transport-only connectors: no Kafka publish, Iceberg write, or persistence.
+
+Health checks intentionally omitted for both historical and realtime providers —
+configuration validation stays settings-side and must not be labeled provider health.
+Realtime connection state is available on ``PolygonRealtimeConnector.state`` for
+operations/tests; it is not a readiness probe.
 """
 
 from __future__ import annotations
@@ -23,6 +25,11 @@ from app.infrastructure.polygon.errors import (
     PolygonProviderError,
     PolygonRateLimitedError,
     PolygonTimeoutError,
+    PolygonWebsocketAuthFailedError,
+    PolygonWebsocketError,
+    PolygonWebsocketOverflowError,
+    PolygonWebsocketProtocolError,
+    PolygonWebsocketReconnectExhaustedError,
 )
 from app.infrastructure.polygon.historical import (
     HistoricalBarsRequest,
@@ -32,8 +39,15 @@ from app.infrastructure.polygon.historical import (
 )
 from app.infrastructure.polygon.http import PolygonHttpClient
 from app.infrastructure.polygon.protocol import HistoricalBarConnector
+from app.infrastructure.polygon.realtime import (
+    ConnectionState,
+    PolygonRealtimeConnector,
+    RealtimeStartRequest,
+    SymbolRealtimeContext,
+)
 
 __all__ = [
+    "ConnectionState",
     "HistoricalBarConnector",
     "HistoricalBarsRequest",
     "HistoricalBarsResult",
@@ -52,6 +66,14 @@ __all__ = [
     "PolygonPaginationLoopError",
     "PolygonProviderError",
     "PolygonRateLimitedError",
+    "PolygonRealtimeConnector",
     "PolygonTimeoutError",
     "PolygonTimespan",
+    "PolygonWebsocketAuthFailedError",
+    "PolygonWebsocketError",
+    "PolygonWebsocketOverflowError",
+    "PolygonWebsocketProtocolError",
+    "PolygonWebsocketReconnectExhaustedError",
+    "RealtimeStartRequest",
+    "SymbolRealtimeContext",
 ]

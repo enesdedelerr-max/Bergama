@@ -124,6 +124,7 @@ dependencies = [
     { name = "pyjwt" },
     { name = "pyyaml" },
     { name = "uvicorn", extra = ["standard"] },
+    { name = "websockets" },
 ]
 
 [package.dev-dependencies]
@@ -145,6 +146,7 @@ requires-dist = [
     { name = "pyjwt", specifier = ">=2.10.0" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.34.0" },
+    { name = "websockets", specifier = "==16.1" },
 ]
 
 [package.metadata.requires-dev]
