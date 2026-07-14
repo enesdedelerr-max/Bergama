@@ -21,3 +21,4 @@ releases/**/*.tar.gz.sha256
 __pycache__/
 .pytest_cache/
 
+apps/api/.venv/

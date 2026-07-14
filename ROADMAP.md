@@ -18,19 +18,17 @@ Every sprint must produce:
 
 ### Sprint 0 — Repository and developer platform
 
-Status: implementation baseline established.
+Status: complete.
 
 ### Sprint 1 — Infrastructure foundation
 
-Status: finalization gate in progress.
+Status: complete. Tag `v0.1.0-sprint1`. Gate: `make gate-sprint1` PASS.
 
-Required exit command:
+### Sprint 2 — FastAPI runtime
 
-```bash
-make gate-sprint1
-```
+Status: in progress. Branch `feature/sprint2-runtime`. Current issue: **#201 FastAPI Runtime Bootstrap**.
 
-Sprint 2 is blocked until the Sprint 1 gate passes.
+See [`docs/sprints/sprint-2/README.md`](docs/sprints/sprint-2/README.md).
 
 ## Sprint sequence
 

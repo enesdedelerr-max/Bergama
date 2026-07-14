@@ -2,15 +2,17 @@
   "schema_version": 1,
   "python": {
     "version": "3.13",
-    "note": "Target runtime for Sprint 2+. No application pyproject/requirements lock exists in Sprint 1."
+    "note": "Runtime for apps/api (Sprint 2+)."
   },
   "toolchain": {
-    "pip": null,
-    "requirements_hash": null,
-    "status": "no-python-app-lock"
+    "package_manager": "uv",
+    "project": "apps/api",
+    "lockfile": "apps/api/uv.lock",
+    "status": "application-lock-present"
   },
   "consistency": {
-    "requires_application_lock": false,
-    "sprint1_acceptable": true
+    "requires_application_lock": true,
+    "sprint1_acceptable": true,
+    "sprint2_required": true
   }
 }

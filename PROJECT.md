@@ -53,32 +53,16 @@ The current work should follow the sprint backlog.
 
 Do not add broad speculative features.
 
-The immediate objective is to complete Sprint 1 infrastructure finalization,
-pass `make gate-sprint1`, and only then begin Sprint 2.
+Sprint 1 infrastructure finalization is complete (`v0.1.0-sprint1`).
 
-## Current sprint gate
+The immediate objective is Sprint 2 — FastAPI runtime foundation, starting with
+Issue **#201 FastAPI Runtime Bootstrap** on branch `feature/sprint2-runtime`.
 
-Sprint 1 is complete only when:
+## Current sprint
 
-- infrastructure health is 100%,
-- GitOps is Healthy and Synced,
-- Helm lint and rendering pass,
-- stateful services are healthy,
-- backup and restore smoke pass,
-- version locks pass,
-- secrets validation passes,
-- platform validation passes,
-- release artifacts, checksums and SBOM exist,
-- no default credentials remain,
-- Git tag `v0.1.0-sprint1` exists.
+Sprint 2 issue chain: #201 → #202 → … → #210 → Sprint 2 Gate.
 
-Required command:
-
-```bash
-make gate-sprint1
-```
-
-Sprint 2 must not start unless this command succeeds.
+Package root: `apps/api`.
 
 ## Primary stack
 

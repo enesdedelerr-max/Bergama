@@ -6,13 +6,17 @@ SHELL := /bin/bash
 
 ROOT := $(abspath .)
 
+API_DIR := $(ROOT)/apps/api
+
 .PHONY: help helm-lint helm-template full-check verify-locks validate-secrets \
 	kind-bootstrap ingress-install argocd-bootstrap \
 	postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy \
-	backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1
+	backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1 \
+	lint typecheck test-api run-api
 
 help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
+	@echo "Sprint 2 targets: lint typecheck test-api run-api"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -76,3 +80,16 @@ gate-sprint1:
 
 test-sprint1:
 	@python3 -m pytest -q tests/locks tests/secrets tests/backup tests/platform_validation tests/release
+
+# Sprint 2 — FastAPI runtime (apps/api)
+lint:
+	@cd "$(API_DIR)" && uv run ruff check app tests && uv run ruff format --check app tests
+
+typecheck:
+	@cd "$(API_DIR)" && uv run mypy
+
+test-api:
+	@cd "$(API_DIR)" && uv run pytest -q
+
+run-api:
+	@cd "$(API_DIR)" && uv run app
