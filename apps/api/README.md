@@ -16,7 +16,9 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#209** Registry Loader
 - ✅ **#210** Runtime Smoke Tests and Sprint 2 Gate
 - Out of gate: #211 Trading Engine Foundation (excluded)
-- 🟡 **#301** Canonical Market Data Contract (Sprint 3)
+- ✅ **#301** Canonical Market Data Contract (Sprint 3)
+- ✅ **#302** Polygon Historical Connector (Sprint 3)
+- ⏳ **#303** Polygon Realtime Connector (not started)
 
 ## Canonical market data (#301)
 
@@ -30,10 +32,31 @@ Provider-independent PIT-safe contracts under `app/market_data/`.
 | Money | Decimal-native models; transport uses canonical Decimal strings |
 | Events | quote, trade, bar, reference_data, fundamental, macro, filing, news |
 | Keys | Deterministic idempotency + deduplication builders |
-| Out of scope | Provider connectors, Kafka publish, Iceberg, features/strategies |
+| Out of scope | Provider connectors (#302+), Kafka publish, Iceberg, features/strategies |
 
 ```bash
 make test-api-market-contracts
+```
+
+## Polygon historical connector (#302)
+
+Stocks custom aggregate bars only (`/v2/aggs/ticker/.../range/...`). Maps to canonical `BarEvent`.
+
+| Item | Behavior |
+|------|----------|
+| Default | `BERGAMA_POLYGON__ENABLED=false` (no HTTP client constructed) |
+| Auth | `Authorization: Bearer` via `BERGAMA_POLYGON__API_KEY` (`SecretStr`) |
+| Identity | Caller supplies `InstrumentId` + ISO currency; Polygon ticker → `SourceReference.source_symbol` only |
+| Windows | Minute/hour: exact duration; day: `utc_fixed_24h_from_provider_t` (not NYSE RTH close) |
+| Pagination | Follow `next_url` only; same https host; loop + max-page guards |
+| Retry | Connect/timeout/429/5xx only; bounded backoff; injectable sleeper |
+| Health | Omitted — no cheap honest Polygon probe without quota burn |
+| Live smoke | `make smoke-api-polygon` — SKIPPED unless `BERGAMA_POLYGON_SMOKE=1` |
+| Out of scope | WebSocket (#303), Kafka publish, Iceberg, backfill orchestration, other providers |
+
+```bash
+make test-api-polygon-historical
+make smoke-api-polygon
 ```
 
 ## Sprint 2 gate (#210)
@@ -133,7 +156,7 @@ This harness is **not** Kafka and must not be reported as `kafka` health.
 
 - Topics are **not** auto-created. Provision them before producing.
 - Sprint 1 Kind Kafka advertises `127.0.0.1:9092` (in-pod / port-forward oriented). Cluster-internal clients may need a later infra listener fix; do not treat TCP open as full protocol health.
-- Market-data connectors, Iceberg, Schema Registry, retry topics and real DLQ are out of scope (#208B / Sprint 3+).
+- Market-data Kafka publish, Iceberg, Schema Registry, retry topics and real DLQ remain Sprint 3+ beyond #302.
 
 ## Health runtime (#207)
 

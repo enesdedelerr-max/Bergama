@@ -1,4 +1,4 @@
-"""Explicit application-scoped dependency container (Issues #206–#209)."""
+"""Explicit application-scoped dependency container (Issues #206–#209 / #302)."""
 
 from __future__ import annotations
 
@@ -16,6 +16,8 @@ from app.health.protocol import HealthCheck
 from app.health.runtime_state import RuntimeState
 from app.health.service import HealthService, build_default_health_checks
 from app.infrastructure.kafka.runtime import KafkaRuntime, build_kafka_runtime
+from app.infrastructure.polygon.historical import PolygonHistoricalConnector
+from app.infrastructure.polygon.http import PolygonHttpClient
 from app.registry.service import RegistryService
 from app.services.token_service import TokenService
 
@@ -35,6 +37,8 @@ class AppContainer:
     topic_registry: TopicRegistry
     kafka_runtime: KafkaRuntime | None
     registry_service: RegistryService
+    polygon_http: PolygonHttpClient | None
+    polygon_historical: PolygonHistoricalConnector | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -47,6 +51,8 @@ class AppContainer:
             await self.registry_service.close()
             if self.kafka_runtime is not None:
                 await self.kafka_runtime.stop()
+            if self.polygon_http is not None:
+                await self.polygon_http.aclose()
             await self._exit_stack.aclose()
         except Exception:
             logger.error(
@@ -73,6 +79,8 @@ def build_container(
     event_handler: EventHandler | None = None,
     retry_policy: RetryPolicy | None = None,
     registry_service: RegistryService | None = None,
+    polygon_http: PolygonHttpClient | None = None,
+    polygon_historical: PolygonHistoricalConnector | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -106,6 +114,25 @@ def build_container(
         else RegistryService(settings.registry, clock=resolved_clock)
     )
 
+    resolved_polygon_http: PolygonHttpClient | None
+    resolved_polygon_historical: PolygonHistoricalConnector | None
+    if polygon_http is not None:
+        resolved_polygon_http = polygon_http
+        resolved_polygon_historical = (
+            polygon_historical
+            if polygon_historical is not None
+            else PolygonHistoricalConnector(polygon_http, clock=resolved_clock)
+        )
+    elif settings.polygon.enabled:
+        resolved_polygon_http = PolygonHttpClient(settings.polygon)
+        resolved_polygon_historical = PolygonHistoricalConnector(
+            resolved_polygon_http,
+            clock=resolved_clock,
+        )
+    else:
+        resolved_polygon_http = None
+        resolved_polygon_historical = None
+
     resolved_checks = (
         tuple(health_checks)
         if health_checks is not None
@@ -135,4 +162,6 @@ def build_container(
         topic_registry=topic_registry,
         kafka_runtime=resolved_kafka,
         registry_service=resolved_registry,
+        polygon_http=resolved_polygon_http,
+        polygon_historical=resolved_polygon_historical,
     )

@@ -17,6 +17,7 @@ from pydantic_settings import (
 
 from app.core.environment import AppEnvironment
 from app.core.kafka_settings import KafkaSettings
+from app.core.polygon_settings import PolygonSettings
 from app.core.registry_settings import RegistrySettings
 from app.core.secrets import SecretSettings
 from app.core.security import JWT_ALGORITHM_HS256, JwtAlgorithm
@@ -64,6 +65,7 @@ class AppSettings(BaseSettings):
     secrets: SecretSettings = Field(default_factory=SecretSettings)
     kafka: KafkaSettings = Field(default_factory=KafkaSettings)
     registry: RegistrySettings = Field(default_factory=RegistrySettings)
+    polygon: PolygonSettings = Field(default_factory=PolygonSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
@@ -235,6 +237,7 @@ class AppSettings(BaseSettings):
             "redis_configured": bool(self.redis_host),
             "kafka": self.kafka.safe_summary(),
             "registry": self.registry.safe_summary(),
+            "polygon": self.polygon.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
         return summary
