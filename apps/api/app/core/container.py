@@ -1,4 +1,4 @@
-"""Explicit application-scoped dependency container (Issues #206–#209 / #302–#304B)."""
+"""Explicit application-scoped dependency container (Issues #206–#209 / #302–#304C)."""
 
 from __future__ import annotations
 
@@ -25,6 +25,8 @@ from app.infrastructure.kafka.runtime import KafkaRuntime, build_kafka_runtime
 from app.infrastructure.polygon.historical import PolygonHistoricalConnector
 from app.infrastructure.polygon.http import PolygonHttpClient
 from app.infrastructure.polygon.realtime import PolygonRealtimeConnector
+from app.infrastructure.sec.http import SecHttpClient
+from app.infrastructure.sec.submissions import SecSubmissionsConnector
 from app.registry.service import RegistryService
 from app.services.token_service import TokenService
 
@@ -53,6 +55,8 @@ class AppContainer:
     fred_http: FredHttpClient | None
     fred_series: FredSeriesConnector | None
     fred_observations: FredObservationsConnector | None
+    sec_http: SecHttpClient | None
+    sec_submissions: SecSubmissionsConnector | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -73,6 +77,8 @@ class AppContainer:
                 await self.finnhub_http.aclose()
             if self.fred_http is not None:
                 await self.fred_http.aclose()
+            if self.sec_http is not None:
+                await self.sec_http.aclose()
             await self._exit_stack.aclose()
         except Exception:
             logger.error(
@@ -108,6 +114,8 @@ def build_container(
     fred_http: FredHttpClient | None = None,
     fred_series: FredSeriesConnector | None = None,
     fred_observations: FredObservationsConnector | None = None,
+    sec_http: SecHttpClient | None = None,
+    sec_submissions: SecSubmissionsConnector | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -231,6 +239,25 @@ def build_container(
         resolved_fred_series = None
         resolved_fred_observations = None
 
+    resolved_sec_http: SecHttpClient | None
+    resolved_sec_submissions: SecSubmissionsConnector | None
+    if sec_http is not None:
+        resolved_sec_http = sec_http
+        resolved_sec_submissions = (
+            sec_submissions
+            if sec_submissions is not None
+            else SecSubmissionsConnector(sec_http, clock=resolved_clock)
+        )
+    elif settings.sec.enabled:
+        resolved_sec_http = SecHttpClient(settings.sec)
+        resolved_sec_submissions = SecSubmissionsConnector(
+            resolved_sec_http,
+            clock=resolved_clock,
+        )
+    else:
+        resolved_sec_http = None
+        resolved_sec_submissions = None
+
     resolved_checks = (
         tuple(health_checks)
         if health_checks is not None
@@ -269,4 +296,6 @@ def build_container(
         fred_http=resolved_fred_http,
         fred_series=resolved_fred_series,
         fred_observations=resolved_fred_observations,
+        sec_http=resolved_sec_http,
+        sec_submissions=resolved_sec_submissions,
     )
