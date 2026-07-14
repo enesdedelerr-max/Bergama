@@ -149,6 +149,28 @@ make test-api-sec-filings
 make smoke-api-sec
 ```
 
+## Benzinga news connector (#304D)
+
+Newsfeed REST (`GET /api/v2/news`) maps stories to canonical `NewsEvent` with optional
+caller ticker→instrument mapping and revision-aware source keys.
+
+| Item | Behavior |
+|------|----------|
+| Default | `BERGAMA_BENZINGA__ENABLED=false` (no HTTP client constructed) |
+| Auth | Header `Authorization: token <key>` only (`SecretStr`); query `token` never used |
+| Content | `displayOutput=abstract` default; `headline` allowed; `full` rejected; body never mapped |
+| Identity | Story `id` + `updated` → `source_event_id`; no fabricated `revision_of_event_id` |
+| Instruments | Fan-out per mapped ticker; unmapped/zero-ticker requires caller `anchor_instrument` |
+| Bounds | Require `date` / `dateFrom+dateTo` / `updatedSince` / `publishedSince` + max pages |
+| Health | Omitted — no cheap honest Newsfeed probe without entitled quota |
+| Live smoke | `make smoke-api-benzinga` — SKIPPED unless `BERGAMA_BENZINGA_SMOKE=1` |
+| Out of scope | Channels catalog, news-removed, WebSocket, scraping, Kafka, Iceberg, #304E |
+
+```bash
+make test-api-benzinga-news
+make smoke-api-benzinga
+```
+
 ## Sprint 2 gate (#210)
 
 Fail-closed verification of the FastAPI Runtime Foundation:

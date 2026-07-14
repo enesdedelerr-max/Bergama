@@ -9,7 +9,8 @@
 ✅ **Issue #304A** Finnhub Fundamentals Connector — profile2 + basic financials whitelist.  
 ✅ **Issue #304B** FRED Macro Connector — series + observations → MacroEvent.  
 ✅ **Issue #304C** SEC EDGAR Filings Connector — submissions → FilingEvent.  
-⏳ **Issue #304D** Benzinga News Connector — not started.
+⏳ **Issue #304D** Benzinga News Connector — implemented on `feature/sprint3-issue304d-benzinga-news` (not yet merged).  
+⏳ **Issue #304E** Cross-Provider Connector Contract Tests — not started.
 
 ## Goal
 
@@ -25,16 +26,17 @@ canonical contracts. Kafka publishing and Iceberg writes remain later issues.
 5. ✅ **#304B** FRED Macro Connector
 6. ✅ **#304C** SEC EDGAR Filings Connector
 7. ⏳ **#304D** Benzinga News Connector
-8. Later: Kafka publish, Iceberg, …
+8. ⏳ **#304E** Cross-Provider Connector Contract Tests
+9. Later: Kafka publish, Iceberg, …
 
-## #304C scope
+## #304D scope
 
-- Package: `apps/api/app/infrastructure/sec/`
-- Endpoint: `GET https://data.sec.gov/submissions/CIK##########.json`
-- Required descriptive User-Agent with contact; conservative rate limiter
-- Map `filings.recent` only; preserve `filings.files` refs without fetching
-- Accession identity; amendments remain distinct; no ticker→CIK inference
-- No document download / XBRL parsing / Kafka / Iceberg
+- Package: `apps/api/app/infrastructure/benzinga/`
+- Endpoint: `GET https://api.benzinga.com/api/v2/news`
+- Header-only `Authorization: token …`; `displayOutput` headline|abstract only
+- Map to `NewsEvent`; fan-out mapped tickers; caller `anchor_instrument` for others
+- Revision identity via `source_event_id = {id}:{updated}`; no fabricated revision links
+- No body mapping, scraping, channels catalog, news-removed, Kafka, Iceberg
 
 ## Commands
 
@@ -48,17 +50,19 @@ make test-api-polygon-realtime
 make test-api-finnhub-fundamentals
 make test-api-fred-macro
 make test-api-sec-filings
+make test-api-benzinga-news
 make test-api
 make smoke-api-polygon              # SKIPPED unless BERGAMA_POLYGON_SMOKE=1
 make smoke-api-polygon-realtime     # SKIPPED unless BERGAMA_POLYGON_WS_SMOKE=1
 make smoke-api-finnhub              # SKIPPED unless BERGAMA_FINNHUB_SMOKE=1
 make smoke-api-fred                 # SKIPPED unless BERGAMA_FRED_SMOKE=1
 make smoke-api-sec                  # SKIPPED unless BERGAMA_SEC_SMOKE=1
+make smoke-api-benzinga             # SKIPPED unless BERGAMA_BENZINGA_SMOKE=1
 ```
 
 ## Constraints
 
-- No Kafka publishing / Iceberg writers in #304C.
-- No filing-body download / XBRL fact extraction / archive backfill in #304C.
-- No trading / strategy / UI / #304D scope.
-- Do not commit secrets or real production contact emails unless intentionally local-only.
+- No Kafka publishing / Iceberg writers in #304D.
+- No article body scraping / paywall bypass / sentiment / catalyst scoring.
+- No trading / strategy / UI / #304E scope.
+- Do not commit secrets or real API keys.

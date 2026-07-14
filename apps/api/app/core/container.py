@@ -1,4 +1,4 @@
-"""Explicit application-scoped dependency container (Issues #206–#209 / #302–#304C)."""
+"""Explicit application-scoped dependency container (Issues #206–#209 / #302–#304D)."""
 
 from __future__ import annotations
 
@@ -15,6 +15,8 @@ from app.events.topics import TopicRegistry
 from app.health.protocol import HealthCheck
 from app.health.runtime_state import RuntimeState
 from app.health.service import HealthService, build_default_health_checks
+from app.infrastructure.benzinga.http import BenzingaHttpClient
+from app.infrastructure.benzinga.news import BenzingaNewsConnector
 from app.infrastructure.finnhub.fundamentals import FinnhubFundamentalsConnector
 from app.infrastructure.finnhub.http import FinnhubHttpClient
 from app.infrastructure.finnhub.reference import FinnhubReferenceConnector
@@ -57,6 +59,8 @@ class AppContainer:
     fred_observations: FredObservationsConnector | None
     sec_http: SecHttpClient | None
     sec_submissions: SecSubmissionsConnector | None
+    benzinga_http: BenzingaHttpClient | None
+    benzinga_news: BenzingaNewsConnector | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -79,6 +83,8 @@ class AppContainer:
                 await self.fred_http.aclose()
             if self.sec_http is not None:
                 await self.sec_http.aclose()
+            if self.benzinga_http is not None:
+                await self.benzinga_http.aclose()
             await self._exit_stack.aclose()
         except Exception:
             logger.error(
@@ -116,6 +122,8 @@ def build_container(
     fred_observations: FredObservationsConnector | None = None,
     sec_http: SecHttpClient | None = None,
     sec_submissions: SecSubmissionsConnector | None = None,
+    benzinga_http: BenzingaHttpClient | None = None,
+    benzinga_news: BenzingaNewsConnector | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -258,6 +266,25 @@ def build_container(
         resolved_sec_http = None
         resolved_sec_submissions = None
 
+    resolved_benzinga_http: BenzingaHttpClient | None
+    resolved_benzinga_news: BenzingaNewsConnector | None
+    if benzinga_http is not None:
+        resolved_benzinga_http = benzinga_http
+        resolved_benzinga_news = (
+            benzinga_news
+            if benzinga_news is not None
+            else BenzingaNewsConnector(benzinga_http, clock=resolved_clock)
+        )
+    elif settings.benzinga.enabled:
+        resolved_benzinga_http = BenzingaHttpClient(settings.benzinga)
+        resolved_benzinga_news = BenzingaNewsConnector(
+            resolved_benzinga_http,
+            clock=resolved_clock,
+        )
+    else:
+        resolved_benzinga_http = None
+        resolved_benzinga_news = None
+
     resolved_checks = (
         tuple(health_checks)
         if health_checks is not None
@@ -298,4 +325,6 @@ def build_container(
         fred_observations=resolved_fred_observations,
         sec_http=resolved_sec_http,
         sec_submissions=resolved_sec_submissions,
+        benzinga_http=resolved_benzinga_http,
+        benzinga_news=resolved_benzinga_news,
     )
