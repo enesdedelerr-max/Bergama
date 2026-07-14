@@ -1,0 +1,10 @@
+{
+  "api_package": "bergama-api",
+  "generated_at": "2026-07-14T03:29:25Z",
+  "git": {
+    "branch": "feature/sprint2-issue210-runtime-gate",
+    "commit": "7f6c6f2c64f546a0a1229023561815b390a279e7"
+  },
+  "python_requires": ">=3.13",
+  "release": "v0.2.0-sprint2"
+}

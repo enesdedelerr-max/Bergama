@@ -1,0 +1,9 @@
+release: v0.2.0-sprint2
+artifacts:
+  - release-notes.md
+  - known-issues.md
+  - risk-summary.md
+  - rollback-notes.md
+  - artifact-manifest.yaml
+  - versions.json
+  - checksums.txt

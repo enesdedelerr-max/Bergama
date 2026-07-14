@@ -13,11 +13,12 @@ API_DIR := $(ROOT)/apps/api
 	postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy \
 	backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1 \
 	lint typecheck test-api test-api-auth test-api-container test-api-health \
-	test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka run-api
+	test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka run-api \
+	smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate
 
 help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
-	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka run-api"
+	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate run-api"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -143,6 +144,21 @@ smoke-api-kafka:
 		exit 0; \
 	fi; \
 	uv run pytest -q -m kafka_integration tests/integration/test_kafka_live_smoke.py
+
+smoke-api-runtime:
+	@bash "$(ROOT)/scripts/smoke/smoke-api-runtime.sh"
+
+validate-api-openapi:
+	@bash "$(ROOT)/scripts/gates/validate-api-openapi.sh"
+
+build-sprint2-release:
+	@bash "$(ROOT)/scripts/gates/build-sprint2-release.sh"
+
+gate-sprint2:
+	@bash "$(ROOT)/scripts/gates/gate-sprint2.sh"
+
+test-sprint2-gate:
+	@cd "$(API_DIR)" && uv run pytest -q "$(ROOT)/tests/gates/test_sprint2_gate.py"
 
 run-api:
 	@cd "$(API_DIR)" && uv run app
