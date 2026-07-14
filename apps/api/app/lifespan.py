@@ -2,30 +2,49 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.core.config import AppSettings
+from app.core.logging import get_logger, structured_extra
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
-async def on_startup(settings: AppSettings) -> None:
-    """Run process startup side effects."""
-    summary = settings.safe_summary()
-    logger.info(
-        "startup complete env=%s service=%s",
-        summary["environment"],
-        summary["service_name"],
+def _lifecycle_extra(settings: AppSettings, *, event: str) -> dict[str, object]:
+    return structured_extra(
+        event=event,
+        source="lifespan",
+        service=settings.service_name,
+        version=settings.app_version,
+        environment=settings.environment.value,
     )
 
 
-async def on_shutdown() -> None:
-    """Run process shutdown side effects."""
-    logger.info("shutdown complete")
+async def on_startup(settings: AppSettings) -> None:
+    """Emit starting/started lifecycle logs without dumping settings."""
+    logger.info(
+        "application starting",
+        extra=_lifecycle_extra(settings, event="application.starting"),
+    )
+    logger.info(
+        "application started",
+        extra=_lifecycle_extra(settings, event="application.started"),
+    )
+
+
+async def on_shutdown(settings: AppSettings) -> None:
+    """Emit stopping/stopped lifecycle logs without dumping settings."""
+    logger.info(
+        "application stopping",
+        extra=_lifecycle_extra(settings, event="application.stopping"),
+    )
+    logger.info(
+        "application stopped",
+        extra=_lifecycle_extra(settings, event="application.stopped"),
+    )
 
 
 @asynccontextmanager
@@ -36,4 +55,4 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
-        await on_shutdown()
+        await on_shutdown(settings)
