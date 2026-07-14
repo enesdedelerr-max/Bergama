@@ -1,7 +1,6 @@
-"""Typed secret settings boundary (Issue #204).
+"""Typed secret settings boundary (Issues #204 / #205).
 
 Provider-agnostic: values come from environment or local `.secrets.env` only.
-No Vault / cloud secret-manager clients here.
 """
 
 from __future__ import annotations
@@ -24,7 +23,7 @@ _PLACEHOLDER_VALUES: Final[frozenset[str]] = frozenset(
     }
 )
 
-_REQUIRED_PRODUCTION_FIELDS: Final[tuple[str, ...]] = (
+_SECRET_FIELD_NAMES: Final[tuple[str, ...]] = (
     "app_secret_key",
     "bootstrap_jwt_signing_key",
 )
@@ -41,11 +40,11 @@ class SecretSettings(BaseModel):
 
     app_secret_key: SecretStr | None = Field(
         default=None,
-        description="Application secret key reserved for upcoming auth/session use (#205+).",
+        description="Optional reserved application secret; not required by current runtime.",
     )
     bootstrap_jwt_signing_key: SecretStr | None = Field(
         default=None,
-        description="JWT signing key reserved for Issue #205 bootstrap; unused until auth lands.",
+        description="HS256 signing key for local/test JWT bootstrap (#205).",
     )
 
     @field_validator("app_secret_key", "bootstrap_jwt_signing_key", mode="before")
@@ -68,7 +67,7 @@ class SecretSettings(BaseModel):
 
     @model_validator(mode="after")
     def reject_empty_secret_str(self) -> Self:
-        for name in _REQUIRED_PRODUCTION_FIELDS:
+        for name in _SECRET_FIELD_NAMES:
             secret = getattr(self, name)
             if isinstance(secret, SecretStr) and secret.get_secret_value() == "":
                 msg = f"{name} must not be empty"
@@ -86,25 +85,22 @@ class SecretSettings(BaseModel):
         """Redacted operational summary."""
         return self.configured_flags()
 
-    def validate_for_environment(self, *, production_like: bool) -> None:
-        """Fail fast for staging/production; local/test may omit secrets."""
-        if not production_like:
-            return
-        for name in _REQUIRED_PRODUCTION_FIELDS:
-            secret: SecretStr | None = getattr(self, name)
-            if secret is None:
-                msg = (
-                    f"BERGAMA_SECRETS__{name.upper()} is required when "
-                    "BERGAMA_ENVIRONMENT is staging or production"
-                )
-                raise ValueError(msg)
-            raw = secret.get_secret_value()
-            if raw.lower() in _PLACEHOLDER_VALUES:
-                msg = f"BERGAMA_SECRETS__{name.upper()} must not use a placeholder value"
-                raise ValueError(msg)
-            if len(raw) < MIN_CRYPTO_SECRET_LENGTH:
-                msg = (
-                    f"BERGAMA_SECRETS__{name.upper()} must be at least "
-                    f"{MIN_CRYPTO_SECRET_LENGTH} characters"
-                )
-                raise ValueError(msg)
+    def validate_bootstrap_signing_key(self) -> None:
+        """Require a strong bootstrap JWT signing key when bootstrap auth is enabled."""
+        secret = self.bootstrap_jwt_signing_key
+        if secret is None:
+            msg = (
+                "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY is required when "
+                "bootstrap auth is enabled"
+            )
+            raise ValueError(msg)
+        raw = secret.get_secret_value()
+        if raw.lower() in _PLACEHOLDER_VALUES:
+            msg = "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY must not use a placeholder value"
+            raise ValueError(msg)
+        if len(raw) < MIN_CRYPTO_SECRET_LENGTH:
+            msg = (
+                "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY must be at least "
+                f"{MIN_CRYPTO_SECRET_LENGTH} characters"
+            )
+            raise ValueError(msg)

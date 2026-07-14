@@ -17,6 +17,7 @@ from pydantic_settings import (
 
 from app.core.environment import AppEnvironment
 from app.core.secrets import SecretSettings
+from app.core.security import JWT_ALGORITHM_HS256, JwtAlgorithm
 
 _ENV_PREFIX = "BERGAMA_"
 _DOTENV_NAME = ".env"
@@ -59,6 +60,16 @@ class AppSettings(BaseSettings):
     )
 
     secrets: SecretSettings = Field(default_factory=SecretSettings)
+
+    # JWT bootstrap (Issue #205) — non-secret settings.
+    jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
+    jwt_issuer: str = Field(default="bergama-api", min_length=1)
+    jwt_audience: str = Field(default="bergama-api", min_length=1)
+    jwt_access_token_ttl_seconds: int = Field(default=900, gt=0, le=86_400)
+    bootstrap_auth_enabled: bool | None = Field(
+        default=None,
+        description="Defaults to true for local/test and false for staging/production.",
+    )
 
     @field_validator("environment", "deployment_environment", mode="before")
     @classmethod
@@ -116,7 +127,21 @@ class AppSettings(BaseSettings):
             msg = "BERGAMA_LOG_LEVEL=DEBUG is not allowed in production"
             raise ValueError(msg)
 
-        self.secrets.validate_for_environment(production_like=self.environment.is_production_like)
+        enabled = self.bootstrap_auth_enabled
+        if enabled is None:
+            enabled = self.environment in {AppEnvironment.LOCAL, AppEnvironment.TEST}
+            object.__setattr__(self, "bootstrap_auth_enabled", enabled)
+
+        if enabled and self.environment.is_production_like:
+            msg = (
+                "BERGAMA_BOOTSTRAP_AUTH_ENABLED must be false when "
+                "BERGAMA_ENVIRONMENT is staging or production"
+            )
+            raise ValueError(msg)
+
+        if enabled:
+            self.secrets.validate_bootstrap_signing_key()
+
         return self
 
     @classmethod
@@ -163,6 +188,11 @@ class AppSettings(BaseSettings):
             "shutdown_timeout_seconds": self.shutdown_timeout_seconds,
             "service_name": self.service_name,
             "instance_id": self.instance_id,
+            "jwt_algorithm": self.jwt_algorithm,
+            "jwt_issuer": self.jwt_issuer,
+            "jwt_audience": self.jwt_audience,
+            "jwt_access_token_ttl_seconds": self.jwt_access_token_ttl_seconds,
+            "bootstrap_auth_enabled": self.bootstrap_auth_enabled,
             "secrets": self.secrets.safe_summary(),
         }
         return summary

@@ -40,8 +40,14 @@ def capture_handler() -> tuple[logging.Handler, StringIO]:
 
 
 def test_use_json_logs_by_environment() -> None:
-    assert use_json_logs(AppSettings(environment=AppEnvironment.LOCAL)) is False
-    assert use_json_logs(AppSettings(environment=AppEnvironment.TEST)) is False
+    assert (
+        use_json_logs(AppSettings(environment=AppEnvironment.LOCAL, bootstrap_auth_enabled=False))
+        is False
+    )
+    assert (
+        use_json_logs(AppSettings(environment=AppEnvironment.TEST, bootstrap_auth_enabled=False))
+        is False
+    )
     assert (
         use_json_logs(
             AppSettings(
@@ -67,7 +73,14 @@ def test_use_json_logs_by_environment() -> None:
 def test_local_format_is_human_readable_production_is_json(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    configure_logging(AppSettings(environment=AppEnvironment.LOCAL, log_level="INFO", debug=True))
+    configure_logging(
+        AppSettings(
+            environment=AppEnvironment.LOCAL,
+            log_level="INFO",
+            debug=True,
+            bootstrap_auth_enabled=False,
+        )
+    )
     get_logger("test.local").info("local-line", extra=structured_extra(event="local.check"))
     local_line = capsys.readouterr().out.strip().splitlines()[-1]
     assert not local_line.startswith("{")
@@ -90,7 +103,10 @@ def test_local_format_is_human_readable_production_is_json(
 
 
 def test_use_color_logs_false_outside_local_tty() -> None:
-    assert use_color_logs(AppSettings(environment=AppEnvironment.TEST)) is False
+    assert (
+        use_color_logs(AppSettings(environment=AppEnvironment.TEST, bootstrap_auth_enabled=False))
+        is False
+    )
     assert (
         use_color_logs(
             AppSettings(
@@ -206,7 +222,14 @@ def test_json_output_is_one_object_per_line_and_sorted(
 
 
 def test_log_level_follows_settings(capsys: pytest.CaptureFixture[str]) -> None:
-    configure_logging(AppSettings(environment=AppEnvironment.TEST, log_level="ERROR", debug=False))
+    configure_logging(
+        AppSettings(
+            environment=AppEnvironment.TEST,
+            log_level="ERROR",
+            debug=False,
+            bootstrap_auth_enabled=False,
+        )
+    )
     get_logger("test.level").info("should-not-appear")
     get_logger("test.level").error("should-appear")
     out = capsys.readouterr().out
@@ -215,7 +238,9 @@ def test_log_level_follows_settings(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_configure_logging_is_idempotent_no_duplicate_handlers() -> None:
-    settings = AppSettings(environment=AppEnvironment.TEST, log_level="INFO", debug=False)
+    settings = AppSettings(
+        environment=AppEnvironment.TEST, log_level="INFO", debug=False, bootstrap_auth_enabled=False
+    )
     configure_logging(settings)
     configure_logging(settings)
     configure_logging(settings)

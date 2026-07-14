@@ -30,9 +30,8 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 
 def test_nested_env_variable_loading(clean_env: None, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("BERGAMA_ENVIRONMENT", "production")
-    monkeypatch.setenv("BERGAMA_DEBUG", "false")
-    monkeypatch.setenv("BERGAMA_LOG_LEVEL", "INFO")
+    monkeypatch.setenv("BERGAMA_ENVIRONMENT", "test")
+    monkeypatch.setenv("BERGAMA_BOOTSTRAP_AUTH_ENABLED", "true")
     monkeypatch.setenv("BERGAMA_SECRETS__APP_SECRET_KEY", VALID_PROD_APP_SECRET)
     monkeypatch.setenv(
         "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY",
@@ -45,55 +44,53 @@ def test_nested_env_variable_loading(clean_env: None, monkeypatch: pytest.Monkey
     assert settings.secrets.bootstrap_jwt_signing_key.get_secret_value() == VALID_PROD_JWT_SECRET
 
 
-def test_missing_required_production_secret_fails(clean_env: None) -> None:
-    with pytest.raises(ValidationError) as exc_info:
-        AppSettings(environment=AppEnvironment.PRODUCTION, debug=False)
-    err = str(exc_info.value)
-    assert "required" in err.lower()
-    assert VALID_PROD_APP_SECRET not in err
+def test_production_without_secrets_succeeds_when_bootstrap_disabled(
+    clean_env: None,
+) -> None:
+    settings = AppSettings(
+        environment=AppEnvironment.PRODUCTION,
+        debug=False,
+        bootstrap_auth_enabled=False,
+    )
+    assert settings.secrets.bootstrap_jwt_signing_key is None
+    assert settings.secrets.app_secret_key is None
 
 
-def test_placeholder_production_secret_fails(clean_env: None) -> None:
+def test_placeholder_bootstrap_secret_fails_when_enabled(clean_env: None) -> None:
     with pytest.raises(ValidationError) as exc_info:
         AppSettings(
-            environment=AppEnvironment.STAGING,
-            debug=False,
-            secrets=SecretSettings(
-                app_secret_key="password",
-                bootstrap_jwt_signing_key=VALID_PROD_JWT_SECRET,
-            ),
+            environment=AppEnvironment.TEST,
+            bootstrap_auth_enabled=True,
+            secrets=SecretSettings(bootstrap_jwt_signing_key="password"),
         )
     assert "placeholder" in str(exc_info.value).lower()
-    assert "password" not in str(exc_info.value).split("placeholder")[0]
 
 
-def test_weak_length_production_secret_fails(clean_env: None) -> None:
+def test_weak_length_bootstrap_secret_fails_when_enabled(clean_env: None) -> None:
     with pytest.raises(ValidationError) as exc_info:
         AppSettings(
-            environment=AppEnvironment.PRODUCTION,
-            debug=False,
-            secrets=SecretSettings(
-                app_secret_key="short-but-not-placeholder",
-                bootstrap_jwt_signing_key=VALID_PROD_JWT_SECRET,
-            ),
+            environment=AppEnvironment.TEST,
+            bootstrap_auth_enabled=True,
+            secrets=SecretSettings(bootstrap_jwt_signing_key="short-but-not-placeholder"),
         )
     assert "at least" in str(exc_info.value).lower()
     assert "short-but-not-placeholder" not in str(exc_info.value)
 
 
-def test_valid_production_secret_passes(clean_env: None) -> None:
+def test_valid_bootstrap_secret_passes(clean_env: None) -> None:
     settings = AppSettings(
-        environment=AppEnvironment.PRODUCTION,
-        debug=False,
-        secrets=make_production_secrets(),
+        environment=AppEnvironment.TEST,
+        bootstrap_auth_enabled=True,
+        secrets=SecretSettings(bootstrap_jwt_signing_key=VALID_PROD_JWT_SECRET),
     )
-    assert settings.secrets.app_secret_key is not None
+    assert settings.secrets.bootstrap_jwt_signing_key is not None
 
 
 def test_safe_summary_excludes_raw_secrets(clean_env: None) -> None:
     settings = AppSettings(
         environment=AppEnvironment.STAGING,
         debug=False,
+        bootstrap_auth_enabled=False,
         secrets=make_production_secrets(),
     )
     summary = settings.safe_summary()
@@ -101,6 +98,7 @@ def test_safe_summary_excludes_raw_secrets(clean_env: None) -> None:
     assert VALID_PROD_APP_SECRET not in blob
     assert VALID_PROD_JWT_SECRET not in blob
     assert summary["secrets"]["app_secret_key_configured"] is True
+    assert summary["bootstrap_auth_enabled"] is False
 
 
 def test_local_secrets_file_loads_when_present(
@@ -120,6 +118,7 @@ def test_local_secrets_file_loads_when_present(
         encoding="utf-8",
     )
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", "local")
+    monkeypatch.setenv("BERGAMA_BOOTSTRAP_AUTH_ENABLED", "true")
     monkeypatch.chdir(tmp_path)
     settings = AppSettings()
     assert settings.secrets.app_secret_key is not None
@@ -143,6 +142,7 @@ def test_env_overrides_local_secrets_file(
         encoding="utf-8",
     )
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", "local")
+    monkeypatch.setenv("BERGAMA_BOOTSTRAP_AUTH_ENABLED", "false")
     monkeypatch.setenv("BERGAMA_SECRETS__APP_SECRET_KEY", VALID_PROD_APP_SECRET)
     monkeypatch.setenv(
         "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY",
@@ -165,6 +165,7 @@ def test_test_profile_ignores_developer_secrets_file(
         encoding="utf-8",
     )
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", "test")
+    monkeypatch.setenv("BERGAMA_BOOTSTRAP_AUTH_ENABLED", "false")
     monkeypatch.chdir(tmp_path)
     settings = AppSettings()
     assert settings.secrets.app_secret_key is None
@@ -191,8 +192,10 @@ def test_production_like_ignores_secrets_file(
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", profile)
     monkeypatch.setenv("BERGAMA_DEBUG", "false")
     monkeypatch.chdir(tmp_path)
-    with pytest.raises(ValidationError):
-        AppSettings()
+    settings = AppSettings()
+    # File ignored; bootstrap disabled by default → no secrets loaded.
+    assert settings.secrets.bootstrap_jwt_signing_key is None
+    assert settings.bootstrap_auth_enabled is False
 
 
 def test_logging_redaction_handles_secret_field_names() -> None:

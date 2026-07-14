@@ -52,6 +52,7 @@ async def test_docs_and_openapi_follow_settings_disabled() -> None:
         docs_enabled=False,
         openapi_enabled=False,
         debug=False,
+        bootstrap_auth_enabled=False,
     )
     application = create_app(settings)
     transport = ASGITransport(app=application)
@@ -74,6 +75,7 @@ async def test_app_factory_uses_cached_settings(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", "test")
     monkeypatch.setenv("BERGAMA_APP_NAME", "from-env-api")
     monkeypatch.setenv("BERGAMA_DEBUG", "false")
+    monkeypatch.setenv("BERGAMA_BOOTSTRAP_AUTH_ENABLED", "false")
     clear_settings_cache()
     settings = get_settings()
     application = create_app()

@@ -28,7 +28,7 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 
 def test_default_local_settings_load(clean_env: None) -> None:
-    settings = AppSettings()
+    settings = AppSettings(bootstrap_auth_enabled=False)
     assert settings.environment is AppEnvironment.LOCAL
     assert settings.app_name
     assert settings.app_version
@@ -106,12 +106,14 @@ def test_dotenv_gate_skips_for_test_profile(
 
 def test_provider_caching(clean_env: None, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", "test")
+    monkeypatch.setenv("BERGAMA_BOOTSTRAP_AUTH_ENABLED", "false")
     clear_settings_cache()
     assert get_settings() is get_settings()
 
 
 def test_cache_reset_isolates_tests(clean_env: None, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", "test")
+    monkeypatch.setenv("BERGAMA_BOOTSTRAP_AUTH_ENABLED", "false")
     clear_settings_cache()
     first = get_settings()
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", "staging")
@@ -134,6 +136,7 @@ def test_load_settings_bypasses_cache(clean_env: None, monkeypatch: pytest.Monke
     from tests.conftest import make_production_secrets
 
     monkeypatch.setenv("BERGAMA_ENVIRONMENT", "test")
+    monkeypatch.setenv("BERGAMA_BOOTSTRAP_AUTH_ENABLED", "false")
     clear_settings_cache()
     cached = get_settings()
     isolated = load_settings(
