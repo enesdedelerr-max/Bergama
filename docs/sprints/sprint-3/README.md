@@ -10,8 +10,8 @@
 ✅ **Issue #304B** FRED Macro Connector — series + observations → MacroEvent.  
 ✅ **Issue #304C** SEC EDGAR Filings Connector — submissions → FilingEvent.  
 ✅ **Issue #304D** Benzinga News Connector — complete on `main`.  
-⏳ **Issue #304E** Cross-Provider Connector Contract Tests — implemented on feature branch (not yet merged).  
-⏳ **Issue #305** Market Data Orchestrator — not started.
+✅ **Issue #304E** Cross-Provider Connector Contract Tests — complete on `main`.  
+⏳ **Issue #305** Market Data Orchestrator — in progress on feature branch.
 
 ## Goal
 
@@ -27,9 +27,30 @@ canonical contracts. Kafka publishing and Iceberg writes remain later issues.
 5. ✅ **#304B** FRED Macro Connector
 6. ✅ **#304C** SEC EDGAR Filings Connector
 7. ✅ **#304D** Benzinga News Connector
-8. ⏳ **#304E** Cross-Provider Connector Contract Tests
+8. ✅ **#304E** Cross-Provider Connector Contract Tests
 9. ⏳ **#305** Market Data Orchestrator
 10. Later: Kafka publish, Iceberg, …
+
+## #305 scope
+
+Canonical-event pipeline after connectors:
+
+`CanonicalMarketEvent → validate → PIT → quality → dedup reserve → ordering → route → bounded in-flight admission → PublishPort → dedup commit/release`
+
+- Immutable `PipelineContext`
+- Dedup reserve before publish; commit only after successful live delivery; release on failure/dry-run
+- Ordering per `(instrument_key, event_type)` — no global sort
+- Routing by canonical event type only (no Kafka topic names)
+- **Bounded in-flight admission control** (`max_in_flight`, `admission_timeout_seconds`) — not a durable buffer or async queue
+- Terminal delivery success is `PUBLISHED` (not `ACCEPTED`)
+- Abstract `PublishPort` only — no Kafka / EventEnvelope / Iceberg in this issue
+- Orchestrator disabled by default (`BERGAMA_ORCHESTRATOR__ENABLED=false`)
+- Enabled mode requires an explicit `PublishPort` (or explicit `dry_run=true`)
+- Dry-run never reports a successful live publish
+
+```bash
+make test-api-market-orchestrator
+```
 
 ## #304E scope
 
@@ -82,11 +103,13 @@ make test-api-fred-macro
 make test-api-sec-filings
 make test-api-benzinga-news
 make test-api-provider-contracts
+make test-api-market-orchestrator
 make test-api
 ```
 
 ## Constraints
 
-- No Kafka / Iceberg / orchestrator / #305 in #304E.
-- No production connector refactors unless a genuine safety defect is proven.
+- No Kafka / Iceberg in #305.
+- Orchestrator accepts `CanonicalMarketEvent` only.
+- Connectors must not import the orchestrator.
 - Do not commit secrets or real API keys.
