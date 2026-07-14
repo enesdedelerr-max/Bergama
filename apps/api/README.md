@@ -14,7 +14,20 @@ FastAPI runtime for the AI Hedge Fund Operating System.
 - ✅ **#208A** Kafka Core Runtime
 - ✅ **#208B** Kafka Test Runtime
 - ✅ **#209** Registry Loader
+- ✅ **#211** Trading Engine Foundation
 - Later: #210 Smoke Gate
+
+## Trading engine foundation (#211)
+
+Multi-horizon architecture only under `app/trading/`.
+
+| Item | Behavior |
+|------|----------|
+| Contract | Abstract `TradingEngine` (`initialize` / `shutdown` / `health` / `metadata`) |
+| Types | `day_trading`, `swing`, `investing`, `options`, `futures`, `crypto` |
+| Registry | Explicit instance-scoped registration — no auto-discovery, no globals |
+| Factory | `TradingEngineFactory.create_engine` / `list_available` — no DI wiring |
+| Out of scope | Strategies, scanners, indicators, market data, risk, execution, Kafka/DI/health |
 
 ## Registry loader (#209)
 
