@@ -697,6 +697,39 @@ make build-sprint2-release
 make gate-sprint2
 ```
 
+### Sprint 3 runtime gate and release
+
+Sprint 3 closes with a fail-closed runtime gate and self-contained release package.
+
+```bash
+make lint
+make typecheck
+make validate-secrets
+make test-api-market-contracts
+make test-api-provider-contracts
+make test-api-market-orchestrator
+make test-api-kafka-publish-adapter
+make test-api-iceberg-writer
+make test-api-replay-engine
+make test-api-backfill
+make test-api-data-quality
+make test-api
+make smoke-api-data-quality
+BERGAMA_REPLAY_ENGINE_SMOKE=1 make smoke-api-replay-engine
+make smoke-sprint3-runtime
+make build-sprint3-release
+make validate-sprint3-evidence
+make validate-sprint3-release
+make test-sprint3-gate
+make gate-sprint3
+```
+
+`make smoke-sprint3-runtime` requires local/test Kafka, the market-data topic, Iceberg REST, MinIO/S3 warehouse configuration, and pre-created Iceberg tables unless local/test-only auto-create is explicitly enabled. It uses a synthetic canonical `BarEvent` only; provider APIs and provider credentials are not used.
+
+Sprint 3 evidence is written to `artifacts/sprint3/` and remains ignored. Tracked release artifacts are generated under `releases/sprint-3/` from validated evidence and a real Syft SPDX JSON SBOM. The gate prints exactly `GO FOR SPRINT 4` or `NO-GO FOR SPRINT 4`.
+
+Do not create or push `v0.3.0-sprint3` during #311 implementation. After merge, create an annotated local tag only on the validated merged-main commit and only with explicit approval.
+
 ## Out of scope (#209)
 
 Remote registries, dynamic plugins, hot reload, registry writes, business registry

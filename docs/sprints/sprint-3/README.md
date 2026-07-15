@@ -16,7 +16,8 @@
 ✅ **Issue #307** Iceberg Writer — complete on `main` (PR #34).  
 ✅ **Issue #308** Replay Engine — complete on `main`.  
 ✅ **Issue #309** Historical Backfill Pipeline — complete on `main` (PR #36).  
-⏳ **Issue #310** Data Quality and Monitoring — in progress on feature branch.
+✅ **Issue #310** Data Quality and Monitoring — complete.  
+⏳ **Issue #311** Sprint 3 Runtime Gate and Release — in progress on feature branch.
 
 ## Goal
 
@@ -39,8 +40,39 @@ and deterministically replay persisted events without calling providers.
 11. ✅ **#307** Iceberg Writer
 12. ✅ **#308** Replay Engine
 13. ✅ **#309** Historical Backfill Pipeline
-14. ⏳ **#310** Data Quality and Monitoring
-15. Later: Sprint 3 Runtime Gate and Release (#311), …
+14. ✅ **#310** Data Quality and Monitoring
+15. ⏳ **#311** Sprint 3 Runtime Gate and Release
+
+## #311 scope
+
+`Synthetic BarEvent → MarketDataOrchestrator → DataQualityService → KafkaPublishAdapter → Kafka market-data topic → IcebergWriterWorker → Iceberg snapshot → row scan → Kafka offset commit`
+
+- Fail-closed Sprint 3 runtime gate: `make gate-sprint3`.
+- Required runtime smoke: `make smoke-sprint3-runtime`; no provider APIs are called.
+- Required evidence is written under `artifacts/sprint3/evidence/` and command logs under `artifacts/sprint3/logs/`.
+- Tracked release package is built under `releases/sprint-3/` from validated evidence only.
+- Syft is mandatory for `sbom.spdx.json`; no placeholder SBOM is acceptable.
+- Required `SKIPPED` results are NO-GO; optional unconfigured provider smokes remain `SKIPPED`.
+- Explicitly enabled optional provider smoke failures are NO-GO.
+- Final decision is exactly `GO FOR SPRINT 4` or `NO-GO FOR SPRINT 4`.
+- No tag is created by the gate or #311 PR.
+
+```bash
+make smoke-sprint3-runtime
+make build-sprint3-release
+make validate-sprint3-evidence
+make validate-sprint3-release
+make test-sprint3-gate
+make gate-sprint3
+```
+
+Post-merge tag policy for `v0.3.0-sprint3`:
+
+- Create only an annotated local tag.
+- Target the exact validated merged-main commit.
+- Require `make gate-sprint3` PASS, release validation PASS, and clean working tree.
+- Refuse conflicting existing tags.
+- Do not push without explicit approval.
 
 ## #310 scope
 
@@ -115,6 +147,11 @@ make smoke-api-iceberg-writer
 make smoke-api-replay-engine
 make smoke-api-backfill
 make smoke-api-data-quality
+make smoke-sprint3-runtime
+make build-sprint3-release
+make validate-sprint3-evidence
+make validate-sprint3-release
+make gate-sprint3
 ```
 
 ## Constraints
@@ -123,6 +160,7 @@ make smoke-api-data-quality
 - Backfill never writes Kafka/Iceberg directly or reuses ReplayCheckpoint.
 - Backfill never silently selects the production Kafka publish adapter.
 - Data quality never calls providers, repairs data, publishes directly, writes Iceberg directly or sends external alerts.
+- Sprint 3 release evidence must be generated from executable evidence and real Syft SPDX output only.
 - Do not claim exactly-once.
-- Do not implement #311 in #310.
+- Do not implement Sprint 4 in #311.
 - Do not commit secrets or real API keys.
