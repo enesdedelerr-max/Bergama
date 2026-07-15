@@ -65,6 +65,9 @@ from app.market_data.orchestrator.ports import PublishPort
 from app.market_data.replay.engine import ReplayEngine, build_replay_engine
 from app.registry.service import RegistryService
 from app.services.token_service import TokenService
+from app.strategy.engine import StrategyEngine, build_strategy_engine
+from app.strategy.reference import NoOpStrategy, NoOpStrategyConfig
+from app.strategy.registry import StrategyRegistry
 
 logger = get_logger(__name__)
 
@@ -100,6 +103,7 @@ class AppContainer:
     iceberg_writer_runtime: IcebergWriterRuntime | None
     replay_engine: ReplayEngine | None
     backfill_engine: BackfillEngine | None
+    strategy_engine: StrategyEngine | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -121,6 +125,8 @@ class AppContainer:
             # Backfill owns checkpoint store only; adapters do not close shared connectors (#309).
             if self.backfill_engine is not None:
                 await self.backfill_engine.aclose()
+            if self.strategy_engine is not None:
+                await self.strategy_engine.aclose()
             # Iceberg writer: stop intake → flush → snapshots → offsets → consumer → catalog
             # before shared Kafka runtime is stopped (#307).
             if self.iceberg_writer_runtime is not None:
@@ -184,6 +190,7 @@ def build_container(
     iceberg_writer_runtime: IcebergWriterRuntime | None = None,
     replay_engine: ReplayEngine | None = None,
     backfill_engine: BackfillEngine | None = None,
+    strategy_engine: StrategyEngine | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -530,6 +537,30 @@ def build_container(
     else:
         resolved_backfill = None
 
+    # Strategy Engine: construct when enabled/injected. Never evaluates on startup (#401).
+    resolved_strategy_engine: StrategyEngine | None
+    if strategy_engine is not None:
+        resolved_strategy_engine = strategy_engine
+    elif settings.strategy.enabled:
+        strategy_registry = StrategyRegistry()
+        if settings.strategy.register_reference_strategy:
+            strategy_registry.register(
+                "noop",
+                lambda _identity, config: NoOpStrategy(
+                    config if isinstance(config, NoOpStrategyConfig) else NoOpStrategyConfig()
+                ),
+            )
+        resolved_strategy_engine = build_strategy_engine(
+            clock=resolved_clock,
+            registry=strategy_registry,
+            decision_port=None,
+            max_strategies_per_session=settings.strategy.max_strategies_per_session,
+            max_seen_inputs_per_session=settings.strategy.max_seen_inputs_per_session,
+            audit_max_records=settings.strategy.audit_max_records,
+        )
+    else:
+        resolved_strategy_engine = None
+
     if health_checks is not None:
         resolved_checks: tuple[HealthCheck, ...] = tuple(health_checks)
     else:
@@ -607,4 +638,5 @@ def build_container(
         iceberg_writer_runtime=resolved_iceberg,
         replay_engine=resolved_replay,
         backfill_engine=resolved_backfill,
+        strategy_engine=resolved_strategy_engine,
     )
