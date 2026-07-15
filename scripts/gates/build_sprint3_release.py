@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import secrets
 import shutil
 import subprocess
 import sys
@@ -30,6 +32,7 @@ from scripts.gates.validate_sprint3_evidence import validate_evidence
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE_DIR = ROOT / "releases" / "sprint-3"
+_BOOTSTRAP_JWT_SIGNING_KEY_ENV = "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY"
 
 
 def _run_syft(root: Path) -> dict[str, Any]:
@@ -80,13 +83,42 @@ def _normalize_sbom(sbom: dict[str, Any], *, normalized_created: str) -> dict[st
     return _normalize_json(payload)
 
 
-def _generate_openapi(root: Path) -> dict[str, Any]:
-    api_path = str(root / "apps" / "api")
-    if api_path not in sys.path:
-        sys.path.insert(0, api_path)
-    from app.factory import create_app  # noqa: PLC0415
+def _openapi_child_environment(source: dict[str, str] | None = None) -> dict[str, str]:
+    env = dict(os.environ if source is None else source)
+    env[_BOOTSTRAP_JWT_SIGNING_KEY_ENV] = secrets.token_urlsafe(48)
+    return env
 
-    schema = create_app().openapi()
+
+def _generate_openapi(root: Path) -> dict[str, Any]:
+    code = """
+import json
+import sys
+from pathlib import Path
+
+api_path = str(Path.cwd() / "apps" / "api")
+if api_path not in sys.path:
+    sys.path.insert(0, api_path)
+
+from app.factory import create_app
+
+print(json.dumps(create_app().openapi(), sort_keys=True))
+"""
+    proc = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=root,
+        env=_openapi_child_environment(),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=120,
+        check=False,
+    )
+    ensure_no_secrets(proc.stdout, context="openapi generation stdout")
+    ensure_no_secrets(proc.stderr, context="openapi generation stderr")
+    if proc.returncode != 0:
+        raise RuntimeError(f"OpenAPI generation failed with exit code {proc.returncode}")
+    schema = json.loads(proc.stdout)
     return _normalize_json(schema)
 
 

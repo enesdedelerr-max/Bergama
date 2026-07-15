@@ -63,6 +63,12 @@ RUNTIME_ENV_EXACT_KEYS = frozenset(
     }
 )
 
+GATE_SECRET_ENV_EXACT_KEYS = frozenset(
+    {
+        "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY",
+    }
+)
+
 REQUIRED_SOURCE_PATHS = (
     "apps/api/app/market_data/envelope.py",
     "apps/api/app/market_data/events/base.py",
@@ -286,7 +292,11 @@ def is_runtime_env_key(key: str) -> bool:
 def sanitized_gate_environment(env: Mapping[str, str] | None = None) -> dict[str, str]:
     """Return a child-process environment with local runtime overrides removed."""
     source = env or os.environ
-    return {key: value for key, value in source.items() if not is_runtime_env_key(key)}
+    return {
+        key: value
+        for key, value in source.items()
+        if not is_runtime_env_key(key) and key not in GATE_SECRET_ENV_EXACT_KEYS
+    }
 
 
 def runtime_smoke_environment(env: Mapping[str, str] | None = None) -> dict[str, str]:
