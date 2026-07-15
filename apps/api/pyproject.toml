@@ -44,6 +44,7 @@ markers = [
     "kafka_integration: optional live Kafka broker smoke (requires BERGAMA_KAFKA_SMOKE=1)",
     "iceberg_writer_smoke: optional live Kafka+Iceberg+MinIO smoke (requires BERGAMA_ICEBERG_WRITER_SMOKE=1)",
     "replay_engine_smoke: optional local Iceberg replay smoke (requires BERGAMA_REPLAY_ENGINE_SMOKE=1)",
+    "backfill_smoke: optional live provider backfill smoke (requires BERGAMA_BACKFILL_SMOKE=1)",
 ]
 
 [tool.ruff]

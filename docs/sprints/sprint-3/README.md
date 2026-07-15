@@ -14,7 +14,8 @@
 ✅ **Issue #305** Market Data Orchestrator — complete on `main` (PR #32).  
 ✅ **Issue #306** Kafka Publish Adapter — complete on `main` (PR #33).  
 ✅ **Issue #307** Iceberg Writer — complete on `main` (PR #34).  
-⏳ **Issue #308** Replay Engine — in progress on feature branch.
+✅ **Issue #308** Replay Engine — complete on `main`.  
+⏳ **Issue #309** Historical Backfill Pipeline — in progress on feature branch.
 
 ## Goal
 
@@ -35,27 +36,33 @@ and deterministically replay persisted events without calling providers.
 9. ✅ **#305** Market Data Orchestrator
 10. ✅ **#306** Kafka Publish Adapter
 11. ✅ **#307** Iceberg Writer
-12. ⏳ **#308** Replay Engine
-13. Later: Historical Backfill Pipeline (#309), …
+12. ✅ **#308** Replay Engine
+13. ⏳ **#309** Historical Backfill Pipeline
+14. Later: Data Quality and Monitoring (#310), …
+
+## #309 scope
+
+`BackfillRequest → BackfillSource → slices → existing connector → CanonicalMarketEvent → isolated MarketDataOrchestrator → explicit PublishPort or none → checkpoint → audit`
+
+- Historical: Polygon aggregates, FRED observations, Benzinga bounded news
+- Bounded refresh: Finnhub profile/fundamentals, SEC filings.recent
+- Unsupported: Polygon realtime, SEC archives
+- Default mode `dry_run`; publish requires explicit injected sink
+- Deterministic provider-specific slices; `may_have_more` fails closed
+- Dedicated atomic file checkpoint (not ReplayCheckpoint)
+- Preserve connector idempotency keys; at-least-once only
+- Disabled by default; no startup run; no backfill readiness health
+
+```bash
+make test-api-backfill
+make smoke-api-backfill
+```
+
+Optional live smoke: `BERGAMA_BACKFILL_SMOKE=1` with `BERGAMA_BACKFILL_SMOKE_PROVIDER=polygon` (exactly one provider; tiny dry_run).
 
 ## #308 scope
 
 `ReplayRequest → IcebergReplaySource → reconstruct → order → isolated MarketDataOrchestrator → explicit sink or none → audit → checkpoint`
-
-- Primary source: eight Iceberg market-data tables (no Kafka consumer-group rewind)
-- Default mode `dry_run`; side-effect modes require an explicit injected sink
-- Deterministic order `(occurred_at, event_type, instrument_key, idempotency_key)`
-- Preserve original PIT timestamps and `idempotency_key` (at-least-once republish)
-- Lossy reconstruction when lake columns omit fields; synthetic `symbol_effective_from` when missing
-- Atomic file checkpoint/resume; request fingerprint must match
-- Disabled by default; no startup replay; no replay readiness health
-
-```bash
-make test-api-replay-engine
-make smoke-api-replay-engine
-```
-
-Optional local smoke: `BERGAMA_REPLAY_ENGINE_SMOKE=1` (local Iceberg tables, dry-run).
 
 ## #307 scope
 
@@ -79,17 +86,19 @@ make test-api-kafka-test-runtime
 make test-api-kafka-publish-adapter
 make test-api-iceberg-writer
 make test-api-replay-engine
+make test-api-backfill
 make test-api
 make smoke-api-kafka-publish
 make smoke-api-iceberg-writer
 make smoke-api-replay-engine
+make smoke-api-backfill
 ```
 
 ## Constraints
 
-- Replay never calls provider connectors or mutates Kafka offsets.
-- Replay never silently selects the production Kafka publish adapter.
-- No Iceberg rewrite sink in #308.
+- Backfill never uses raw httpx in core; adapters wrap existing connectors.
+- Backfill never writes Kafka/Iceberg directly or reuses ReplayCheckpoint.
+- Backfill never silently selects the production Kafka publish adapter.
 - Do not claim exactly-once.
-- Do not implement #309 in this issue.
+- Do not implement #310 in this issue.
 - Do not commit secrets or real API keys.

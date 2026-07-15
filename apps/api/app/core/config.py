@@ -15,6 +15,7 @@ from pydantic_settings import (
     SettingsConfigDict,
 )
 
+from app.core.backfill_settings import BackfillSettings
 from app.core.benzinga_settings import BenzingaSettings
 from app.core.environment import AppEnvironment
 from app.core.finnhub_settings import FinnhubSettings
@@ -80,6 +81,7 @@ class AppSettings(BaseSettings):
     orchestrator: OrchestratorSettings = Field(default_factory=OrchestratorSettings)
     iceberg_writer: IcebergWriterSettings = Field(default_factory=IcebergWriterSettings)
     replay: ReplaySettings = Field(default_factory=ReplaySettings)
+    backfill: BackfillSettings = Field(default_factory=BackfillSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)

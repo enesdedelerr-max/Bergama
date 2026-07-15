@@ -322,6 +322,31 @@ make test-api-replay-engine
 make smoke-api-replay-engine   # SKIPPED unless BERGAMA_REPLAY_ENGINE_SMOKE=1
 ```
 
+## Historical Backfill Pipeline (#309)
+
+Bounded, resumable provider backfill into canonical market-data events.
+
+Flow:
+
+`BackfillRequest → BackfillSource → slices → existing connector → CanonicalMarketEvent → isolated MarketDataOrchestrator → explicit PublishPort or none → checkpoint → audit`
+
+| Concern | Policy |
+|--------|--------|
+| Capability | Polygon/FRED/Benzinga historical; Finnhub/SEC bounded refresh; realtime/archives unsupported |
+| Default mode | `dry_run` — fetch/map/validate, no sink, never reports published |
+| Modes | `dry_run`, `validate_only`, `publish` (explicit `PublishPort` only) |
+| Request | One provider + one `source_kind`; typed selectors; no credentials/URLs/paths |
+| Slicing | Provider-specific deterministic slices; `may_have_more` fails closed |
+| Ordering | `(slice_start, occurred_at, event_type, instrument_key, idempotency_key)` |
+| Identity | Preserve connector `idempotency_key`; at-least-once publish only |
+| Checkpoint | Dedicated atomic file JSON (not ReplayCheckpoint); fingerprint must match |
+| Lifecycle | Disabled by default; construct when enabled; explicit `run()` only; no backfill health |
+
+```bash
+make test-api-backfill
+make smoke-api-backfill   # SKIPPED unless BERGAMA_BACKFILL_SMOKE=1 (+ provider)
+```
+
 ## Sprint 2 gate (#210)
 
 Fail-closed verification of the FastAPI Runtime Foundation:

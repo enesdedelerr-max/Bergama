@@ -15,6 +15,12 @@ from app.events.topics import TopicRegistry
 from app.health.protocol import HealthCheck
 from app.health.runtime_state import RuntimeState
 from app.health.service import HealthService, build_default_health_checks
+from app.infrastructure.backfill.benzinga import BenzingaBackfillSource
+from app.infrastructure.backfill.file_checkpoint import FileBackfillCheckpointStore
+from app.infrastructure.backfill.finnhub import FinnhubRefreshSource
+from app.infrastructure.backfill.fred import FredBackfillSource
+from app.infrastructure.backfill.polygon import PolygonHistoricalBackfillSource
+from app.infrastructure.backfill.sec import SecRefreshSource
 from app.infrastructure.benzinga.http import BenzingaHttpClient
 from app.infrastructure.benzinga.news import BenzingaNewsConnector
 from app.infrastructure.finnhub.fundamentals import FinnhubFundamentalsConnector
@@ -36,6 +42,12 @@ from app.infrastructure.polygon.realtime import PolygonRealtimeConnector
 from app.infrastructure.replay.file_checkpoint import FileCheckpointStore
 from app.infrastructure.sec.http import SecHttpClient
 from app.infrastructure.sec.submissions import SecSubmissionsConnector
+from app.market_data.backfill.engine import (
+    BackfillEngine,
+    StaticSourceRegistry,
+    build_backfill_engine,
+)
+from app.market_data.backfill.ports import BackfillSource
 from app.market_data.orchestrator.errors import OrchestratorConfigurationError
 from app.market_data.orchestrator.pipeline import (
     MarketDataOrchestrator,
@@ -78,6 +90,7 @@ class AppContainer:
     market_data_orchestrator: MarketDataOrchestrator | None
     iceberg_writer_runtime: IcebergWriterRuntime | None
     replay_engine: ReplayEngine | None
+    backfill_engine: BackfillEngine | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -94,6 +107,9 @@ class AppContainer:
             # Replay Engine owns its source/checkpoint only — never starts on aclose (#308).
             if self.replay_engine is not None:
                 await self.replay_engine.aclose()
+            # Backfill owns checkpoint store only; adapters do not close shared connectors (#309).
+            if self.backfill_engine is not None:
+                await self.backfill_engine.aclose()
             # Iceberg writer: stop intake → flush → snapshots → offsets → consumer → catalog
             # before shared Kafka runtime is stopped (#307).
             if self.iceberg_writer_runtime is not None:
@@ -155,6 +171,7 @@ def build_container(
     publish_port: PublishPort | None = None,
     iceberg_writer_runtime: IcebergWriterRuntime | None = None,
     replay_engine: ReplayEngine | None = None,
+    backfill_engine: BackfillEngine | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -397,6 +414,65 @@ def build_container(
     else:
         resolved_replay = None
 
+    # Backfill Engine: construct when enabled/injected. Never starts a run here (#309).
+    resolved_backfill: BackfillEngine | None
+    if backfill_engine is not None:
+        resolved_backfill = backfill_engine
+    elif settings.backfill.enabled:
+        sources: dict[tuple[str, str], BackfillSource] = {}
+        if resolved_polygon_historical is not None:
+            sources[("polygon", "aggregates")] = PolygonHistoricalBackfillSource(
+                resolved_polygon_historical,
+                settings.backfill,
+                owns_connector=False,
+            )
+        if resolved_fred_observations is not None:
+            sources[("fred", "observations")] = FredBackfillSource(
+                resolved_fred_observations,
+                settings.backfill,
+                owns_connector=False,
+            )
+        if resolved_benzinga_news is not None:
+            sources[("benzinga", "news")] = BenzingaBackfillSource(
+                resolved_benzinga_news,
+                settings.backfill,
+                owns_connector=False,
+            )
+        if resolved_finnhub_reference is not None or resolved_finnhub_fundamentals is not None:
+            finnhub_src = FinnhubRefreshSource(
+                reference=resolved_finnhub_reference,
+                fundamentals=resolved_finnhub_fundamentals,
+                settings=settings.backfill,
+                owns_connector=False,
+            )
+            sources[("finnhub", "profile_refresh")] = finnhub_src
+            sources[("finnhub", "fundamentals_refresh")] = finnhub_src
+            sources[("finnhub", "both_refresh")] = finnhub_src
+        if resolved_sec_submissions is not None:
+            sources[("sec", "recent_filings")] = SecRefreshSource(
+                resolved_sec_submissions,
+                settings.backfill,
+                owns_connector=False,
+            )
+        backfill_checkpoint = None
+        if settings.backfill.checkpoint_enabled:
+            if settings.backfill.checkpoint_directory is None:
+                raise OrchestratorConfigurationError(
+                    "backfill.checkpoint_directory_required",
+                    detail="checkpoint_directory required when checkpoint_enabled",
+                )
+            backfill_checkpoint = FileBackfillCheckpointStore(
+                settings.backfill.checkpoint_directory
+            )
+        resolved_backfill = build_backfill_engine(
+            settings.backfill,
+            clock=resolved_clock,
+            source_registry=StaticSourceRegistry(sources=sources),
+            checkpoint_store=backfill_checkpoint,
+        )
+    else:
+        resolved_backfill = None
+
     if health_checks is not None:
         resolved_checks: tuple[HealthCheck, ...] = tuple(health_checks)
     else:
@@ -465,4 +541,5 @@ def build_container(
         market_data_orchestrator=resolved_orchestrator,
         iceberg_writer_runtime=resolved_iceberg,
         replay_engine=resolved_replay,
+        backfill_engine=resolved_backfill,
     )
