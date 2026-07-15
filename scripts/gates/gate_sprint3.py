@@ -220,6 +220,7 @@ def _write_release_attestation(
     *,
     validated_source_commit: str,
     release_commit: str,
+    observed_branch: str,
     release_paths: list[str],
 ) -> None:
     parent = subprocess.check_output(["git", "rev-parse", f"{release_commit}^"], cwd=root, text=True).strip()
@@ -229,6 +230,7 @@ def _write_release_attestation(
             "validated_source_commit": validated_source_commit,
             "release_commit": release_commit,
             "release_commit_parent": parent,
+            "observed_branch": observed_branch,
             "release_only_diff_verified": True,
             "release_paths": release_paths,
             "gate_phase": "final",
@@ -332,6 +334,7 @@ def run_gate(*, root: Path = ROOT, runner: Runner = default_runner, phase: str =
                 root,
                 validated_source_commit=commit,
                 release_commit=head_commit,
+                observed_branch=branch,
                 release_paths=release_paths,
             )
 

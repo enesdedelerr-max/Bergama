@@ -454,6 +454,86 @@ def test_sbom_non_namespace_drift_still_fails_repeated_comparison() -> None:
     assert normalized_first["documentNamespace"] == normalized_second["documentNamespace"]
 
 
+def _release_file_snapshot(root: Path) -> dict[str, bytes]:
+    release = root / "releases/sprint-3"
+    return {
+        str(path.relative_to(root)): path.read_bytes()
+        for path in sorted(release.rglob("*"))
+        if path.is_file()
+    }
+
+
+def _patch_release_builder_dependencies(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    branch: str,
+    commit: str = COMMIT,
+) -> None:
+    monkeypatch.setattr(build_sprint3_release, "git_meta", lambda root: (branch, commit))
+    monkeypatch.setattr(
+        "scripts.gates.validate_sprint3_evidence.git_meta",
+        lambda root: (branch, commit),
+    )
+    monkeypatch.setattr(
+        build_sprint3_release,
+        "_generate_openapi",
+        lambda root: {"openapi": "3.1.0", "paths": {"/health": {}}},
+    )
+    monkeypatch.setattr(
+        build_sprint3_release,
+        "_run_syft",
+        lambda root: _sample_spdx_sbom(
+            namespace="https://anchore.com/syft/dir/apps/api-random"
+        ),
+    )
+
+    def fake_check_output(args: list[str], **kwargs: Any) -> str:
+        if args == ["syft", "--version"]:
+            return "syft 1.18.1\n"
+        raise AssertionError(f"unexpected check_output call: {args}")
+
+    monkeypatch.setattr(build_sprint3_release.subprocess, "check_output", fake_check_output)
+
+
+def test_release_manifest_and_checksums_are_branch_invariant(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_valid_evidence(tmp_path)
+    _patch_release_builder_dependencies(monkeypatch, branch="fix/sprint3-release")
+    build_sprint3_release.build_release(tmp_path)
+    feature_snapshot = _release_file_snapshot(tmp_path)
+
+    _patch_release_builder_dependencies(monkeypatch, branch="main")
+    build_sprint3_release.build_release(tmp_path)
+    main_snapshot = _release_file_snapshot(tmp_path)
+
+    assert main_snapshot == feature_snapshot
+    manifest = json.loads(main_snapshot["releases/sprint-3/MANIFEST.json"])
+    assert "source_branch" not in manifest
+    assert manifest["validated_source_commit"] == COMMIT
+    assert manifest["sbom"]["normalized_fields"] == ["creationInfo.created", "documentNamespace"]
+    sbom = json.loads(main_snapshot["releases/sprint-3/sbom.spdx.json"])
+    assert sbom["documentNamespace"].endswith(f"/{COMMIT}")
+
+
+def test_release_manifest_and_checksums_are_detached_head_invariant(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_valid_evidence(tmp_path)
+    _patch_release_builder_dependencies(monkeypatch, branch="fix/sprint3-release")
+    build_sprint3_release.build_release(tmp_path)
+    branch_snapshot = _release_file_snapshot(tmp_path)
+
+    _patch_release_builder_dependencies(monkeypatch, branch="HEAD")
+    build_sprint3_release.build_release(tmp_path)
+    detached_snapshot = _release_file_snapshot(tmp_path)
+
+    assert detached_snapshot == branch_snapshot
+    assert b"source_branch" not in detached_snapshot["releases/sprint-3/MANIFEST.json"]
+    assert b"fix/sprint3-release" not in detached_snapshot["releases/sprint-3/checksums.txt"]
+    assert b"HEAD" not in detached_snapshot["releases/sprint-3/checksums.txt"]
+
+
 def _patch_clean_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(gate_sprint3, "git_meta", lambda root: ("feature/test", COMMIT))
     monkeypatch.setattr(gate_sprint3, "git_is_dirty", lambda root: False)
@@ -630,7 +710,10 @@ def _write_valid_evidence(root: Path) -> None:
             },
         )
     write_json(evidence / "environment.json", {"evidence_version": EVIDENCE_VERSION})
-    write_json(evidence / "git-state.json", {"evidence_version": EVIDENCE_VERSION})
+    write_json(
+        evidence / "git-state.json",
+        {"evidence_version": EVIDENCE_VERSION, "generated_at": "2026-07-14T00:00:00Z"},
+    )
     write_json(evidence / "preflight.json", {"evidence_version": EVIDENCE_VERSION, "status": "PASS"})
     runtime_log = logs / "runtime.log"
     runtime_log.write_text("PASS\n", encoding="utf-8")
@@ -848,6 +931,36 @@ def test_final_context_rejects_product_change_between_source_and_release(
     assert any("non-release changes" in error for error in errors)
 
 
+def test_release_attestation_records_observed_branch_outside_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    write_json(release / "MANIFEST.json", {"validated_source_commit": COMMIT})
+    monkeypatch.setattr(
+        gate_sprint3.subprocess,
+        "check_output",
+        lambda *args, **kwargs: "608240dcaad8ca81d7351bfa3671a161f1061506\n",
+    )
+
+    gate_sprint3._write_release_attestation(
+        tmp_path,
+        validated_source_commit=COMMIT,
+        release_commit="508240dcaad8ca81d7351bfa3671a161f1061505",
+        observed_branch="fix/sprint3-release",
+        release_paths=["releases/sprint-3/MANIFEST.json"],
+    )
+
+    manifest = json.loads((release / "MANIFEST.json").read_text())
+    attestation = json.loads(
+        (tmp_path / "artifacts/sprint3/evidence/release-attestation.json").read_text()
+    )
+    assert "source_branch" not in manifest
+    assert "observed_branch" not in manifest
+    assert attestation["observed_branch"] == "fix/sprint3-release"
+    assert attestation["release_commit"] == "508240dcaad8ca81d7351bfa3671a161f1061505"
+
+
 def test_prepare_preflight_allows_only_release_dirty_paths(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -929,3 +1042,40 @@ def test_tracked_manifest_rejects_release_commit_field(
 
     assert validation.status == "FAIL"
     assert any("must not contain release_commit" in reason for reason in validation.reasons)
+
+
+def test_tracked_manifest_rejects_source_branch_field(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("scripts.gates.validate_sprint3_evidence.git_meta", lambda root: ("x", COMMIT))
+    _write_valid_evidence(tmp_path)
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    for name in (
+        "README.md",
+        "RELEASE_NOTES.md",
+        "sprint3-runtime-validation.json",
+        "sprint3-openapi.json",
+        "sprint3-quality-gate.json",
+        "sprint3-known-limitations.md",
+    ):
+        (release / name).write_text("{}\n" if name.endswith(".json") else "ok\n", encoding="utf-8")
+    write_json(release / "sbom.spdx.json", {"SPDXID": "SPDXRef-DOCUMENT", "packages": []})
+    write_json(
+        release / "MANIFEST.json",
+        {
+            "release_version": "v0.3.0-sprint3",
+            "validated_source_commit": COMMIT,
+            "source_branch": "feature/non-deterministic",
+            "gate_decision": GO_DECISION,
+            "approved_release_paths": sorted(gate_sprint3.APPROVED_SPRINT3_RELEASE_PATHS),
+            "sbom": {"format": "spdx-json"},
+            "files": {},
+        },
+    )
+    write_checksums(tmp_path, release)
+
+    validation = validate_evidence(tmp_path, validate_release=True)
+
+    assert validation.status == "FAIL"
+    assert any("must not contain source_branch" in reason for reason in validation.reasons)

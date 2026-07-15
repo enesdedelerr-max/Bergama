@@ -258,6 +258,8 @@ def _validate_release(root: Path, result: ValidationResult, *, commit: str) -> N
         return
     if manifest.get("release_version") != RELEASE_VERSION:
         result.fail("release manifest version mismatch")
+    if "source_branch" in manifest:
+        result.fail("release manifest must not contain source_branch")
     if "release_commit" in manifest and manifest.get("release_commit") is not None:
         result.fail("release manifest must not contain release_commit")
     if manifest.get("validated_source_commit") != commit:
