@@ -280,21 +280,26 @@ def sanitized_environment_summary(env: Mapping[str, str] | None = None) -> dict[
     return dict(sorted(summary.items()))
 
 
-def normalize_status(*, exit_code: int, body: str, required: bool) -> tuple[Status, str | None]:
-    upper = body.upper()
-    if exit_code == 0 and "SKIPPED" in upper:
-        reason = _first_skipped_line(body)
+def normalize_status(*, exit_code: int, body: str) -> tuple[Status, str | None]:
+    if exit_code == 0 and (reason := _explicit_skip_reason(body)) is not None:
         return "SKIPPED", reason
     if exit_code == 0:
         return "PASS", None
-    return "FAIL", None if required else "optional smoke failed"
+    return "FAIL", None
 
 
-def _first_skipped_line(body: str) -> str:
+def _explicit_skip_reason(body: str) -> str | None:
     for line in body.splitlines():
-        if "SKIPPED" in line.upper():
+        if line.strip() == "BERGAMA_SMOKE_STATUS=SKIPPED":
             return line.strip()[:500]
-    return "command reported SKIPPED"
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict) and payload.get("status") == "SKIPPED":
+            reason = payload.get("reason")
+            return str(reason or "machine-readable smoke skip")[:500]
+    return None
 
 
 def default_runner(spec: CommandSpec, cwd: Path, log_path: Path, git_commit: str) -> CommandResult:
@@ -340,7 +345,7 @@ def default_runner(spec: CommandSpec, cwd: Path, log_path: Path, git_commit: str
     )
     ensure_no_secrets(body, context=str(log_path))
     log_path.write_text(body, encoding="utf-8")
-    status, skip_reason = normalize_status(exit_code=exit_code, body=body, required=spec.required)
+    status, skip_reason = normalize_status(exit_code=exit_code, body=body)
     return CommandResult(
         id=spec.id,
         command=command_string(spec.command),

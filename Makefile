@@ -212,6 +212,7 @@ test-api-kafka-publish-adapter:
 smoke-api-kafka-publish:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_KAFKA_PUBLISH_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-kafka-publish SKIPPED (set BERGAMA_KAFKA_PUBLISH_SMOKE=1 and broker settings)"; \
 		exit 0; \
 	fi; \
@@ -227,6 +228,7 @@ test-api-iceberg-writer:
 smoke-api-iceberg-writer:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_ICEBERG_WRITER_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-iceberg-writer SKIPPED (set BERGAMA_ICEBERG_WRITER_SMOKE=1 with Kafka, REST catalog, MinIO)"; \
 		exit 0; \
 	fi; \
@@ -243,6 +245,7 @@ test-api-replay-engine:
 smoke-api-replay-engine:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_REPLAY_ENGINE_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-replay-engine SKIPPED (set BERGAMA_REPLAY_ENGINE_SMOKE=1 for local Iceberg dry-run)"; \
 		exit 0; \
 	fi; \
@@ -260,6 +263,7 @@ test-api-backfill:
 smoke-api-backfill:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_BACKFILL_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-backfill SKIPPED (set BERGAMA_BACKFILL_SMOKE=1 and BERGAMA_BACKFILL_SMOKE_PROVIDER)"; \
 		exit 0; \
 	fi; \
@@ -279,6 +283,7 @@ smoke-api-data-quality:
 smoke-api-polygon:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_POLYGON_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-polygon SKIPPED (set BERGAMA_POLYGON_SMOKE=1 and BERGAMA_POLYGON__API_KEY)"; \
 		exit 0; \
 	fi; \
@@ -287,6 +292,7 @@ smoke-api-polygon:
 smoke-api-polygon-realtime:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_POLYGON_WS_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-polygon-realtime SKIPPED (set BERGAMA_POLYGON_WS_SMOKE=1 and BERGAMA_POLYGON__API_KEY)"; \
 		exit 0; \
 	fi; \
@@ -295,6 +301,7 @@ smoke-api-polygon-realtime:
 smoke-api-finnhub:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_FINNHUB_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-finnhub SKIPPED (set BERGAMA_FINNHUB_SMOKE=1 and BERGAMA_FINNHUB__API_KEY)"; \
 		exit 0; \
 	fi; \
@@ -303,6 +310,7 @@ smoke-api-finnhub:
 smoke-api-fred:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_FRED_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-fred SKIPPED (set BERGAMA_FRED_SMOKE=1 and BERGAMA_FRED__API_KEY)"; \
 		exit 0; \
 	fi; \
@@ -311,6 +319,7 @@ smoke-api-fred:
 smoke-api-sec:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_SEC_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-sec SKIPPED (set BERGAMA_SEC_SMOKE=1 and SEC User-Agent/contact)"; \
 		exit 0; \
 	fi; \
@@ -319,6 +328,7 @@ smoke-api-sec:
 smoke-api-benzinga:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_BENZINGA_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-benzinga SKIPPED (set BERGAMA_BENZINGA_SMOKE=1 and BERGAMA_BENZINGA__API_KEY)"; \
 		exit 0; \
 	fi; \
@@ -327,6 +337,7 @@ smoke-api-benzinga:
 smoke-api-kafka:
 	@cd "$(API_DIR)" && \
 	if [ "$${BERGAMA_KAFKA_SMOKE}" != "1" ]; then \
+		echo "BERGAMA_SMOKE_STATUS=SKIPPED"; \
 		echo "smoke-api-kafka SKIPPED (set BERGAMA_KAFKA_SMOKE=1 and broker settings)"; \
 		exit 0; \
 	fi; \
