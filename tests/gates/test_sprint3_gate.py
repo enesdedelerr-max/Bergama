@@ -457,6 +457,7 @@ def test_sbom_non_namespace_drift_still_fails_repeated_comparison() -> None:
 def _patch_clean_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(gate_sprint3, "git_meta", lambda root: ("feature/test", COMMIT))
     monkeypatch.setattr(gate_sprint3, "git_is_dirty", lambda root: False)
+    monkeypatch.setattr(gate_sprint3, "_unexpected_dirty_paths", lambda root: [])
     monkeypatch.setattr(
         gate_sprint3,
         "preflight_payload",
@@ -511,15 +512,15 @@ def _runner(
 
 def test_all_required_pass_returns_go(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_clean_preflight(monkeypatch)
-    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner()) == 0
+    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(), phase="prepare") == 0
     summary = json.loads((tmp_path / "artifacts/sprint3/gate-summary.json").read_text())
-    assert summary["final_decision"] == GO_DECISION
+    assert summary["final_decision"] == gate_sprint3.RELEASE_PACKAGE_READY
     assert summary["overall_status"] == "PASS"
 
 
 def test_required_failure_returns_no_go(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_clean_preflight(monkeypatch)
-    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(fail_id="lint")) == 1
+    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(fail_id="lint"), phase="prepare") == 1
     summary = json.loads((tmp_path / "artifacts/sprint3/gate-summary.json").read_text())
     assert summary["final_decision"] == "NO-GO FOR SPRINT 4"
     assert summary["first_failed_stage"] == "lint"
@@ -527,21 +528,42 @@ def test_required_failure_returns_no_go(tmp_path: Path, monkeypatch: pytest.Monk
 
 def test_required_skipped_returns_no_go(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_clean_preflight(monkeypatch)
-    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(skip_id="smoke-api-data-quality")) == 1
+    assert (
+        gate_sprint3.run_gate(
+            root=tmp_path,
+            runner=_runner(skip_id="smoke-api-data-quality"),
+            phase="prepare",
+        )
+        == 1
+    )
     summary = json.loads((tmp_path / "artifacts/sprint3/gate-summary.json").read_text())
     assert summary["required_skipped_count"] == 1
 
 
 def test_optional_skipped_is_allowed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_clean_preflight(monkeypatch)
-    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(skip_id="smoke-api-polygon")) == 0
+    assert (
+        gate_sprint3.run_gate(
+            root=tmp_path,
+            runner=_runner(skip_id="smoke-api-polygon"),
+            phase="prepare",
+        )
+        == 0
+    )
     summary = json.loads((tmp_path / "artifacts/sprint3/gate-summary.json").read_text())
     assert summary["optional_skipped_count"] == 1
 
 
 def test_enabled_optional_failure_is_no_go(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_clean_preflight(monkeypatch)
-    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(fail_id="smoke-api-polygon")) == 1
+    assert (
+        gate_sprint3.run_gate(
+            root=tmp_path,
+            runner=_runner(fail_id="smoke-api-polygon"),
+            phase="prepare",
+        )
+        == 1
+    )
     summary = json.loads((tmp_path / "artifacts/sprint3/gate-summary.json").read_text())
     assert summary["optional_failed_count"] == 1
     assert summary["first_failed_stage"] == "smoke-api-polygon"
@@ -777,3 +799,133 @@ def test_validator_rejects_missing_sbom(tmp_path: Path, monkeypatch: pytest.Monk
     validation = validate_evidence(tmp_path, validate_release=True)
     assert validation.status == "FAIL"
     assert any("sbom.spdx.json" in reason for reason in validation.reasons)
+
+
+def test_final_context_allows_release_only_diff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_commit = COMMIT
+    release_commit = "508240dcaad8ca81d7351bfa3671a161f1061505"
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    write_json(release / "MANIFEST.json", {"validated_source_commit": source_commit})
+    monkeypatch.setattr(gate_sprint3, "_git_success", lambda *args, **kwargs: True)
+    monkeypatch.setattr(
+        gate_sprint3,
+        "_changed_paths_between",
+        lambda *args, **kwargs: ["releases/sprint-3/MANIFEST.json"],
+    )
+
+    validated_source, errors, release_paths = gate_sprint3._final_context(
+        tmp_path, head_commit=release_commit
+    )
+
+    assert validated_source == source_commit
+    assert errors == []
+    assert release_paths == ["releases/sprint-3/MANIFEST.json"]
+
+
+def test_final_context_rejects_product_change_between_source_and_release(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_commit = COMMIT
+    release_commit = "508240dcaad8ca81d7351bfa3671a161f1061505"
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    write_json(release / "MANIFEST.json", {"validated_source_commit": source_commit})
+    monkeypatch.setattr(gate_sprint3, "_git_success", lambda *args, **kwargs: True)
+    monkeypatch.setattr(
+        gate_sprint3,
+        "_changed_paths_between",
+        lambda *args, **kwargs: [
+            "apps/api/pyproject.toml",
+            "releases/sprint-3/MANIFEST.json",
+        ],
+    )
+
+    _, errors, _ = gate_sprint3._final_context(tmp_path, head_commit=release_commit)
+
+    assert any("non-release changes" in error for error in errors)
+
+
+def test_prepare_preflight_allows_only_release_dirty_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    (release / "README.md").write_text("generated\n", encoding="utf-8")
+    monkeypatch.setattr(gate_sprint3, "_git_status_paths", lambda root: ["releases/sprint-3/README.md"])
+    monkeypatch.setattr(
+        gate_sprint3,
+        "preflight_payload",
+        lambda root, git_commit: {
+            "evidence_version": EVIDENCE_VERSION,
+            "git_commit": git_commit,
+            "status": "FAIL",
+            "checks": {"working_tree_clean": False},
+            "errors": ["working tree is dirty"],
+        },
+    )
+
+    payload = gate_sprint3._prepare_preflight(tmp_path, git_commit=COMMIT)
+
+    assert payload["status"] == "PASS"
+    assert payload["checks"]["release_dirty_paths_allowed"] == ["releases/sprint-3/README.md"]
+
+
+def test_prepare_preflight_rejects_non_release_dirty_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(gate_sprint3, "_git_status_paths", lambda root: ["apps/api/pyproject.toml"])
+    monkeypatch.setattr(
+        gate_sprint3,
+        "preflight_payload",
+        lambda root, git_commit: {
+            "evidence_version": EVIDENCE_VERSION,
+            "git_commit": git_commit,
+            "status": "FAIL",
+            "checks": {"working_tree_clean": False},
+            "errors": ["working tree is dirty"],
+        },
+    )
+
+    payload = gate_sprint3._prepare_preflight(tmp_path, git_commit=COMMIT)
+
+    assert payload["status"] == "FAIL"
+
+
+def test_tracked_manifest_rejects_release_commit_field(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("scripts.gates.validate_sprint3_evidence.git_meta", lambda root: ("x", COMMIT))
+    _write_valid_evidence(tmp_path)
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    for name in (
+        "README.md",
+        "RELEASE_NOTES.md",
+        "sprint3-runtime-validation.json",
+        "sprint3-openapi.json",
+        "sprint3-quality-gate.json",
+        "sprint3-known-limitations.md",
+    ):
+        (release / name).write_text("{}\n" if name.endswith(".json") else "ok\n", encoding="utf-8")
+    write_json(release / "sbom.spdx.json", {"SPDXID": "SPDXRef-DOCUMENT", "packages": []})
+    write_json(
+        release / "MANIFEST.json",
+        {
+            "release_version": "v0.3.0-sprint3",
+            "validated_source_commit": COMMIT,
+            "release_commit": COMMIT,
+            "gate_decision": GO_DECISION,
+            "approved_release_paths": sorted(gate_sprint3.APPROVED_SPRINT3_RELEASE_PATHS),
+            "sbom": {"format": "spdx-json"},
+            "files": {},
+        },
+    )
+    write_checksums(tmp_path, release)
+
+    validation = validate_evidence(tmp_path, validate_release=True)
+
+    assert validation.status == "FAIL"
+    assert any("must not contain release_commit" in reason for reason in validation.reasons)
