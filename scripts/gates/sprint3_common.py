@@ -49,6 +49,20 @@ SAFE_ENV_KEYS = (
     "BERGAMA_SPRINT3_RUNTIME_BOOTSTRAP",
 )
 
+RUNTIME_ENV_PREFIXES = (
+    "BERGAMA_KAFKA__",
+    "BERGAMA_ICEBERG_WRITER__",
+)
+
+RUNTIME_ENV_EXACT_KEYS = frozenset(
+    {
+        "BERGAMA_ENVIRONMENT",
+        "BERGAMA_SPRINT3_RUNTIME_SMOKE",
+        "BERGAMA_SPRINT3_GATE_BOOTSTRAP_LOCAL_RUNTIME",
+        "BERGAMA_SPRINT3_RUNTIME_BOOTSTRAP",
+    }
+)
+
 REQUIRED_SOURCE_PATHS = (
     "apps/api/app/market_data/envelope.py",
     "apps/api/app/market_data/events/base.py",
@@ -263,6 +277,40 @@ def ensure_no_secrets(text: str, *, context: str) -> None:
             raise RuntimeError(msg)
 
 
+def is_runtime_env_key(key: str) -> bool:
+    return key in RUNTIME_ENV_EXACT_KEYS or any(
+        key.startswith(prefix) for prefix in RUNTIME_ENV_PREFIXES
+    )
+
+
+def sanitized_gate_environment(env: Mapping[str, str] | None = None) -> dict[str, str]:
+    """Return a child-process environment with local runtime overrides removed."""
+    source = env or os.environ
+    return {key: value for key, value in source.items() if not is_runtime_env_key(key)}
+
+
+def runtime_smoke_environment(env: Mapping[str, str] | None = None) -> dict[str, str]:
+    """Return the isolated runtime smoke environment.
+
+    Runtime variables are copied from the parent process only for the required
+    smoke command; all other gate commands use sanitized_gate_environment().
+    """
+    source = env or os.environ
+    child = sanitized_gate_environment(source)
+    child.update({key: value for key, value in source.items() if is_runtime_env_key(key)})
+    return child
+
+
+def environment_for_spec(spec: CommandSpec, env: Mapping[str, str] | None = None) -> dict[str, str]:
+    child = (
+        runtime_smoke_environment(env)
+        if spec.group == "runtime-smoke"
+        else sanitized_gate_environment(env)
+    )
+    child.update(spec.env)
+    return child
+
+
 def sanitized_environment_summary(env: Mapping[str, str] | None = None) -> dict[str, object]:
     source = env or os.environ
     summary: dict[str, object] = {}
@@ -304,8 +352,7 @@ def _explicit_skip_reason(body: str) -> str | None:
 
 def default_runner(spec: CommandSpec, cwd: Path, log_path: Path, git_commit: str) -> CommandResult:
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    env = os.environ.copy()
-    env.update(spec.env)
+    env = environment_for_spec(spec)
     started_wall = utc_now()
     started = time.perf_counter()
     timed_out = False
@@ -465,7 +512,7 @@ def preflight_payload(root: Path, *, git_commit: str) -> dict[str, Any]:
         "status": "PASS" if not errors else "FAIL",
         "checks": checks,
         "errors": errors,
-        "sanitized_environment_summary": sanitized_environment_summary(),
+        "sanitized_environment_summary": sanitized_environment_summary(sanitized_gate_environment()),
     }
 
 
@@ -499,7 +546,7 @@ def write_environment(root: Path, evidence: Path, *, commit: str) -> None:
             "git_commit": commit,
             "tools": tools,
             "tool_versions": versions,
-            "sanitized_environment_summary": sanitized_environment_summary(),
+            "sanitized_environment_summary": sanitized_environment_summary(sanitized_gate_environment()),
         },
     )
 
