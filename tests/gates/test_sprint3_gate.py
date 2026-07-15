@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -12,6 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from scripts.gates import gate_sprint3
+from scripts.gates import build_sprint3_release
 from scripts.gates.sprint3_common import (
     EVIDENCE_VERSION,
     GO_DECISION,
@@ -87,6 +90,7 @@ def test_sanitized_gate_environment_removes_runtime_settings() -> None:
         "BERGAMA_KAFKA__BOOTSTRAP_SERVERS": '["127.0.0.1:9092"]',
         "BERGAMA_ICEBERG_WRITER__ENABLED": "true",
         "BERGAMA_ICEBERG_WRITER__SECRET_KEY": "local-secret",
+        "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY": "parent-secret",
         "BERGAMA_SPRINT3_RUNTIME_SMOKE": "1",
         "BERGAMA_REPLAY_ENGINE_SMOKE": "1",
     }
@@ -106,6 +110,7 @@ def test_non_runtime_specs_receive_sanitized_environment() -> None:
         "BERGAMA_KAFKA__ENABLED": "true",
         "BERGAMA_ICEBERG_WRITER__CATALOG_URI": "http://127.0.0.1:8181",
         "BERGAMA_ICEBERG_WRITER__ACCESS_KEY": "local-access",
+        "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY": "parent-secret",
     }
     spec = CommandSpec(
         id="test-api-kafka-publish-adapter",
@@ -162,6 +167,146 @@ def test_spec_env_is_applied_after_sanitization() -> None:
         "PATH": "/usr/bin",
         "BERGAMA_REPLAY_ENGINE_SMOKE": "1",
     }
+
+
+def test_openapi_child_environment_uses_ephemeral_bootstrap_key() -> None:
+    source = {
+        "PATH": "/usr/bin",
+        "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY": "parent-secret",
+    }
+
+    child = build_sprint3_release._openapi_child_environment(source)
+
+    assert source["BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY"] == "parent-secret"
+    assert child["PATH"] == "/usr/bin"
+    assert child["BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY"] != "parent-secret"
+    assert len(child["BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY"]) >= 48
+
+
+def test_openapi_generation_scopes_bootstrap_key_to_child_process(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured_env: dict[str, str] = {}
+    monkeypatch.setenv("BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY", "parent-secret")
+
+    def fake_run(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        nonlocal captured_env
+        captured_env = dict(kwargs["env"])
+        return subprocess.CompletedProcess(
+            args=args[0],
+            returncode=0,
+            stdout='{"openapi": "3.1.0", "paths": {}}\n',
+            stderr="",
+        )
+
+    monkeypatch.setattr(build_sprint3_release.subprocess, "run", fake_run)
+
+    schema = build_sprint3_release._generate_openapi(tmp_path)
+
+    assert schema["openapi"] == "3.1.0"
+    assert captured_env["BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY"] != "parent-secret"
+    assert len(captured_env["BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY"]) >= 48
+    assert os.environ["BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY"] == "parent-secret"
+
+
+def test_openapi_generation_succeeds_without_parent_bootstrap_key(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured_env: dict[str, str] = {}
+    monkeypatch.delenv("BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY", raising=False)
+
+    def fake_run(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        nonlocal captured_env
+        captured_env = dict(kwargs["env"])
+        return subprocess.CompletedProcess(
+            args=args[0],
+            returncode=0,
+            stdout='{"openapi": "3.1.0", "paths": {"/health": {}}}\n',
+            stderr="",
+        )
+
+    monkeypatch.setattr(build_sprint3_release.subprocess, "run", fake_run)
+
+    schema = build_sprint3_release._generate_openapi(tmp_path)
+
+    assert schema["paths"] == {"/health": {}}
+    assert "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY" in captured_env
+    assert "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY" not in os.environ
+
+
+def test_openapi_output_is_independent_of_ephemeral_bootstrap_key(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observed_keys: list[str] = []
+
+    def fake_token_urlsafe(length: int) -> str:
+        return f"ephemeral-key-{len(observed_keys)}-{'x' * length}"
+
+    def fake_run(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        observed_keys.append(kwargs["env"]["BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY"])
+        return subprocess.CompletedProcess(
+            args=args[0],
+            returncode=0,
+            stdout='{"openapi": "3.1.0", "paths": {"/health": {}}}\n',
+            stderr="",
+        )
+
+    monkeypatch.setattr(build_sprint3_release.secrets, "token_urlsafe", fake_token_urlsafe)
+    monkeypatch.setattr(build_sprint3_release.subprocess, "run", fake_run)
+
+    first = build_sprint3_release._generate_openapi(tmp_path)
+    second = build_sprint3_release._generate_openapi(tmp_path)
+
+    assert first == second
+    assert len(observed_keys) == 2
+    assert observed_keys[0] != observed_keys[1]
+
+
+def test_openapi_generation_does_not_echo_bootstrap_key_on_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    raw_key = "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY=raw-test-secret"
+
+    def fake_run(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=args[0],
+            returncode=1,
+            stdout="",
+            stderr=f"bad env {raw_key}",
+        )
+
+    monkeypatch.setattr(build_sprint3_release.subprocess, "run", fake_run)
+
+    with pytest.raises(RuntimeError) as exc:
+        build_sprint3_release._generate_openapi(tmp_path)
+
+    assert "raw-test-secret" not in str(exc.value)
+    assert "secret-like material" in str(exc.value)
+
+
+def test_openapi_generation_does_not_embed_child_stderr_on_failure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fake_run(*args: Any, **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=args[0],
+            returncode=1,
+            stdout="",
+            stderr="raw-child-output-that-must-not-be-logged",
+        )
+
+    monkeypatch.setattr(build_sprint3_release.subprocess, "run", fake_run)
+
+    with pytest.raises(RuntimeError) as exc:
+        build_sprint3_release._generate_openapi(tmp_path)
+
+    assert "raw-child-output-that-must-not-be-logged" not in str(exc.value)
+    assert "OpenAPI generation failed with exit code 1" in str(exc.value)
 
 
 def _patch_clean_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
