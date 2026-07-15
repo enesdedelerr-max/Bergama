@@ -7,6 +7,7 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from app.core.clock import Clock
+from app.market_data.data_quality import DataQualityService, QualityAction
 from app.market_data.envelope import CanonicalMarketEvent, parse_canonical_market_event
 from app.market_data.keys import build_deduplication_key, build_idempotency_key
 from app.market_data.orchestrator.audit import AuditRecord
@@ -48,6 +49,26 @@ def build_terminal_audit(
         reason_code=reason_code,
         error_type=error_type,
         sink_message_id=sink_message_id,
+        quality_assessment_id=(
+            context.quality_assessment.assessment_id
+            if context.quality_assessment is not None
+            else None
+        ),
+        quality_status=(
+            context.quality_assessment.overall_status.value
+            if context.quality_assessment is not None
+            else None
+        ),
+        quality_highest_severity=(
+            context.quality_assessment.highest_severity.value
+            if context.quality_assessment is not None
+            else None
+        ),
+        quality_action=(
+            context.quality_assessment.recommended_action.value
+            if context.quality_assessment is not None
+            else None
+        ),
     )
 
 
@@ -110,11 +131,42 @@ def run_pit_stage(context: PipelineContext, *, pipeline_id: str) -> PipelineCont
     return context
 
 
-def run_quality_stage(context: PipelineContext) -> PipelineContext:
+def run_quality_stage(
+    context: PipelineContext,
+    *,
+    service: DataQualityService | None = None,
+) -> PipelineContext:
     """Preserve connector quality flags; never invent provider-specific flags."""
     if context.decision is not PipelineDecision.PENDING:
         return context
-    return context.evolve(quality=context.event.quality)
+    if service is None:
+        return context.evolve(quality=context.event.quality)
+
+    assessment = service.evaluate(context.event)
+    metadata = {
+        **dict(context.metadata),
+        "quality_assessment_id": assessment.assessment_id,
+        "quality_status": assessment.overall_status.value,
+        "quality_highest_severity": assessment.highest_severity.value,
+        "quality_action": assessment.recommended_action.value,
+    }
+    enriched = context.evolve(
+        quality=context.event.quality,
+        quality_assessment=assessment,
+        metadata=metadata,
+    )
+    if assessment.recommended_action is QualityAction.REJECT:
+        return enriched.evolve(
+            decision=PipelineDecision.QUALITY_REJECTED,
+            reason="quality_rejected",
+        )
+    if assessment.recommended_action is QualityAction.HALT_PIPELINE:
+        return enriched.evolve(
+            decision=PipelineDecision.QUALITY_HALT,
+            reason="quality_halt",
+            metadata={**metadata, "error_type": "DataQualityHaltError"},
+        )
+    return enriched
 
 
 async def run_dedup_stage(

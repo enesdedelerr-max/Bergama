@@ -48,6 +48,14 @@ from app.market_data.backfill.engine import (
     build_backfill_engine,
 )
 from app.market_data.backfill.ports import BackfillSource
+from app.market_data.data_quality import (
+    DataQualityHealthCheck,
+    DataQualityService,
+    InMemoryQuarantinePort,
+    QualityMetrics,
+    default_quality_policy,
+    load_quality_policy_file,
+)
 from app.market_data.orchestrator.errors import OrchestratorConfigurationError
 from app.market_data.orchestrator.pipeline import (
     MarketDataOrchestrator,
@@ -88,6 +96,7 @@ class AppContainer:
     benzinga_http: BenzingaHttpClient | None
     benzinga_news: BenzingaNewsConnector | None
     market_data_orchestrator: MarketDataOrchestrator | None
+    data_quality_service: DataQualityService | None
     iceberg_writer_runtime: IcebergWriterRuntime | None
     replay_engine: ReplayEngine | None
     backfill_engine: BackfillEngine | None
@@ -104,6 +113,8 @@ class AppContainer:
             # Orchestrator before writers/Kafka so in-flight PublishPort work finishes.
             if self.market_data_orchestrator is not None:
                 await self.market_data_orchestrator.aclose()
+            if self.data_quality_service is not None:
+                await self.data_quality_service.aclose()
             # Replay Engine owns its source/checkpoint only — never starts on aclose (#308).
             if self.replay_engine is not None:
                 await self.replay_engine.aclose()
@@ -169,6 +180,7 @@ def build_container(
     benzinga_news: BenzingaNewsConnector | None = None,
     market_data_orchestrator: MarketDataOrchestrator | None = None,
     publish_port: PublishPort | None = None,
+    data_quality_service: DataQualityService | None = None,
     iceberg_writer_runtime: IcebergWriterRuntime | None = None,
     replay_engine: ReplayEngine | None = None,
     backfill_engine: BackfillEngine | None = None,
@@ -333,6 +345,50 @@ def build_container(
         resolved_benzinga_http = None
         resolved_benzinga_news = None
 
+    resolved_quality: DataQualityService | None
+    if data_quality_service is not None:
+        resolved_quality = data_quality_service
+    elif settings.data_quality.enabled:
+        if settings.data_quality.policy_file is not None:
+            quality_policy = load_quality_policy_file(
+                settings.data_quality.policy_file,
+                max_file_size_bytes=settings.data_quality.policy_max_file_bytes,
+            )
+        else:
+            quality_policy = default_quality_policy(
+                observe_only=settings.data_quality.observe_only,
+                reject_on_error=settings.data_quality.reject_on_error,
+                halt_on_critical=settings.data_quality.halt_on_critical,
+                quarantine_on_error=settings.data_quality.quarantine_enabled,
+                aggregation_window_seconds=settings.data_quality.aggregation_window_seconds,
+                max_problem_dimensions=settings.data_quality.max_problem_dimensions,
+            )
+        quarantine_port = (
+            InMemoryQuarantinePort()
+            if settings.data_quality.quarantine_enabled
+            and not settings.environment.is_production_like
+            else None
+        )
+        resolved_quality = DataQualityService(
+            policy=quality_policy,
+            clock=resolved_clock,
+            metrics=QualityMetrics(
+                max_tracked_instruments=settings.data_quality.max_tracked_instruments,
+                max_problem_dimensions=settings.data_quality.max_problem_dimensions,
+            ),
+            quarantine_port=quarantine_port,
+            enabled=True,
+            required=settings.data_quality.required,
+            readiness_fail_on_critical_halt=settings.data_quality.readiness_fail_on_critical_halt,
+        )
+    elif settings.data_quality.required:
+        raise OrchestratorConfigurationError(
+            "data_quality.required_disabled",
+            detail="data quality required but disabled",
+        )
+    else:
+        resolved_quality = None
+
     resolved_orchestrator: MarketDataOrchestrator | None
     if market_data_orchestrator is not None:
         resolved_orchestrator = market_data_orchestrator
@@ -368,6 +424,7 @@ def build_container(
             settings.orchestrator,
             clock=resolved_clock,
             publish_port=resolved_publish_port,
+            data_quality_service=resolved_quality,
         )
     else:
         resolved_orchestrator = None
@@ -504,6 +561,13 @@ def build_container(
                     worker_started=lambda: iceberg_runtime.started,
                 )
             )
+        if resolved_quality is not None:
+            base_checks.append(
+                DataQualityHealthCheck(
+                    service=resolved_quality,
+                    timeout_seconds=settings.health_check_timeout_seconds,
+                )
+            )
         resolved_checks = tuple(base_checks)
     resolved_health = (
         health_service
@@ -539,6 +603,7 @@ def build_container(
         benzinga_http=resolved_benzinga_http,
         benzinga_news=resolved_benzinga_news,
         market_data_orchestrator=resolved_orchestrator,
+        data_quality_service=resolved_quality,
         iceberg_writer_runtime=resolved_iceberg,
         replay_engine=resolved_replay,
         backfill_engine=resolved_backfill,

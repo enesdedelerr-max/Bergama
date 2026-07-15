@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Any
 
 from app.core.clock import Clock
+from app.market_data.data_quality.models import QualityAssessment
 from app.market_data.envelope import CanonicalMarketEvent
 from app.market_data.orchestrator.audit import AuditRecord
 from app.market_data.orchestrator.policies import PipelineDecision
@@ -31,6 +32,7 @@ class PipelineContext:
     pipeline_clock: Clock
     correlation_id: str | None
     audit: tuple[AuditRecord, ...]
+    quality_assessment: QualityAssessment | None = None
     metadata: Mapping[str, str] = field(default_factory=dict)
     reason: str | None = None
     order_scope: str | None = None

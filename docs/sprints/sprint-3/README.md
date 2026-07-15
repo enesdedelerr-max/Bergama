@@ -15,7 +15,8 @@
 ✅ **Issue #306** Kafka Publish Adapter — complete on `main` (PR #33).  
 ✅ **Issue #307** Iceberg Writer — complete on `main` (PR #34).  
 ✅ **Issue #308** Replay Engine — complete on `main`.  
-⏳ **Issue #309** Historical Backfill Pipeline — in progress on feature branch.
+✅ **Issue #309** Historical Backfill Pipeline — complete on `main` (PR #36).  
+⏳ **Issue #310** Data Quality and Monitoring — in progress on feature branch.
 
 ## Goal
 
@@ -37,8 +38,28 @@ and deterministically replay persisted events without calling providers.
 10. ✅ **#306** Kafka Publish Adapter
 11. ✅ **#307** Iceberg Writer
 12. ✅ **#308** Replay Engine
-13. ⏳ **#309** Historical Backfill Pipeline
-14. Later: Data Quality and Monitoring (#310), …
+13. ✅ **#309** Historical Backfill Pipeline
+14. ⏳ **#310** Data Quality and Monitoring
+15. Later: Sprint 3 Runtime Gate and Release (#311), …
+
+## #310 scope
+
+`CanonicalMarketEvent → canonical/PIT validation → DataQualityService.evaluate() → QualityAssessment → orchestrator decision → audit/metrics → QualitySnapshot → AlertSignal`
+
+- New subsystem under `app.market_data.data_quality`; existing `app.market_data.quality.DataQualityFlags` remains the canonical flag contract.
+- Disabled by default; enabled mode is observe-only by default.
+- Enforcement requires explicit policy configuration; observe-only never rejects, quarantines or halts.
+- Closed rule taxonomy, immutable `QualityAssessment`, deterministic policy fingerprinting.
+- Process-local bounded metrics and deterministic snapshots; no Prometheus exporter in #310.
+- Alert-ready typed signals only; no PagerDuty/Slack/email delivery.
+- Quarantine protocol plus local/test implementations only; no Kafka quarantine topic or Iceberg quarantine table.
+- Narrow orchestrator integration with explicit `QUALITY_REJECTED`, `QUALITY_QUARANTINED`, and `QUALITY_HALT` decisions.
+- No provider calls, data repair, timestamp repair, missing-value imputation, ML anomaly detection or #311.
+
+```bash
+make test-api-data-quality
+make smoke-api-data-quality
+```
 
 ## #309 scope
 
@@ -87,11 +108,13 @@ make test-api-kafka-publish-adapter
 make test-api-iceberg-writer
 make test-api-replay-engine
 make test-api-backfill
+make test-api-data-quality
 make test-api
 make smoke-api-kafka-publish
 make smoke-api-iceberg-writer
 make smoke-api-replay-engine
 make smoke-api-backfill
+make smoke-api-data-quality
 ```
 
 ## Constraints
@@ -99,6 +122,7 @@ make smoke-api-backfill
 - Backfill never uses raw httpx in core; adapters wrap existing connectors.
 - Backfill never writes Kafka/Iceberg directly or reuses ReplayCheckpoint.
 - Backfill never silently selects the production Kafka publish adapter.
+- Data quality never calls providers, repairs data, publishes directly, writes Iceberg directly or sends external alerts.
 - Do not claim exactly-once.
-- Do not implement #310 in this issue.
+- Do not implement #311 in #310.
 - Do not commit secrets or real API keys.

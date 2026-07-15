@@ -16,6 +16,10 @@ class OrchestratorMetrics:
     duplicate_suppressed_total: int = 0
     rejected_validation_total: int = 0
     rejected_pit_total: int = 0
+    quality_degraded_total: int = 0
+    quality_rejected_total: int = 0
+    quality_quarantined_total: int = 0
+    quality_halt_total: int = 0
     admission_overflow_total: int = 0
     publish_failed_total: int = 0
     in_flight_current: int = 0
@@ -43,6 +47,10 @@ class OrchestratorMetrics:
             "duplicate_suppressed_total": self.duplicate_suppressed_total,
             "rejected_validation_total": self.rejected_validation_total,
             "rejected_pit_total": self.rejected_pit_total,
+            "quality_degraded_total": self.quality_degraded_total,
+            "quality_rejected_total": self.quality_rejected_total,
+            "quality_quarantined_total": self.quality_quarantined_total,
+            "quality_halt_total": self.quality_halt_total,
             "admission_overflow_total": self.admission_overflow_total,
             "publish_failed_total": self.publish_failed_total,
             "in_flight_current": self.in_flight_current,
@@ -57,6 +65,10 @@ class OrchestratorMetrics:
         self.duplicate_suppressed_total = 0
         self.rejected_validation_total = 0
         self.rejected_pit_total = 0
+        self.quality_degraded_total = 0
+        self.quality_rejected_total = 0
+        self.quality_quarantined_total = 0
+        self.quality_halt_total = 0
         self.admission_overflow_total = 0
         self.publish_failed_total = 0
         self.in_flight_current = 0
