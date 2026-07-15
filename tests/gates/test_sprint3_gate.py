@@ -908,6 +908,34 @@ def test_final_context_allows_release_only_diff(
     assert release_paths == ["releases/sprint-3/MANIFEST.json"]
 
 
+def test_final_context_allows_release_gate_workflow_diff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_commit = COMMIT
+    release_commit = "508240dcaad8ca81d7351bfa3671a161f1061505"
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    write_json(release / "MANIFEST.json", {"validated_source_commit": source_commit})
+    changed_paths = [
+        "releases/sprint-3/MANIFEST.json",
+        "scripts/gates/build_sprint3_release.py",
+        "scripts/gates/gate_sprint3.py",
+        "scripts/gates/sprint3_common.py",
+        "scripts/gates/validate_sprint3_evidence.py",
+        "tests/gates/test_sprint3_gate.py",
+    ]
+    monkeypatch.setattr(gate_sprint3, "_git_success", lambda *args, **kwargs: True)
+    monkeypatch.setattr(gate_sprint3, "_changed_paths_between", lambda *args, **kwargs: changed_paths)
+
+    validated_source, errors, release_paths = gate_sprint3._final_context(
+        tmp_path, head_commit=release_commit
+    )
+
+    assert validated_source == source_commit
+    assert errors == []
+    assert release_paths == changed_paths
+
+
 def test_final_context_rejects_product_change_between_source_and_release(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

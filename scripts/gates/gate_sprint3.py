@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from scripts.gates.sprint3_common import (
+    APPROVED_SPRINT3_FINALIZATION_PATHS,
     APPROVED_SPRINT3_RELEASE_PATHS,
     GO_DECISION,
     CommandResult,
@@ -209,7 +210,7 @@ def _final_context(root: Path, *, head_commit: str) -> tuple[str, list[str], lis
     if not _git_success(root, "merge-base", "--is-ancestor", source, head_commit):
         errors.append("validated_source_commit is not an ancestor of HEAD")
     changed_paths = _changed_paths_between(root, source, head_commit)
-    unexpected = sorted(path for path in changed_paths if path not in APPROVED_SPRINT3_RELEASE_PATHS)
+    unexpected = sorted(path for path in changed_paths if path not in APPROVED_SPRINT3_FINALIZATION_PATHS)
     if unexpected:
         errors.append(f"non-release changes after validated source commit: {unexpected}")
     return source, errors, changed_paths
