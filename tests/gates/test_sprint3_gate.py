@@ -17,12 +17,64 @@ from scripts.gates.sprint3_common import (
     GO_DECISION,
     CommandResult,
     CommandSpec,
+    normalize_status,
     write_checksums,
     write_json,
 )
 from scripts.gates.validate_sprint3_evidence import validate_evidence
 
 COMMIT = "408240dcaad8ca81d7351bfa3671a161f1061504"
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "698 passed, 6 skipped, 5 deselected in 4.40s",
+        "1 passed, 3 skipped in 0.02s",
+        "29 passed in 0.25s",
+        "1 skipped in 0.01s",
+        "10 passed, 1 xfailed, 2 deselected in 0.50s",
+        "some tests were skipped by pytest markers",
+    ],
+)
+def test_exit_zero_pytest_skip_counts_are_pass(body: str) -> None:
+    status, reason = normalize_status(exit_code=0, body=body)
+    assert status == "PASS"
+    assert reason is None
+
+
+def test_explicit_smoke_marker_is_skipped() -> None:
+    status, reason = normalize_status(
+        exit_code=0,
+        body=(
+            "BERGAMA_SMOKE_STATUS=SKIPPED\n"
+            "smoke-api-polygon SKIPPED (set BERGAMA_POLYGON_SMOKE=1)"
+        ),
+    )
+    assert status == "SKIPPED"
+    assert reason == "BERGAMA_SMOKE_STATUS=SKIPPED"
+
+
+def test_json_smoke_marker_is_skipped() -> None:
+    status, reason = normalize_status(
+        exit_code=0,
+        body='{"status": "SKIPPED", "reason": "BERGAMA_KAFKA_SMOKE is not enabled"}',
+    )
+    assert status == "SKIPPED"
+    assert reason == "BERGAMA_KAFKA_SMOKE is not enabled"
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "FAIL: BERGAMA_KAFKA__ENABLED=true is required",
+        "smoke-api-polygon failed after being explicitly enabled",
+    ],
+)
+def test_nonzero_exit_is_fail(body: str) -> None:
+    status, reason = normalize_status(exit_code=1, body=body)
+    assert status == "FAIL"
+    assert reason is None
 
 
 def _patch_clean_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
