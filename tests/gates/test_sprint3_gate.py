@@ -309,6 +309,151 @@ def test_openapi_generation_does_not_embed_child_stderr_on_failure(
     assert "OpenAPI generation failed with exit code 1" in str(exc.value)
 
 
+def _sample_spdx_sbom(*, namespace: object, package_version: str = "1.0.0") -> dict[str, Any]:
+    return {
+        "SPDXID": "SPDXRef-DOCUMENT",
+        "spdxVersion": "SPDX-2.3",
+        "dataLicense": "CC0-1.0",
+        "name": "dir:apps/api",
+        "documentNamespace": namespace,
+        "creationInfo": {
+            "created": "2026-07-15T01:02:03Z",
+            "creators": ["Tool: syft-1.0.0"],
+        },
+        "packages": [
+            {
+                "SPDXID": "SPDXRef-Package-b",
+                "name": "beta",
+                "versionInfo": package_version,
+                "checksums": [{"algorithm": "SHA256", "checksumValue": "b" * 64}],
+            },
+            {
+                "SPDXID": "SPDXRef-Package-a",
+                "name": "alpha",
+                "versionInfo": "2.0.0",
+                "checksums": [{"algorithm": "SHA256", "checksumValue": "a" * 64}],
+            },
+        ],
+        "relationships": [
+            {
+                "spdxElementId": "SPDXRef-DOCUMENT",
+                "relationshipType": "DESCRIBES",
+                "relatedSpdxElement": "SPDXRef-Package-b",
+            },
+            {
+                "spdxElementId": "SPDXRef-DOCUMENT",
+                "relationshipType": "DESCRIBES",
+                "relatedSpdxElement": "SPDXRef-Package-a",
+            },
+        ],
+    }
+
+
+def _normalize_sample_sbom(sbom: dict[str, Any], *, commit: str = COMMIT) -> dict[str, Any]:
+    return build_sprint3_release._normalize_sbom(
+        sbom,
+        normalized_created="2026-07-15T00:00:00Z",
+        validated_commit=commit,
+    )
+
+
+def test_sbom_document_namespace_is_deterministic_for_same_commit() -> None:
+    first = _sample_spdx_sbom(
+        namespace="https://anchore.com/syft/dir/apps/api-9378a740-f44a-4043-a4a2-8c091ca3e80d"
+    )
+    second = _sample_spdx_sbom(
+        namespace="https://anchore.com/syft/dir/apps/api-13bc5e23-0b20-40aa-833c-b59e00c6df2c"
+    )
+
+    normalized_first = _normalize_sample_sbom(first)
+    normalized_second = _normalize_sample_sbom(second)
+
+    assert normalized_first == normalized_second
+    assert normalized_first["documentNamespace"] == (
+        f"https://github.com/enesdedelerr-max/Bergama/sbom/sprint-3/{COMMIT}"
+    )
+    assert "9378a740-f44a-4043-a4a2-8c091ca3e80d" not in normalized_first["documentNamespace"]
+    assert "13bc5e23-0b20-40aa-833c-b59e00c6df2c" not in normalized_second["documentNamespace"]
+
+
+def test_sbom_document_namespace_changes_by_commit() -> None:
+    other_commit = "508240dcaad8ca81d7351bfa3671a161f1061505"
+    first = _normalize_sample_sbom(
+        _sample_spdx_sbom(namespace="https://anchore.com/syft/dir/apps/api-a"),
+        commit=COMMIT,
+    )
+    second = _normalize_sample_sbom(
+        _sample_spdx_sbom(namespace="https://anchore.com/syft/dir/apps/api-a"),
+        commit=other_commit,
+    )
+
+    assert first["documentNamespace"] != second["documentNamespace"]
+    assert first["documentNamespace"].endswith(f"/{COMMIT}")
+    assert second["documentNamespace"].endswith(f"/{other_commit}")
+
+
+@pytest.mark.parametrize(
+    "namespace",
+    [
+        None,
+        "",
+        123,
+        "not-a-uri",
+        "http://anchore.com/syft/dir/apps/api-random",
+    ],
+)
+def test_sbom_document_namespace_must_be_valid_absolute_https_uri(namespace: object) -> None:
+    with pytest.raises(RuntimeError):
+        _normalize_sample_sbom(_sample_spdx_sbom(namespace=namespace))
+
+
+def test_sbom_normalization_preserves_packages_relationships_and_core_spdx_fields() -> None:
+    source = _sample_spdx_sbom(namespace="https://anchore.com/syft/dir/apps/api-random")
+
+    normalized = _normalize_sample_sbom(source)
+
+    assert normalized["SPDXID"] == source["SPDXID"]
+    assert normalized["spdxVersion"] == source["spdxVersion"]
+    assert normalized["dataLicense"] == source["dataLicense"]
+    assert normalized["name"] == source["name"]
+    assert normalized["creationInfo"]["creators"] == source["creationInfo"]["creators"]
+    assert normalized["creationInfo"]["created"] == "2026-07-15T00:00:00Z"
+    assert sorted(item["name"] for item in normalized["packages"]) == ["alpha", "beta"]
+    assert sorted(item["relatedSpdxElement"] for item in normalized["relationships"]) == [
+        "SPDXRef-Package-a",
+        "SPDXRef-Package-b",
+    ]
+
+
+def test_sbom_canonical_sort_behavior_is_stable() -> None:
+    source = _sample_spdx_sbom(namespace="https://anchore.com/syft/dir/apps/api-random")
+
+    normalized = _normalize_sample_sbom(source)
+
+    assert [package["name"] for package in normalized["packages"]] == ["alpha", "beta"]
+    assert [relationship["relatedSpdxElement"] for relationship in normalized["relationships"]] == [
+        "SPDXRef-Package-a",
+        "SPDXRef-Package-b",
+    ]
+
+
+def test_sbom_non_namespace_drift_still_fails_repeated_comparison() -> None:
+    first = _sample_spdx_sbom(
+        namespace="https://anchore.com/syft/dir/apps/api-9378a740-f44a-4043-a4a2-8c091ca3e80d",
+        package_version="1.0.0",
+    )
+    second = _sample_spdx_sbom(
+        namespace="https://anchore.com/syft/dir/apps/api-13bc5e23-0b20-40aa-833c-b59e00c6df2c",
+        package_version="1.0.1",
+    )
+
+    normalized_first = _normalize_sample_sbom(first)
+    normalized_second = _normalize_sample_sbom(second)
+
+    assert normalized_first != normalized_second
+    assert normalized_first["documentNamespace"] == normalized_second["documentNamespace"]
+
+
 def _patch_clean_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(gate_sprint3, "git_meta", lambda root: ("feature/test", COMMIT))
     monkeypatch.setattr(gate_sprint3, "git_is_dirty", lambda root: False)

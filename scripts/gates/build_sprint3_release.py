@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from scripts.gates.sprint3_common import (
     EVIDENCE_VERSION,
@@ -32,7 +33,19 @@ from scripts.gates.validate_sprint3_evidence import validate_evidence
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE_DIR = ROOT / "releases" / "sprint-3"
+_RELEASE_SBOM_NAMESPACE_PREFIX = "https://github.com/enesdedelerr-max/Bergama/sbom/sprint-3"
 _BOOTSTRAP_JWT_SIGNING_KEY_ENV = "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY"
+_REQUIRED_SPDX_FIELDS = frozenset(
+    {
+        "SPDXID",
+        "spdxVersion",
+        "dataLicense",
+        "name",
+        "documentNamespace",
+        "creationInfo",
+        "packages",
+    }
+)
 
 
 def _run_syft(root: Path) -> dict[str, Any]:
@@ -75,8 +88,59 @@ def _normalize_json(value: Any) -> Any:
     return value
 
 
-def _normalize_sbom(sbom: dict[str, Any], *, normalized_created: str) -> dict[str, Any]:
+def _validate_spdx_required_fields(sbom: dict[str, Any]) -> None:
+    missing = sorted(field for field in _REQUIRED_SPDX_FIELDS if field not in sbom)
+    if missing:
+        raise RuntimeError(f"Syft SBOM missing required SPDX fields: {', '.join(missing)}")
+    if not isinstance(sbom.get("creationInfo"), dict):
+        raise RuntimeError("Syft SBOM creationInfo must be an object")
+    if not isinstance(sbom.get("packages"), list):
+        raise RuntimeError("Syft SBOM packages must be a list")
+
+
+def _deterministic_sbom_document_namespace(commit: str) -> str:
+    normalized_commit = commit.strip()
+    if normalized_commit != commit or normalized_commit != normalized_commit.lower():
+        raise RuntimeError("validated git commit must be a full lowercase SHA-1")
+    if len(normalized_commit) != 40 or any(char not in "0123456789abcdef" for char in normalized_commit):
+        raise RuntimeError("validated git commit must be a full lowercase SHA-1")
+    return f"{_RELEASE_SBOM_NAMESPACE_PREFIX}/{normalized_commit}"
+
+
+def _validate_source_document_namespace(value: object) -> None:
+    if not isinstance(value, str) or not value.strip():
+        raise RuntimeError("Syft SBOM documentNamespace must be a non-empty string")
+    parsed = urlparse(value)
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise RuntimeError("Syft SBOM documentNamespace must be an absolute HTTPS URI")
+
+
+def _validate_normalized_document_namespace(value: object, *, commit: str) -> None:
+    _validate_source_document_namespace(value)
+    namespace = str(value)
+    normalized_commit = commit.strip().lower()
+    if "sprint-3" not in namespace:
+        raise RuntimeError("normalized SBOM documentNamespace must include sprint-3")
+    if normalized_commit not in namespace:
+        raise RuntimeError("normalized SBOM documentNamespace must include validated commit")
+    parsed = urlparse(namespace)
+    if parsed.username or parsed.password:
+        raise RuntimeError("normalized SBOM documentNamespace must not contain credentials")
+    if "://" in parsed.path:
+        raise RuntimeError("normalized SBOM documentNamespace path is malformed")
+
+
+def _normalize_sbom(
+    sbom: dict[str, Any],
+    *,
+    normalized_created: str,
+    validated_commit: str,
+) -> dict[str, Any]:
     payload = deepcopy(sbom)
+    _validate_spdx_required_fields(payload)
+    _validate_source_document_namespace(payload.get("documentNamespace"))
+    payload["documentNamespace"] = _deterministic_sbom_document_namespace(validated_commit)
+    _validate_normalized_document_namespace(payload["documentNamespace"], commit=validated_commit)
     creation = payload.setdefault("creationInfo", {})
     if isinstance(creation, dict):
         creation["created"] = normalized_created
@@ -228,7 +292,7 @@ Post-merge tag policy is documented in `docs/sprints/sprint-3/README.md`. Do not
 - `sprint3-quality-gate.json`: normalized required and optional gate results.
 - `sprint3-runtime-validation.json`: normalized Kafka to Iceberg runtime proof.
 - `sprint3-openapi.json`: current generated API schema.
-- `sbom.spdx.json`: real Syft SPDX JSON SBOM with normalized volatile creation timestamp.
+- `sbom.spdx.json`: real Syft SPDX JSON SBOM with normalized volatile creation timestamp and document namespace.
 - `MANIFEST.json`: release metadata, hashes, tool versions, and source evidence hashes.
 - `checksums.txt`: SHA-256 hashes for tracked release files.
 """
@@ -297,8 +361,16 @@ def build_release(root: Path) -> None:
     runtime_summary = _normalize_json(_runtime_summary(root))
     openapi = _generate_openapi(root)
     normalized_created = read_json(evidence / "git-state.json").get("generated_at", utc_now())
-    sbom_first = _normalize_sbom(_run_syft(root), normalized_created=str(normalized_created))
-    sbom_second = _normalize_sbom(_run_syft(root), normalized_created=str(normalized_created))
+    sbom_first = _normalize_sbom(
+        _run_syft(root),
+        normalized_created=str(normalized_created),
+        validated_commit=commit,
+    )
+    sbom_second = _normalize_sbom(
+        _run_syft(root),
+        normalized_created=str(normalized_created),
+        validated_commit=commit,
+    )
     if sbom_first != sbom_second:
         raise RuntimeError("normalized Syft SBOM generation drifted across two runs")
 
@@ -326,7 +398,7 @@ def build_release(root: Path) -> None:
             "format": "spdx-json",
             "generator": "syft",
             "scan_target": "apps/api",
-            "normalized_fields": ["creationInfo.created"],
+            "normalized_fields": ["creationInfo.created", "documentNamespace"],
         },
         "manifest_included_in_checksums": True,
         "files": {},
