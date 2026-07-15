@@ -21,6 +21,11 @@ from typing import Any
 from app.core.clock import Clock
 from app.core.logging import get_logger, structured_extra
 from app.core.orchestrator_settings import OrchestratorSettings
+from app.market_data.data_quality import (
+    DataQualityQuarantineUnavailableError,
+    DataQualityService,
+    QualityAction,
+)
 from app.market_data.envelope import CanonicalMarketEvent
 from app.market_data.orchestrator.admission import (
     AdmissionTimeoutError,
@@ -74,6 +79,7 @@ class MarketDataOrchestrator:
     publish_port: PublishPort
     audit_sink: AuditSink = field(default_factory=InMemoryAuditSink)
     metrics: OrchestratorMetrics = field(default_factory=OrchestratorMetrics)
+    data_quality_service: DataQualityService | None = None
     _dedup: BoundedDedupStore = field(init=False, repr=False)
     _admission: InFlightAdmissionController = field(init=False, repr=False)
     _sequencer: PerStreamSequencer = field(init=False, repr=False)
@@ -136,7 +142,52 @@ class MarketDataOrchestrator:
         if context.decision in TERMINAL_DECISIONS:
             return self._finish(context)
 
-        context = run_quality_stage(context)
+        context = run_quality_stage(context, service=self.data_quality_service)
+        if context.quality_assessment is not None and (
+            context.quality_assessment.recommended_action is QualityAction.ACCEPT_DEGRADED
+        ):
+            self.metrics.quality_degraded_total += 1
+        if context.decision in TERMINAL_DECISIONS:
+            return self._finish(context)
+        assessment = context.quality_assessment
+        if assessment is not None and assessment.recommended_action is QualityAction.QUARANTINE:
+            if self.data_quality_service is None:
+                context = finalize_decision(
+                    context,
+                    decision=PipelineDecision.QUALITY_HALT,
+                    reason_code="quality_quarantine_unavailable",
+                    error_type="DataQualityQuarantineUnavailableError",
+                )
+                return self._finish(context)
+            try:
+                quarantine_result = await self.data_quality_service.quarantine(
+                    context.event,
+                    assessment=assessment,
+                    correlation_id=correlation_id or context.correlation_id or self.pipeline_id,
+                )
+            except DataQualityQuarantineUnavailableError:
+                context = finalize_decision(
+                    context,
+                    decision=PipelineDecision.QUALITY_HALT,
+                    reason_code="quality_quarantine_unavailable",
+                    error_type="DataQualityQuarantineUnavailableError",
+                )
+                return self._finish(context)
+            if not quarantine_result.succeeded:
+                context = finalize_decision(
+                    context,
+                    decision=PipelineDecision.QUALITY_HALT,
+                    reason_code="quality_quarantine_failed",
+                    error_type="QuarantineResult",
+                )
+                return self._finish(context)
+            context = finalize_decision(
+                context,
+                decision=PipelineDecision.QUALITY_QUARANTINED,
+                reason_code="quality_quarantined",
+                sink_message_id=quarantine_result.quarantined_at_id,
+            )
+            return self._finish(context)
 
         lease: StreamLease | None = None
         reserved = False
@@ -295,6 +346,12 @@ class MarketDataOrchestrator:
             self.metrics.rejected_validation_total += 1
         elif decision is PipelineDecision.REJECTED_PIT:
             self.metrics.rejected_pit_total += 1
+        elif decision is PipelineDecision.QUALITY_REJECTED:
+            self.metrics.quality_rejected_total += 1
+        elif decision is PipelineDecision.QUALITY_QUARANTINED:
+            self.metrics.quality_quarantined_total += 1
+        elif decision is PipelineDecision.QUALITY_HALT:
+            self.metrics.quality_halt_total += 1
         elif decision is PipelineDecision.BUFFER_OVERFLOW:
             self.metrics.admission_overflow_total += 1
         elif decision is PipelineDecision.PUBLISH_FAILED:
@@ -312,6 +369,10 @@ class MarketDataOrchestrator:
                 idempotency_key=context.idempotency_key,
                 correlation_id=context.correlation_id,
                 reason=context.reason,
+                quality_assessment_id=context.metadata.get("quality_assessment_id"),
+                quality_status=context.metadata.get("quality_status"),
+                quality_highest_severity=context.metadata.get("quality_highest_severity"),
+                quality_action=context.metadata.get("quality_action"),
             ),
         )
         return ProcessResult(decision=decision, context=context)
@@ -323,6 +384,7 @@ def build_market_data_orchestrator(
     clock: Clock,
     publish_port: PublishPort | None = None,
     audit_sink: AuditSink | None = None,
+    data_quality_service: DataQualityService | None = None,
 ) -> MarketDataOrchestrator:
     """Construct an application-scoped orchestrator.
 
@@ -349,6 +411,7 @@ def build_market_data_orchestrator(
         clock=clock,
         publish_port=resolved_port,
         audit_sink=sink,
+        data_quality_service=data_quality_service,
     )
 
 
@@ -365,4 +428,5 @@ def orchestrator_safe_summary(orchestrator: MarketDataOrchestrator) -> dict[str,
         },
         "dedup_size": len(orchestrator._dedup),
         "stream_count": len(orchestrator._sequencer),
+        "data_quality_enabled": orchestrator.data_quality_service is not None,
     }

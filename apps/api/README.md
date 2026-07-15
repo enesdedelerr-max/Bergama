@@ -347,6 +347,34 @@ make test-api-backfill
 make smoke-api-backfill   # SKIPPED unless BERGAMA_BACKFILL_SMOKE=1 (+ provider)
 ```
 
+## Data Quality and Monitoring (#310)
+
+Deterministic, provider-independent quality assessment for canonical market-data flows.
+
+Flow:
+
+`CanonicalMarketEvent → canonical/PIT validation → DataQualityService.evaluate() → QualityAssessment → orchestrator quality decision → audit/metrics → QualitySnapshot → AlertSignal`
+
+| Concern | Policy |
+|--------|--------|
+| Default | Disabled. When enabled, `observe_only=true` by default |
+| Enforcement | Requires explicit policy settings; observe-only never rejects/quarantines/halts |
+| Contracts | Existing `DataQualityFlags` in `app.market_data.quality` remain unchanged |
+| Package | New subsystem lives under `app.market_data.data_quality` |
+| Rules | Closed rule IDs only; no free-form runtime rule names |
+| Policy | Optional local YAML/JSON only; duplicate-key-safe, size-bounded, no remote URLs |
+| Metrics | Process-local bounded counters/snapshots; no Prometheus exporter in #310 |
+| Alerts | Typed `AlertSignal` models only; no external notification delivery |
+| Quarantine | Protocol plus local/test in-memory/file implementations; no Kafka topic/Iceberg table |
+| Orchestrator | Quality reject/quarantine/halt never calls `PublishPort` |
+
+Continuity gap detection is deferred until an explicit cadence/calendar policy exists.
+
+```bash
+make test-api-data-quality
+make smoke-api-data-quality
+```
+
 ## Sprint 2 gate (#210)
 
 Fail-closed verification of the FastAPI Runtime Foundation:

@@ -17,6 +17,7 @@ from pydantic_settings import (
 
 from app.core.backfill_settings import BackfillSettings
 from app.core.benzinga_settings import BenzingaSettings
+from app.core.data_quality_settings import DataQualitySettings
 from app.core.environment import AppEnvironment
 from app.core.finnhub_settings import FinnhubSettings
 from app.core.fred_settings import FredSettings
@@ -82,6 +83,7 @@ class AppSettings(BaseSettings):
     iceberg_writer: IcebergWriterSettings = Field(default_factory=IcebergWriterSettings)
     replay: ReplaySettings = Field(default_factory=ReplaySettings)
     backfill: BackfillSettings = Field(default_factory=BackfillSettings)
+    data_quality: DataQualitySettings = Field(default_factory=DataQualitySettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
@@ -278,6 +280,7 @@ class AppSettings(BaseSettings):
             "sec": self.sec.safe_summary(),
             "benzinga": self.benzinga.safe_summary(),
             "orchestrator": self.orchestrator.safe_summary(),
+            "data_quality": self.data_quality.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
         return summary

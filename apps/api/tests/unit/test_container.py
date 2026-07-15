@@ -72,9 +72,11 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert container.benzinga_http is None
     assert container.benzinga_news is None
     assert container.market_data_orchestrator is None
+    assert container.data_quality_service is None
     assert container.replay_engine is None
     assert container.backfill_engine is None
     assert container.settings.orchestrator.enabled is False
+    assert container.settings.data_quality.enabled is False
     assert container.settings.replay.enabled is False
     assert container.settings.backfill.enabled is False
     assert container.registry_service.settings.enabled is False

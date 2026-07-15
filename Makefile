@@ -22,13 +22,14 @@ API_DIR := $(ROOT)/apps/api
 	test-api-iceberg-writer smoke-api-iceberg-writer \
 	test-api-replay-engine smoke-api-replay-engine \
 	test-api-backfill smoke-api-backfill \
+	test-api-data-quality smoke-api-data-quality \
 	smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred \
 	smoke-api-sec smoke-api-benzinga
 
 help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
 	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate run-api"
-	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals test-api-fred-macro test-api-sec-filings test-api-benzinga-news test-api-provider-contracts test-api-market-orchestrator test-api-kafka-publish-adapter smoke-api-kafka-publish test-api-iceberg-writer smoke-api-iceberg-writer test-api-replay-engine smoke-api-replay-engine test-api-backfill smoke-api-backfill smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred smoke-api-sec smoke-api-benzinga"
+	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals test-api-fred-macro test-api-sec-filings test-api-benzinga-news test-api-provider-contracts test-api-market-orchestrator test-api-kafka-publish-adapter smoke-api-kafka-publish test-api-iceberg-writer smoke-api-iceberg-writer test-api-replay-engine smoke-api-replay-engine test-api-backfill smoke-api-backfill test-api-data-quality smoke-api-data-quality smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred smoke-api-sec smoke-api-benzinga"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -261,6 +262,17 @@ smoke-api-backfill:
 		exit 0; \
 	fi; \
 	uv run pytest -q -m backfill_smoke tests/smoke/test_backfill_live.py
+
+test-api-data-quality:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_data_quality_policy_and_settings.py \
+		tests/unit/test_data_quality_engine_rules.py \
+		tests/unit/test_data_quality_monitoring.py \
+		tests/contract/test_data_quality_contract.py \
+		tests/integration/test_data_quality_orchestrator.py
+
+smoke-api-data-quality:
+	@cd "$(API_DIR)" && uv run pytest -q tests/smoke/test_data_quality_smoke.py
 
 smoke-api-polygon:
 	@cd "$(API_DIR)" && \

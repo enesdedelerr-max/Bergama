@@ -20,6 +20,9 @@ TERMINAL_AUDIT_DECISIONS: frozenset[PipelineDecision] = frozenset(
         PipelineDecision.DUPLICATE_SUPPRESSED,
         PipelineDecision.REJECTED_VALIDATION,
         PipelineDecision.REJECTED_PIT,
+        PipelineDecision.QUALITY_REJECTED,
+        PipelineDecision.QUALITY_QUARANTINED,
+        PipelineDecision.QUALITY_HALT,
         PipelineDecision.BUFFER_OVERFLOW,
         PipelineDecision.PUBLISH_FAILED,
     }
@@ -43,6 +46,10 @@ class AuditRecord:
     reason_code: str
     error_type: str | None = None
     sink_message_id: str | None = None
+    quality_assessment_id: str | None = None
+    quality_status: str | None = None
+    quality_highest_severity: str | None = None
+    quality_action: str | None = None
 
     def __post_init__(self) -> None:
         if self.decision not in TERMINAL_AUDIT_DECISIONS:

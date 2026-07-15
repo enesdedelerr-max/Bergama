@@ -18,6 +18,9 @@ class PipelineDecision(StrEnum):
     - DUPLICATE_SUPPRESSED
     - REJECTED_VALIDATION
     - REJECTED_PIT
+    - QUALITY_REJECTED
+    - QUALITY_QUARANTINED
+    - QUALITY_HALT
     - BUFFER_OVERFLOW — admission capacity timeout
     - PUBLISH_FAILED
     """
@@ -28,6 +31,9 @@ class PipelineDecision(StrEnum):
     DUPLICATE_SUPPRESSED = "duplicate_suppressed"
     REJECTED_VALIDATION = "rejected_validation"
     REJECTED_PIT = "rejected_pit"
+    QUALITY_REJECTED = "quality_rejected"
+    QUALITY_QUARANTINED = "quality_quarantined"
+    QUALITY_HALT = "quality_halt"
     BUFFER_OVERFLOW = "buffer_overflow"
     PUBLISH_FAILED = "publish_failed"
     DRY_RUN = "dry_run"
@@ -39,6 +45,9 @@ TERMINAL_DECISIONS: frozenset[PipelineDecision] = frozenset(
         PipelineDecision.DUPLICATE_SUPPRESSED,
         PipelineDecision.REJECTED_VALIDATION,
         PipelineDecision.REJECTED_PIT,
+        PipelineDecision.QUALITY_REJECTED,
+        PipelineDecision.QUALITY_QUARANTINED,
+        PipelineDecision.QUALITY_HALT,
         PipelineDecision.BUFFER_OVERFLOW,
         PipelineDecision.PUBLISH_FAILED,
         PipelineDecision.DRY_RUN,
