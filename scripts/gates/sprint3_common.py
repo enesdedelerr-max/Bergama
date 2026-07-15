@@ -121,11 +121,26 @@ REQUIRED_MAKE_TARGETS = (
     "smoke-api-data-quality",
     "smoke-api-replay-engine",
     "smoke-sprint3-runtime",
+    "prepare-sprint3-release",
     "build-sprint3-release",
     "validate-sprint3-evidence",
     "validate-sprint3-release",
     "test-sprint3-gate",
     "gate-sprint3",
+)
+
+APPROVED_SPRINT3_RELEASE_PATHS = frozenset(
+    {
+        "releases/sprint-3/README.md",
+        "releases/sprint-3/RELEASE_NOTES.md",
+        "releases/sprint-3/MANIFEST.json",
+        "releases/sprint-3/checksums.txt",
+        "releases/sprint-3/sbom.spdx.json",
+        "releases/sprint-3/sprint3-openapi.json",
+        "releases/sprint-3/sprint3-quality-gate.json",
+        "releases/sprint-3/sprint3-runtime-validation.json",
+        "releases/sprint-3/sprint3-known-limitations.md",
+    }
 )
 
 STATIC_STEP_SPECS = (
@@ -601,6 +616,9 @@ def summarize_results(state: GateState) -> dict[str, Any]:
         "release_version": RELEASE_VERSION,
         "branch": state.git_branch,
         "commit": state.git_commit,
+        "validated_source_commit": state.git_commit,
+        "release_commit": getattr(state, "release_commit", None),
+        "gate_phase": getattr(state, "gate_phase", "final"),
         "started_at": state.started_at,
         "completed_at": utc_now(),
         "overall_status": state.overall_status,

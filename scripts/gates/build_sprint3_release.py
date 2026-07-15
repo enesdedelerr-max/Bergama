@@ -13,8 +13,10 @@ from collections.abc import Sequence
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from scripts.gates.sprint3_common import (
+    APPROVED_SPRINT3_RELEASE_PATHS,
     EVIDENCE_VERSION,
     GO_DECISION,
     RELEASE_VERSION,
@@ -32,7 +34,19 @@ from scripts.gates.validate_sprint3_evidence import validate_evidence
 
 ROOT = Path(__file__).resolve().parents[2]
 RELEASE_DIR = ROOT / "releases" / "sprint-3"
+_RELEASE_SBOM_NAMESPACE_PREFIX = "https://github.com/enesdedelerr-max/Bergama/sbom/sprint-3"
 _BOOTSTRAP_JWT_SIGNING_KEY_ENV = "BERGAMA_SECRETS__BOOTSTRAP_JWT_SIGNING_KEY"
+_REQUIRED_SPDX_FIELDS = frozenset(
+    {
+        "SPDXID",
+        "spdxVersion",
+        "dataLicense",
+        "name",
+        "documentNamespace",
+        "creationInfo",
+        "packages",
+    }
+)
 
 
 def _run_syft(root: Path) -> dict[str, Any]:
@@ -75,8 +89,59 @@ def _normalize_json(value: Any) -> Any:
     return value
 
 
-def _normalize_sbom(sbom: dict[str, Any], *, normalized_created: str) -> dict[str, Any]:
+def _validate_spdx_required_fields(sbom: dict[str, Any]) -> None:
+    missing = sorted(field for field in _REQUIRED_SPDX_FIELDS if field not in sbom)
+    if missing:
+        raise RuntimeError(f"Syft SBOM missing required SPDX fields: {', '.join(missing)}")
+    if not isinstance(sbom.get("creationInfo"), dict):
+        raise RuntimeError("Syft SBOM creationInfo must be an object")
+    if not isinstance(sbom.get("packages"), list):
+        raise RuntimeError("Syft SBOM packages must be a list")
+
+
+def _deterministic_sbom_document_namespace(commit: str) -> str:
+    normalized_commit = commit.strip()
+    if normalized_commit != commit or normalized_commit != normalized_commit.lower():
+        raise RuntimeError("validated git commit must be a full lowercase SHA-1")
+    if len(normalized_commit) != 40 or any(char not in "0123456789abcdef" for char in normalized_commit):
+        raise RuntimeError("validated git commit must be a full lowercase SHA-1")
+    return f"{_RELEASE_SBOM_NAMESPACE_PREFIX}/{normalized_commit}"
+
+
+def _validate_source_document_namespace(value: object) -> None:
+    if not isinstance(value, str) or not value.strip():
+        raise RuntimeError("Syft SBOM documentNamespace must be a non-empty string")
+    parsed = urlparse(value)
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise RuntimeError("Syft SBOM documentNamespace must be an absolute HTTPS URI")
+
+
+def _validate_normalized_document_namespace(value: object, *, commit: str) -> None:
+    _validate_source_document_namespace(value)
+    namespace = str(value)
+    normalized_commit = commit.strip().lower()
+    if "sprint-3" not in namespace:
+        raise RuntimeError("normalized SBOM documentNamespace must include sprint-3")
+    if normalized_commit not in namespace:
+        raise RuntimeError("normalized SBOM documentNamespace must include validated commit")
+    parsed = urlparse(namespace)
+    if parsed.username or parsed.password:
+        raise RuntimeError("normalized SBOM documentNamespace must not contain credentials")
+    if "://" in parsed.path:
+        raise RuntimeError("normalized SBOM documentNamespace path is malformed")
+
+
+def _normalize_sbom(
+    sbom: dict[str, Any],
+    *,
+    normalized_created: str,
+    validated_commit: str,
+) -> dict[str, Any]:
     payload = deepcopy(sbom)
+    _validate_spdx_required_fields(payload)
+    _validate_source_document_namespace(payload.get("documentNamespace"))
+    payload["documentNamespace"] = _deterministic_sbom_document_namespace(validated_commit)
+    _validate_normalized_document_namespace(payload["documentNamespace"], commit=validated_commit)
     creation = payload.setdefault("creationInfo", {})
     if isinstance(creation, dict):
         creation["created"] = normalized_created
@@ -228,7 +293,7 @@ Post-merge tag policy is documented in `docs/sprints/sprint-3/README.md`. Do not
 - `sprint3-quality-gate.json`: normalized required and optional gate results.
 - `sprint3-runtime-validation.json`: normalized Kafka to Iceberg runtime proof.
 - `sprint3-openapi.json`: current generated API schema.
-- `sbom.spdx.json`: real Syft SPDX JSON SBOM with normalized volatile creation timestamp.
+- `sbom.spdx.json`: real Syft SPDX JSON SBOM with normalized volatile creation timestamp and document namespace.
 - `MANIFEST.json`: release metadata, hashes, tool versions, and source evidence hashes.
 - `checksums.txt`: SHA-256 hashes for tracked release files.
 """
@@ -274,13 +339,48 @@ def _manifest_file_hashes(root: Path, release_dir: Path) -> dict[str, str]:
     }
 
 
+def _is_full_lower_sha(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 40
+        and value == value.lower()
+        and all(char in "0123456789abcdef" for char in value)
+    )
+
+
+def _existing_release_manifest(root: Path) -> dict[str, Any] | None:
+    manifest_path = root / "releases" / "sprint-3" / "MANIFEST.json"
+    if not manifest_path.is_file():
+        return None
+    try:
+        manifest = read_json(manifest_path)
+    except Exception:  # noqa: BLE001 - malformed manifests are regenerated during prepare
+        return None
+    return manifest if isinstance(manifest, dict) else None
+
+
+def _validated_source_commit_for_build(root: Path, *, head_commit: str) -> str:
+    manifest = _existing_release_manifest(root)
+    if manifest is None:
+        return head_commit
+    validated_source_commit = manifest.get("validated_source_commit")
+    return str(validated_source_commit) if _is_full_lower_sha(validated_source_commit) else head_commit
+
+
 def build_release(root: Path) -> None:
-    validation = validate_evidence(root, validate_release=False, require_release_evidence=False)
+    branch, head_commit = git_meta(root)
+    existing_manifest = _existing_release_manifest(root)
+    validated_source_commit = _validated_source_commit_for_build(root, head_commit=head_commit)
+    validation = validate_evidence(
+        root,
+        validate_release=False,
+        require_release_evidence=False,
+        expected_commit=validated_source_commit,
+    )
     if validation.status != "PASS":
         reasons = "; ".join(validation.reasons)
         raise RuntimeError(f"cannot build Sprint 3 release from invalid evidence: {reasons}")
 
-    branch, commit = git_meta(root)
     release_dir = root / "releases" / "sprint-3"
     release_dir.mkdir(parents=True, exist_ok=True)
     for child in sorted(release_dir.iterdir()):
@@ -288,21 +388,37 @@ def build_release(root: Path) -> None:
             child.unlink()
 
     evidence = root / "artifacts" / "sprint3" / "evidence"
-    evidence_hashes = {
-        str(path.relative_to(root)): sha256_file(path)
-        for path in sorted(evidence.glob("*.json"))
-        if path.name != "checksums.json"
-    }
-    quality_gate = _quality_gate_summary(root, commit=commit)
+    if existing_manifest is not None and validated_source_commit != head_commit:
+        evidence_hashes = existing_manifest.get("source_evidence_hashes", {})
+        if not isinstance(evidence_hashes, dict):
+            raise RuntimeError("existing release manifest source_evidence_hashes must be an object")
+        normalized_created = existing_manifest.get("generated_at")
+        if not isinstance(normalized_created, str) or not normalized_created:
+            raise RuntimeError("existing release manifest generated_at must be a non-empty string")
+    else:
+        evidence_hashes = {
+            str(path.relative_to(root)): sha256_file(path)
+            for path in sorted(evidence.glob("*.json"))
+            if path.name not in {"checksums.json", "release.json", "release-attestation.json"}
+        }
+        normalized_created = read_json(evidence / "git-state.json").get("generated_at", utc_now())
+    quality_gate = _quality_gate_summary(root, commit=validated_source_commit)
     runtime_summary = _normalize_json(_runtime_summary(root))
     openapi = _generate_openapi(root)
-    normalized_created = read_json(evidence / "git-state.json").get("generated_at", utc_now())
-    sbom_first = _normalize_sbom(_run_syft(root), normalized_created=str(normalized_created))
-    sbom_second = _normalize_sbom(_run_syft(root), normalized_created=str(normalized_created))
+    sbom_first = _normalize_sbom(
+        _run_syft(root),
+        normalized_created=str(normalized_created),
+        validated_commit=validated_source_commit,
+    )
+    sbom_second = _normalize_sbom(
+        _run_syft(root),
+        normalized_created=str(normalized_created),
+        validated_commit=validated_source_commit,
+    )
     if sbom_first != sbom_second:
         raise RuntimeError("normalized Syft SBOM generation drifted across two runs")
 
-    _write_docs(root, release_dir, commit=commit)
+    _write_docs(root, release_dir, commit=validated_source_commit)
     write_json(release_dir / "sprint3-quality-gate.json", quality_gate)
     write_json(release_dir / "sprint3-runtime-validation.json", runtime_summary)
     write_json(release_dir / "sprint3-openapi.json", openapi)
@@ -311,7 +427,7 @@ def build_release(root: Path) -> None:
     syft_version = subprocess.check_output(["syft", "--version"], cwd=root, text=True).strip()
     manifest = {
         "release_version": RELEASE_VERSION,
-        "validated_commit": commit,
+        "validated_source_commit": validated_source_commit,
         "source_branch": branch,
         "generated_at": normalized_created,
         "evidence_version": EVIDENCE_VERSION,
@@ -326,9 +442,10 @@ def build_release(root: Path) -> None:
             "format": "spdx-json",
             "generator": "syft",
             "scan_target": "apps/api",
-            "normalized_fields": ["creationInfo.created"],
+            "normalized_fields": ["creationInfo.created", "documentNamespace"],
         },
         "manifest_included_in_checksums": True,
+        "approved_release_paths": sorted(APPROVED_SPRINT3_RELEASE_PATHS),
         "files": {},
     }
     write_json(release_dir / "MANIFEST.json", manifest)

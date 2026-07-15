@@ -364,6 +364,9 @@ smoke-sprint3-runtime:
 build-sprint3-release:
 	@bash "$(ROOT)/scripts/gates/build-sprint3-release.sh"
 
+prepare-sprint3-release:
+	@bash "$(ROOT)/scripts/gates/gate-sprint3.sh" --phase prepare
+
 validate-sprint3-evidence:
 	@bash "$(ROOT)/scripts/gates/validate-sprint3-evidence.sh"
 

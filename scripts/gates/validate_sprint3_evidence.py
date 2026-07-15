@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts.gates.sprint3_common import (
+    APPROVED_SPRINT3_RELEASE_PATHS,
     EVIDENCE_VERSION,
     GO_DECISION,
     NO_GO_DECISION,
@@ -177,10 +178,15 @@ def _validate_runtime(result: ValidationResult, runtime: dict[str, Any], *, comm
 
 
 def validate_evidence(
-    root: Path, *, validate_release: bool = False, require_release_evidence: bool = True
+    root: Path,
+    *,
+    validate_release: bool = False,
+    require_release_evidence: bool = True,
+    expected_commit: str | None = None,
 ) -> ValidationResult:
     result = ValidationResult()
-    _, commit = git_meta(root)
+    _, head_commit = git_meta(root)
+    commit = expected_commit or _expected_validation_commit(root, head_commit=head_commit)
     evidence = root / "artifacts" / "sprint3" / "evidence"
     if not evidence.is_dir():
         result.fail("missing artifacts/sprint3/evidence")
@@ -216,6 +222,20 @@ def validate_evidence(
     return result
 
 
+def _expected_validation_commit(root: Path, *, head_commit: str) -> str:
+    manifest_path = root / "releases" / "sprint-3" / "MANIFEST.json"
+    if not manifest_path.is_file():
+        return head_commit
+    try:
+        manifest = read_json(manifest_path)
+    except Exception:  # noqa: BLE001
+        return head_commit
+    validated_source_commit = manifest.get("validated_source_commit")
+    if isinstance(validated_source_commit, str):
+        return validated_source_commit
+    return head_commit
+
+
 def _validate_release(root: Path, result: ValidationResult, *, commit: str) -> None:
     release_dir = root / "releases" / "sprint-3"
     if not release_dir.is_dir():
@@ -238,10 +258,15 @@ def _validate_release(root: Path, result: ValidationResult, *, commit: str) -> N
         return
     if manifest.get("release_version") != RELEASE_VERSION:
         result.fail("release manifest version mismatch")
-    if manifest.get("validated_commit") != commit:
-        result.fail("release manifest commit mismatch")
+    if "release_commit" in manifest and manifest.get("release_commit") is not None:
+        result.fail("release manifest must not contain release_commit")
+    if manifest.get("validated_source_commit") != commit:
+        result.fail("release manifest validated_source_commit mismatch")
     if manifest.get("gate_decision") != GO_DECISION:
         result.fail("release manifest does not record GO decision")
+    approved_paths = manifest.get("approved_release_paths")
+    if set(approved_paths or []) != set(APPROVED_SPRINT3_RELEASE_PATHS):
+        result.fail("release manifest approved release paths mismatch")
     if manifest.get("sbom", {}).get("format") != "spdx-json":
         result.fail("release manifest missing SPDX SBOM metadata")
     try:

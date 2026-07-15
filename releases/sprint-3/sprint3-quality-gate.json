@@ -1,0 +1,230 @@
+{
+  "evidence_version": "sprint3.gate.v1",
+  "final_decision": "GO FOR SPRINT 4",
+  "git_commit": "045e9ad0f54411b5538d349928ab37d57adb0529",
+  "optional_provider_results": [
+    {
+      "duration_seconds": 0.02,
+      "exit_code": 0,
+      "id": "smoke-api-fred",
+      "log_path": "artifacts/sprint3/logs/smoke-api-fred.log",
+      "required": false,
+      "skip_reason": "BERGAMA_SMOKE_STATUS=SKIPPED",
+      "status": "SKIPPED",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 0.02,
+      "exit_code": 0,
+      "id": "smoke-api-polygon-realtime",
+      "log_path": "artifacts/sprint3/logs/smoke-api-polygon-realtime.log",
+      "required": false,
+      "skip_reason": "BERGAMA_SMOKE_STATUS=SKIPPED",
+      "status": "SKIPPED",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 0.02,
+      "exit_code": 0,
+      "id": "smoke-api-sec",
+      "log_path": "artifacts/sprint3/logs/smoke-api-sec.log",
+      "required": false,
+      "skip_reason": "BERGAMA_SMOKE_STATUS=SKIPPED",
+      "status": "SKIPPED",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 0.021,
+      "exit_code": 0,
+      "id": "smoke-api-backfill",
+      "log_path": "artifacts/sprint3/logs/smoke-api-backfill.log",
+      "required": false,
+      "skip_reason": "BERGAMA_SMOKE_STATUS=SKIPPED",
+      "status": "SKIPPED",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 0.021,
+      "exit_code": 0,
+      "id": "smoke-api-finnhub",
+      "log_path": "artifacts/sprint3/logs/smoke-api-finnhub.log",
+      "required": false,
+      "skip_reason": "BERGAMA_SMOKE_STATUS=SKIPPED",
+      "status": "SKIPPED",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 0.022,
+      "exit_code": 0,
+      "id": "smoke-api-benzinga",
+      "log_path": "artifacts/sprint3/logs/smoke-api-benzinga.log",
+      "required": false,
+      "skip_reason": "BERGAMA_SMOKE_STATUS=SKIPPED",
+      "status": "SKIPPED",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 0.022,
+      "exit_code": 0,
+      "id": "smoke-api-polygon",
+      "log_path": "artifacts/sprint3/logs/smoke-api-polygon.log",
+      "required": false,
+      "skip_reason": "BERGAMA_SMOKE_STATUS=SKIPPED",
+      "status": "SKIPPED",
+      "timeout_seconds": 900
+    }
+  ],
+  "release_version": "v0.3.0-sprint3",
+  "required_results": [
+    {
+      "duration_seconds": 0.328,
+      "exit_code": 0,
+      "id": "lint",
+      "log_path": "artifacts/sprint3/logs/lint.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 1.0,
+      "exit_code": 0,
+      "id": "typecheck",
+      "log_path": "artifacts/sprint3/logs/typecheck.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 2.014,
+      "exit_code": 0,
+      "id": "test-api-data-quality",
+      "log_path": "artifacts/sprint3/logs/test-api-data-quality.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 2.301,
+      "exit_code": 0,
+      "id": "smoke-api-data-quality",
+      "log_path": "artifacts/sprint3/logs/smoke-api-data-quality.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 2.348,
+      "exit_code": 0,
+      "id": "test-api-backfill",
+      "log_path": "artifacts/sprint3/logs/test-api-backfill.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 2.374,
+      "exit_code": 0,
+      "id": "smoke-api-replay-engine",
+      "log_path": "artifacts/sprint3/logs/smoke-api-replay-engine.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 2.573,
+      "exit_code": 0,
+      "id": "test-api-kafka-publish-adapter",
+      "log_path": "artifacts/sprint3/logs/test-api-kafka-publish-adapter.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 2.611,
+      "exit_code": 0,
+      "id": "validate-secrets",
+      "log_path": "artifacts/sprint3/logs/validate-secrets.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 2.917,
+      "exit_code": 0,
+      "id": "test-api-market-contracts",
+      "log_path": "artifacts/sprint3/logs/test-api-market-contracts.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 3.093,
+      "exit_code": 0,
+      "id": "test-api-provider-contracts",
+      "log_path": "artifacts/sprint3/logs/test-api-provider-contracts.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 3.223,
+      "exit_code": 0,
+      "id": "test-api-market-orchestrator",
+      "log_path": "artifacts/sprint3/logs/test-api-market-orchestrator.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 3.515,
+      "exit_code": 0,
+      "id": "test-api-iceberg-writer",
+      "log_path": "artifacts/sprint3/logs/test-api-iceberg-writer.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 3.823,
+      "exit_code": 0,
+      "id": "test-api-replay-engine",
+      "log_path": "artifacts/sprint3/logs/test-api-replay-engine.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    },
+    {
+      "duration_seconds": 5.738,
+      "exit_code": 0,
+      "id": "smoke-sprint3-runtime",
+      "log_path": "artifacts/sprint3/logs/smoke-sprint3-runtime.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 1200
+    },
+    {
+      "duration_seconds": 6.297,
+      "exit_code": 0,
+      "id": "test-api",
+      "log_path": "artifacts/sprint3/logs/test-api.log",
+      "required": true,
+      "skip_reason": null,
+      "status": "PASS",
+      "timeout_seconds": 900
+    }
+  ]
+}

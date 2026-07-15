@@ -309,9 +309,155 @@ def test_openapi_generation_does_not_embed_child_stderr_on_failure(
     assert "OpenAPI generation failed with exit code 1" in str(exc.value)
 
 
+def _sample_spdx_sbom(*, namespace: object, package_version: str = "1.0.0") -> dict[str, Any]:
+    return {
+        "SPDXID": "SPDXRef-DOCUMENT",
+        "spdxVersion": "SPDX-2.3",
+        "dataLicense": "CC0-1.0",
+        "name": "dir:apps/api",
+        "documentNamespace": namespace,
+        "creationInfo": {
+            "created": "2026-07-15T01:02:03Z",
+            "creators": ["Tool: syft-1.0.0"],
+        },
+        "packages": [
+            {
+                "SPDXID": "SPDXRef-Package-b",
+                "name": "beta",
+                "versionInfo": package_version,
+                "checksums": [{"algorithm": "SHA256", "checksumValue": "b" * 64}],
+            },
+            {
+                "SPDXID": "SPDXRef-Package-a",
+                "name": "alpha",
+                "versionInfo": "2.0.0",
+                "checksums": [{"algorithm": "SHA256", "checksumValue": "a" * 64}],
+            },
+        ],
+        "relationships": [
+            {
+                "spdxElementId": "SPDXRef-DOCUMENT",
+                "relationshipType": "DESCRIBES",
+                "relatedSpdxElement": "SPDXRef-Package-b",
+            },
+            {
+                "spdxElementId": "SPDXRef-DOCUMENT",
+                "relationshipType": "DESCRIBES",
+                "relatedSpdxElement": "SPDXRef-Package-a",
+            },
+        ],
+    }
+
+
+def _normalize_sample_sbom(sbom: dict[str, Any], *, commit: str = COMMIT) -> dict[str, Any]:
+    return build_sprint3_release._normalize_sbom(
+        sbom,
+        normalized_created="2026-07-15T00:00:00Z",
+        validated_commit=commit,
+    )
+
+
+def test_sbom_document_namespace_is_deterministic_for_same_commit() -> None:
+    first = _sample_spdx_sbom(
+        namespace="https://anchore.com/syft/dir/apps/api-9378a740-f44a-4043-a4a2-8c091ca3e80d"
+    )
+    second = _sample_spdx_sbom(
+        namespace="https://anchore.com/syft/dir/apps/api-13bc5e23-0b20-40aa-833c-b59e00c6df2c"
+    )
+
+    normalized_first = _normalize_sample_sbom(first)
+    normalized_second = _normalize_sample_sbom(second)
+
+    assert normalized_first == normalized_second
+    assert normalized_first["documentNamespace"] == (
+        f"https://github.com/enesdedelerr-max/Bergama/sbom/sprint-3/{COMMIT}"
+    )
+    assert "9378a740-f44a-4043-a4a2-8c091ca3e80d" not in normalized_first["documentNamespace"]
+    assert "13bc5e23-0b20-40aa-833c-b59e00c6df2c" not in normalized_second["documentNamespace"]
+
+
+def test_sbom_document_namespace_changes_by_commit() -> None:
+    other_commit = "508240dcaad8ca81d7351bfa3671a161f1061505"
+    first = _normalize_sample_sbom(
+        _sample_spdx_sbom(namespace="https://anchore.com/syft/dir/apps/api-a"),
+        commit=COMMIT,
+    )
+    second = _normalize_sample_sbom(
+        _sample_spdx_sbom(namespace="https://anchore.com/syft/dir/apps/api-a"),
+        commit=other_commit,
+    )
+
+    assert first["documentNamespace"] != second["documentNamespace"]
+    assert first["documentNamespace"].endswith(f"/{COMMIT}")
+    assert second["documentNamespace"].endswith(f"/{other_commit}")
+
+
+@pytest.mark.parametrize(
+    "namespace",
+    [
+        None,
+        "",
+        123,
+        "not-a-uri",
+        "http://anchore.com/syft/dir/apps/api-random",
+    ],
+)
+def test_sbom_document_namespace_must_be_valid_absolute_https_uri(namespace: object) -> None:
+    with pytest.raises(RuntimeError):
+        _normalize_sample_sbom(_sample_spdx_sbom(namespace=namespace))
+
+
+def test_sbom_normalization_preserves_packages_relationships_and_core_spdx_fields() -> None:
+    source = _sample_spdx_sbom(namespace="https://anchore.com/syft/dir/apps/api-random")
+
+    normalized = _normalize_sample_sbom(source)
+
+    assert normalized["SPDXID"] == source["SPDXID"]
+    assert normalized["spdxVersion"] == source["spdxVersion"]
+    assert normalized["dataLicense"] == source["dataLicense"]
+    assert normalized["name"] == source["name"]
+    assert normalized["creationInfo"]["creators"] == source["creationInfo"]["creators"]
+    assert normalized["creationInfo"]["created"] == "2026-07-15T00:00:00Z"
+    assert sorted(item["name"] for item in normalized["packages"]) == ["alpha", "beta"]
+    assert sorted(item["relatedSpdxElement"] for item in normalized["relationships"]) == [
+        "SPDXRef-Package-a",
+        "SPDXRef-Package-b",
+    ]
+
+
+def test_sbom_canonical_sort_behavior_is_stable() -> None:
+    source = _sample_spdx_sbom(namespace="https://anchore.com/syft/dir/apps/api-random")
+
+    normalized = _normalize_sample_sbom(source)
+
+    assert [package["name"] for package in normalized["packages"]] == ["alpha", "beta"]
+    assert [relationship["relatedSpdxElement"] for relationship in normalized["relationships"]] == [
+        "SPDXRef-Package-a",
+        "SPDXRef-Package-b",
+    ]
+
+
+def test_sbom_non_namespace_drift_still_fails_repeated_comparison() -> None:
+    first = _sample_spdx_sbom(
+        namespace="https://anchore.com/syft/dir/apps/api-9378a740-f44a-4043-a4a2-8c091ca3e80d",
+        package_version="1.0.0",
+    )
+    second = _sample_spdx_sbom(
+        namespace="https://anchore.com/syft/dir/apps/api-13bc5e23-0b20-40aa-833c-b59e00c6df2c",
+        package_version="1.0.1",
+    )
+
+    normalized_first = _normalize_sample_sbom(first)
+    normalized_second = _normalize_sample_sbom(second)
+
+    assert normalized_first != normalized_second
+    assert normalized_first["documentNamespace"] == normalized_second["documentNamespace"]
+
+
 def _patch_clean_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(gate_sprint3, "git_meta", lambda root: ("feature/test", COMMIT))
     monkeypatch.setattr(gate_sprint3, "git_is_dirty", lambda root: False)
+    monkeypatch.setattr(gate_sprint3, "_unexpected_dirty_paths", lambda root: [])
     monkeypatch.setattr(
         gate_sprint3,
         "preflight_payload",
@@ -366,15 +512,15 @@ def _runner(
 
 def test_all_required_pass_returns_go(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_clean_preflight(monkeypatch)
-    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner()) == 0
+    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(), phase="prepare") == 0
     summary = json.loads((tmp_path / "artifacts/sprint3/gate-summary.json").read_text())
-    assert summary["final_decision"] == GO_DECISION
+    assert summary["final_decision"] == gate_sprint3.RELEASE_PACKAGE_READY
     assert summary["overall_status"] == "PASS"
 
 
 def test_required_failure_returns_no_go(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_clean_preflight(monkeypatch)
-    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(fail_id="lint")) == 1
+    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(fail_id="lint"), phase="prepare") == 1
     summary = json.loads((tmp_path / "artifacts/sprint3/gate-summary.json").read_text())
     assert summary["final_decision"] == "NO-GO FOR SPRINT 4"
     assert summary["first_failed_stage"] == "lint"
@@ -382,21 +528,42 @@ def test_required_failure_returns_no_go(tmp_path: Path, monkeypatch: pytest.Monk
 
 def test_required_skipped_returns_no_go(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_clean_preflight(monkeypatch)
-    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(skip_id="smoke-api-data-quality")) == 1
+    assert (
+        gate_sprint3.run_gate(
+            root=tmp_path,
+            runner=_runner(skip_id="smoke-api-data-quality"),
+            phase="prepare",
+        )
+        == 1
+    )
     summary = json.loads((tmp_path / "artifacts/sprint3/gate-summary.json").read_text())
     assert summary["required_skipped_count"] == 1
 
 
 def test_optional_skipped_is_allowed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_clean_preflight(monkeypatch)
-    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(skip_id="smoke-api-polygon")) == 0
+    assert (
+        gate_sprint3.run_gate(
+            root=tmp_path,
+            runner=_runner(skip_id="smoke-api-polygon"),
+            phase="prepare",
+        )
+        == 0
+    )
     summary = json.loads((tmp_path / "artifacts/sprint3/gate-summary.json").read_text())
     assert summary["optional_skipped_count"] == 1
 
 
 def test_enabled_optional_failure_is_no_go(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _patch_clean_preflight(monkeypatch)
-    assert gate_sprint3.run_gate(root=tmp_path, runner=_runner(fail_id="smoke-api-polygon")) == 1
+    assert (
+        gate_sprint3.run_gate(
+            root=tmp_path,
+            runner=_runner(fail_id="smoke-api-polygon"),
+            phase="prepare",
+        )
+        == 1
+    )
     summary = json.loads((tmp_path / "artifacts/sprint3/gate-summary.json").read_text())
     assert summary["optional_failed_count"] == 1
     assert summary["first_failed_stage"] == "smoke-api-polygon"
@@ -632,3 +799,133 @@ def test_validator_rejects_missing_sbom(tmp_path: Path, monkeypatch: pytest.Monk
     validation = validate_evidence(tmp_path, validate_release=True)
     assert validation.status == "FAIL"
     assert any("sbom.spdx.json" in reason for reason in validation.reasons)
+
+
+def test_final_context_allows_release_only_diff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_commit = COMMIT
+    release_commit = "508240dcaad8ca81d7351bfa3671a161f1061505"
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    write_json(release / "MANIFEST.json", {"validated_source_commit": source_commit})
+    monkeypatch.setattr(gate_sprint3, "_git_success", lambda *args, **kwargs: True)
+    monkeypatch.setattr(
+        gate_sprint3,
+        "_changed_paths_between",
+        lambda *args, **kwargs: ["releases/sprint-3/MANIFEST.json"],
+    )
+
+    validated_source, errors, release_paths = gate_sprint3._final_context(
+        tmp_path, head_commit=release_commit
+    )
+
+    assert validated_source == source_commit
+    assert errors == []
+    assert release_paths == ["releases/sprint-3/MANIFEST.json"]
+
+
+def test_final_context_rejects_product_change_between_source_and_release(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source_commit = COMMIT
+    release_commit = "508240dcaad8ca81d7351bfa3671a161f1061505"
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    write_json(release / "MANIFEST.json", {"validated_source_commit": source_commit})
+    monkeypatch.setattr(gate_sprint3, "_git_success", lambda *args, **kwargs: True)
+    monkeypatch.setattr(
+        gate_sprint3,
+        "_changed_paths_between",
+        lambda *args, **kwargs: [
+            "apps/api/pyproject.toml",
+            "releases/sprint-3/MANIFEST.json",
+        ],
+    )
+
+    _, errors, _ = gate_sprint3._final_context(tmp_path, head_commit=release_commit)
+
+    assert any("non-release changes" in error for error in errors)
+
+
+def test_prepare_preflight_allows_only_release_dirty_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    (release / "README.md").write_text("generated\n", encoding="utf-8")
+    monkeypatch.setattr(gate_sprint3, "_git_status_paths", lambda root: ["releases/sprint-3/README.md"])
+    monkeypatch.setattr(
+        gate_sprint3,
+        "preflight_payload",
+        lambda root, git_commit: {
+            "evidence_version": EVIDENCE_VERSION,
+            "git_commit": git_commit,
+            "status": "FAIL",
+            "checks": {"working_tree_clean": False},
+            "errors": ["working tree is dirty"],
+        },
+    )
+
+    payload = gate_sprint3._prepare_preflight(tmp_path, git_commit=COMMIT)
+
+    assert payload["status"] == "PASS"
+    assert payload["checks"]["release_dirty_paths_allowed"] == ["releases/sprint-3/README.md"]
+
+
+def test_prepare_preflight_rejects_non_release_dirty_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(gate_sprint3, "_git_status_paths", lambda root: ["apps/api/pyproject.toml"])
+    monkeypatch.setattr(
+        gate_sprint3,
+        "preflight_payload",
+        lambda root, git_commit: {
+            "evidence_version": EVIDENCE_VERSION,
+            "git_commit": git_commit,
+            "status": "FAIL",
+            "checks": {"working_tree_clean": False},
+            "errors": ["working tree is dirty"],
+        },
+    )
+
+    payload = gate_sprint3._prepare_preflight(tmp_path, git_commit=COMMIT)
+
+    assert payload["status"] == "FAIL"
+
+
+def test_tracked_manifest_rejects_release_commit_field(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("scripts.gates.validate_sprint3_evidence.git_meta", lambda root: ("x", COMMIT))
+    _write_valid_evidence(tmp_path)
+    release = tmp_path / "releases/sprint-3"
+    release.mkdir(parents=True)
+    for name in (
+        "README.md",
+        "RELEASE_NOTES.md",
+        "sprint3-runtime-validation.json",
+        "sprint3-openapi.json",
+        "sprint3-quality-gate.json",
+        "sprint3-known-limitations.md",
+    ):
+        (release / name).write_text("{}\n" if name.endswith(".json") else "ok\n", encoding="utf-8")
+    write_json(release / "sbom.spdx.json", {"SPDXID": "SPDXRef-DOCUMENT", "packages": []})
+    write_json(
+        release / "MANIFEST.json",
+        {
+            "release_version": "v0.3.0-sprint3",
+            "validated_source_commit": COMMIT,
+            "release_commit": COMMIT,
+            "gate_decision": GO_DECISION,
+            "approved_release_paths": sorted(gate_sprint3.APPROVED_SPRINT3_RELEASE_PATHS),
+            "sbom": {"format": "spdx-json"},
+            "files": {},
+        },
+    )
+    write_checksums(tmp_path, release)
+
+    validation = validate_evidence(tmp_path, validate_release=True)
+
+    assert validation.status == "FAIL"
+    assert any("must not contain release_commit" in reason for reason in validation.reasons)

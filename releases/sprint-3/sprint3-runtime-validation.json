@@ -1,0 +1,61 @@
+{
+  "consumer_group": "bergama-sprint3-runtime-gate",
+  "decimal_verification": {
+    "expected": "190.20",
+    "field": "close",
+    "matched": true
+  },
+  "decimal_verified": true,
+  "environment": "local",
+  "event_type": "market.bar",
+  "evidence_version": "sprint3.gate.v1",
+  "final_status": "PASS",
+  "git_commit": "045e9ad0f54411b5538d349928ab37d57adb0529",
+  "idempotency_key": "mkt|bar|1.0.0|bergama:equity:us:sprint3_runtime|2026-07-13T14:30:00Z|bergama_synthetic|sprint3-runtime-045e9ad0f544|orig|",
+  "kafka_ack_metadata": {
+    "order_sequence": "1",
+    "out_of_order": "false",
+    "quality_action": "accept",
+    "quality_assessment_id": "ec4d5c1e5993d408bc73847ef7d2934f04050b9f27bb5404510d30a554f6da50",
+    "quality_highest_severity": "info",
+    "quality_status": "passed",
+    "sink_message_id": "market-data:0:5",
+    "stream_key": "bergama:equity:us:sprint3_runtime|bar"
+  },
+  "kafka_ack_verified": true,
+  "offset_after": 6,
+  "offset_after_durability_verified": true,
+  "offset_before": 5,
+  "operation_timestamps": {
+    "iceberg_append_started_at": "2026-07-15T05:45:21Z",
+    "iceberg_snapshot_committed_at": "2026-07-15T05:45:21Z",
+    "kafka_offset_committed_at": "2026-07-15T05:45:21Z",
+    "kafka_publish_acknowledged_at": "2026-07-15T05:45:21Z",
+    "row_verified_at": "2026-07-15T05:45:22Z"
+  },
+  "quality_assessment_summary": {
+    "assessment_id": "ec4d5c1e5993d408bc73847ef7d2934f04050b9f27bb5404510d30a554f6da50",
+    "highest_severity": "info",
+    "overall_status": "passed",
+    "recommended_action": "accept",
+    "rule_count": 21
+  },
+  "row_verification_summary": {
+    "close_value": "190.200000000000000000",
+    "decimal_verified_without_float": true,
+    "event_type_matches": true,
+    "expected_close": "190.20",
+    "idempotency_key_matches": true,
+    "occurred_at_matches": true
+  },
+  "row_verified": true,
+  "safe_limitations": [
+    "local/runtime smoke uses synthetic canonical event only",
+    "does not call provider APIs",
+    "at-least-once semantics only; exactly-once is not claimed"
+  ],
+  "snapshot_id": "596129012532696509",
+  "snapshot_verified": true,
+  "table": "bergama.market_bars",
+  "topic": "market-data"
+}
