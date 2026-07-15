@@ -1,0 +1,62 @@
+{
+  "approved_release_paths": [
+    "releases/sprint-3/MANIFEST.json",
+    "releases/sprint-3/README.md",
+    "releases/sprint-3/RELEASE_NOTES.md",
+    "releases/sprint-3/checksums.txt",
+    "releases/sprint-3/sbom.spdx.json",
+    "releases/sprint-3/sprint3-known-limitations.md",
+    "releases/sprint-3/sprint3-openapi.json",
+    "releases/sprint-3/sprint3-quality-gate.json",
+    "releases/sprint-3/sprint3-runtime-validation.json"
+  ],
+  "evidence_version": "sprint3.gate.v1",
+  "files": {
+    "releases/sprint-3/README.md": "18aa6e85a4828300de0f38d0e282f5c5b4ebbee3eda3abe8fc429c537955c1c7",
+    "releases/sprint-3/RELEASE_NOTES.md": "8c9d2a4c13819d48d72a661c4d44f2f46552df8343ac2c1cef3316e902302fbf",
+    "releases/sprint-3/sbom.spdx.json": "a07e77be0009f7ebafd4c705e463fd62f11331b2329fa471469e033132c1448f",
+    "releases/sprint-3/sprint3-known-limitations.md": "d60c4931760e3874b367beaf9215d4a500c88a15e44d221a438a2b06ee39b4b2",
+    "releases/sprint-3/sprint3-openapi.json": "4b773386b871652b2efcd63db9b2732874d49295bd3b8479a946a6e2fe501291",
+    "releases/sprint-3/sprint3-quality-gate.json": "64945709321156ba1f423bb50c0829aafc0670e07c411a78f238df830ef1c3b0",
+    "releases/sprint-3/sprint3-runtime-validation.json": "0691316e50c39b834b6353f74eeb37579ff4544b05f94a2ccc42d73abf99eaee"
+  },
+  "gate_decision": "GO FOR SPRINT 4",
+  "generated_at": "2026-07-15T05:44:35Z",
+  "manifest_included_in_checksums": true,
+  "optional_smoke_statuses": {
+    "smoke-api-backfill": "SKIPPED",
+    "smoke-api-benzinga": "SKIPPED",
+    "smoke-api-finnhub": "SKIPPED",
+    "smoke-api-fred": "SKIPPED",
+    "smoke-api-polygon": "SKIPPED",
+    "smoke-api-polygon-realtime": "SKIPPED",
+    "smoke-api-sec": "SKIPPED"
+  },
+  "release_version": "v0.3.0-sprint3",
+  "runtime_smoke_result": "PASS",
+  "sbom": {
+    "format": "spdx-json",
+    "generator": "syft",
+    "normalized_fields": [
+      "creationInfo.created",
+      "documentNamespace"
+    ],
+    "scan_target": "apps/api"
+  },
+  "source_branch": "fix/sprint3-sbom-document-namespace",
+  "source_evidence_hashes": {
+    "artifacts/sprint3/evidence/environment.json": "56506b8e4b4f70d2e2a78d33de40277ddb5c2d1026542efb026baa54c05027ce",
+    "artifacts/sprint3/evidence/focused-tests.json": "9e2d66685fcea682770ac6eea7dc9b65b61fae7793717798a7e7ae2c5efa98b0",
+    "artifacts/sprint3/evidence/git-state.json": "5499e1c1192324a34096f5a126adcf0a2ed795a988b71ae83a2fc330f71ca746",
+    "artifacts/sprint3/evidence/offline-smokes.json": "4dd36ac3b68248d00f6eae68a8099645e8298b2bbc3df9bf6ec9ace8c4332733",
+    "artifacts/sprint3/evidence/preflight.json": "d540ae2fb4eea5f72700aaaea9176bffc65d388af473d93ad00d81261eb9b46f",
+    "artifacts/sprint3/evidence/provider-smokes.json": "a7294235c032b7fdc559673ca9bfbde4be7682448ef7112c9379d986bc921a9a",
+    "artifacts/sprint3/evidence/regression.json": "201e2b4612cc8e3430db9199009cdfcc2bd894d818879eb78d66042f95844786",
+    "artifacts/sprint3/evidence/runtime-smoke.json": "3aa911c0c5c2ac62f5b3a2847d760a4b139298beb260597d144df0da848e1a01",
+    "artifacts/sprint3/evidence/static-checks.json": "d520dc91373989cb326343d654082bb15b0dffb3506141355bf19ff5c65d224c"
+  },
+  "tool_versions": {
+    "syft": "syft 1.18.1"
+  },
+  "validated_source_commit": "045e9ad0f54411b5538d349928ab37d57adb0529"
+}

@@ -1,0 +1,541 @@
+{
+  "components": {
+    "schemas": {
+      "AuthMeResponse": {
+        "description": "Protected smoke response \u2014 no business data.",
+        "properties": {
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scopes",
+            "type": "array"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "roles",
+          "scopes"
+        ],
+        "title": "AuthMeResponse",
+        "type": "object"
+      },
+      "BootstrapTokenRequest": {
+        "additionalProperties": false,
+        "description": "Local/test bootstrap grant only \u2014 no caller-controlled identity.",
+        "properties": {
+          "grant_type": {
+            "const": "bootstrap",
+            "default": "bootstrap",
+            "title": "Grant Type",
+            "type": "string"
+          }
+        },
+        "title": "BootstrapTokenRequest",
+        "type": "object"
+      },
+      "DependencyHealthResult": {
+        "additionalProperties": false,
+        "description": "Single dependency check result \u2014 no secrets or connection strings.",
+        "properties": {
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "latency_ms": {
+            "minimum": 0.0,
+            "title": "Latency Ms",
+            "type": "number"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Message"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DependencyHealthStatus"
+          }
+        },
+        "required": [
+          "name",
+          "status",
+          "required",
+          "latency_ms"
+        ],
+        "title": "DependencyHealthResult",
+        "type": "object"
+      },
+      "DependencyHealthStatus": {
+        "description": "Per-dependency check outcome.",
+        "enum": [
+          "pass",
+          "fail",
+          "timeout",
+          "skipped"
+        ],
+        "title": "DependencyHealthStatus",
+        "type": "string"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "LivenessResponse": {
+        "additionalProperties": false,
+        "description": "Process liveness \u2014 no dependency checks.",
+        "properties": {
+          "environment": {
+            "title": "Environment",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "const": "healthy",
+            "default": "healthy",
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service",
+          "version",
+          "environment",
+          "timestamp",
+          "request_id"
+        ],
+        "title": "LivenessResponse",
+        "type": "object"
+      },
+      "ReadinessResponse": {
+        "additionalProperties": false,
+        "description": "Traffic readiness with structured dependency results.",
+        "properties": {
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/DependencyHealthResult"
+            },
+            "title": "Checks",
+            "type": "array"
+          },
+          "environment": {
+            "title": "Environment",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "degraded",
+              "not_ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "version",
+          "environment",
+          "timestamp",
+          "checks",
+          "request_id"
+        ],
+        "title": "ReadinessResponse",
+        "type": "object"
+      },
+      "StartupResponse": {
+        "additionalProperties": false,
+        "description": "Application lifecycle startup probe.",
+        "properties": {
+          "environment": {
+            "title": "Environment",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "starting",
+              "started",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "service",
+          "version",
+          "environment",
+          "timestamp",
+          "request_id"
+        ],
+        "title": "StartupResponse",
+        "type": "object"
+      },
+      "TokenResponse": {
+        "description": "OAuth-style access-token response (bootstrap only).",
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "expires_in": {
+            "exclusiveMinimum": 0.0,
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "token_type": {
+            "const": "bearer",
+            "default": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_in"
+        ],
+        "title": "TokenResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "bearerFormat": "JWT",
+        "description": "Local/test bootstrap JWT (HS256). Not a production OIDC token.",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Bergama Trading Platform API \u2014 Sprint 2 FastAPI runtime foundation. JWT bootstrap auth is local/test only; production identity will use OIDC.",
+    "title": "Bergama Trading API",
+    "version": "0.2.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/auth/me": {
+      "get": {
+        "description": "Protected smoke endpoint for JWT validation.",
+        "operationId": "auth_me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthMeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Return authenticated bootstrap principal",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/token": {
+      "post": {
+        "description": "Local/test only. Issues a fixed bootstrap identity JWT (HS256). Not available in staging or production \u2014 future auth uses OIDC.",
+        "operationId": "issue_bootstrap_token_api_v1_auth_token_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BootstrapTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Issue local bootstrap access token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "deprecated": true,
+        "description": "Deprecated alias of ``/health/live``.",
+        "operationId": "health_legacy_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessResponse"
+                }
+              }
+            },
+            "description": "Deprecated alias of /health/live"
+          }
+        },
+        "summary": "Health Legacy",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/live": {
+      "get": {
+        "description": "Liveness probe \u2014 process up; no external dependency calls.",
+        "operationId": "health_live_health_live_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessResponse"
+                }
+              }
+            },
+            "description": "Process is alive"
+          }
+        },
+        "summary": "Health Live",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "description": "Readiness probe \u2014 required dependencies must pass.",
+        "operationId": "health_ready_health_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            },
+            "description": "Ready or degraded (required dependencies pass)"
+          },
+          "503": {
+            "description": "Not ready \u2014 required dependency failure"
+          }
+        },
+        "summary": "Health Ready",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/health/startup": {
+      "get": {
+        "description": "Startup probe \u2014 reflects container lifecycle state.",
+        "operationId": "health_startup_health_startup_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartupResponse"
+                }
+              }
+            },
+            "description": "Application startup completed"
+          },
+          "503": {
+            "description": "Still starting or startup failed"
+          }
+        },
+        "summary": "Health Startup",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/ready": {
+      "get": {
+        "deprecated": true,
+        "description": "Deprecated alias of ``/health/ready``.",
+        "operationId": "ready_legacy_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            },
+            "description": "Deprecated alias of /health/ready"
+          },
+          "503": {
+            "description": "Not ready"
+          }
+        },
+        "summary": "Ready Legacy",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}
