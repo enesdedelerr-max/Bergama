@@ -17,7 +17,9 @@ from scripts.gates.sprint3_common import (
     GO_DECISION,
     CommandResult,
     CommandSpec,
+    environment_for_spec,
     normalize_status,
+    sanitized_gate_environment,
     write_checksums,
     write_json,
 )
@@ -75,6 +77,91 @@ def test_nonzero_exit_is_fail(body: str) -> None:
     status, reason = normalize_status(exit_code=1, body=body)
     assert status == "FAIL"
     assert reason is None
+
+
+def test_sanitized_gate_environment_removes_runtime_settings() -> None:
+    env = {
+        "PATH": "/usr/bin",
+        "BERGAMA_ENVIRONMENT": "local",
+        "BERGAMA_KAFKA__ENABLED": "true",
+        "BERGAMA_KAFKA__BOOTSTRAP_SERVERS": '["127.0.0.1:9092"]',
+        "BERGAMA_ICEBERG_WRITER__ENABLED": "true",
+        "BERGAMA_ICEBERG_WRITER__SECRET_KEY": "local-secret",
+        "BERGAMA_SPRINT3_RUNTIME_SMOKE": "1",
+        "BERGAMA_REPLAY_ENGINE_SMOKE": "1",
+    }
+
+    sanitized = sanitized_gate_environment(env)
+
+    assert sanitized == {
+        "PATH": "/usr/bin",
+        "BERGAMA_REPLAY_ENGINE_SMOKE": "1",
+    }
+
+
+def test_non_runtime_specs_receive_sanitized_environment() -> None:
+    env = {
+        "PATH": "/usr/bin",
+        "BERGAMA_ENVIRONMENT": "local",
+        "BERGAMA_KAFKA__ENABLED": "true",
+        "BERGAMA_ICEBERG_WRITER__CATALOG_URI": "http://127.0.0.1:8181",
+        "BERGAMA_ICEBERG_WRITER__ACCESS_KEY": "local-access",
+    }
+    spec = CommandSpec(
+        id="test-api-kafka-publish-adapter",
+        command=("make", "test-api-kafka-publish-adapter"),
+        group="focused-tests",
+    )
+
+    child = environment_for_spec(spec, env)
+
+    assert child == {"PATH": "/usr/bin"}
+
+
+def test_runtime_smoke_spec_receives_runtime_environment_only_for_that_step() -> None:
+    env = {
+        "PATH": "/usr/bin",
+        "BERGAMA_ENVIRONMENT": "local",
+        "BERGAMA_KAFKA__ENABLED": "true",
+        "BERGAMA_KAFKA__BOOTSTRAP_SERVERS": '["127.0.0.1:9092"]',
+        "BERGAMA_ICEBERG_WRITER__ENABLED": "true",
+        "BERGAMA_ICEBERG_WRITER__SECRET_KEY": "local-secret",
+    }
+    spec = CommandSpec(
+        id="smoke-sprint3-runtime",
+        command=("make", "smoke-sprint3-runtime"),
+        group="runtime-smoke",
+    )
+
+    child = environment_for_spec(spec, env)
+
+    assert child["PATH"] == "/usr/bin"
+    assert child["BERGAMA_ENVIRONMENT"] == "local"
+    assert child["BERGAMA_KAFKA__ENABLED"] == "true"
+    assert child["BERGAMA_KAFKA__BOOTSTRAP_SERVERS"] == '["127.0.0.1:9092"]'
+    assert child["BERGAMA_ICEBERG_WRITER__ENABLED"] == "true"
+    assert child["BERGAMA_ICEBERG_WRITER__SECRET_KEY"] == "local-secret"
+
+
+def test_spec_env_is_applied_after_sanitization() -> None:
+    env = {
+        "PATH": "/usr/bin",
+        "BERGAMA_KAFKA__ENABLED": "true",
+        "BERGAMA_REPLAY_ENGINE_SMOKE": "0",
+    }
+    spec = CommandSpec(
+        id="smoke-api-replay-engine",
+        command=("make", "smoke-api-replay-engine"),
+        group="offline-smokes",
+        env={"BERGAMA_REPLAY_ENGINE_SMOKE": "1"},
+    )
+
+    child = environment_for_spec(spec, env)
+
+    assert child == {
+        "PATH": "/usr/bin",
+        "BERGAMA_REPLAY_ENGINE_SMOKE": "1",
+    }
 
 
 def _patch_clean_preflight(monkeypatch: pytest.MonkeyPatch) -> None:
