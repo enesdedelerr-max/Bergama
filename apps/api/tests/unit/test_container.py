@@ -11,6 +11,7 @@ from app.core.config import AppSettings
 from app.core.container import AppContainer, build_container
 from app.core.environment import AppEnvironment
 from app.core.secrets import SecretSettings
+from app.core.strategy_settings import StrategySettings
 from app.deps.container import get_app_container
 from app.events.topics import TopicRegistry
 from app.factory import create_app
@@ -18,6 +19,11 @@ from app.health.runtime_state import RuntimeState
 from app.health.service import HealthService
 from app.registry.service import RegistryService
 from app.services.token_service import TokenService
+from app.strategy.engine import StrategyEngine
+from app.strategy.errors import StrategyClosedError
+from app.strategy.identity import StrategyIdentity
+from app.strategy.ports import InMemoryStrategyDecisionPort
+from app.strategy.reference import NoOpStrategyConfig
 from fastapi import FastAPI, Request
 from starlette.requests import Request as StarletteRequest
 from tests.conftest import VALID_PROD_JWT_SECRET
@@ -75,10 +81,12 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert container.data_quality_service is None
     assert container.replay_engine is None
     assert container.backfill_engine is None
+    assert container.strategy_engine is None
     assert container.settings.orchestrator.enabled is False
     assert container.settings.data_quality.enabled is False
     assert container.settings.replay.enabled is False
     assert container.settings.backfill.enabled is False
+    assert container.settings.strategy.enabled is False
     assert container.registry_service.settings.enabled is False
 
 
@@ -199,6 +207,45 @@ async def test_cleanup_is_idempotent() -> None:
     await container.aclose()
     await container.aclose()
     assert container._closed is True
+
+
+@pytest.mark.asyncio
+async def test_strategy_engine_container_lifecycle_is_disabled_by_default() -> None:
+    container = build_container(_settings())
+    assert container.strategy_engine is None
+    await container.aclose()
+
+
+@pytest.mark.asyncio
+async def test_strategy_engine_container_enabled_no_startup_evaluation() -> None:
+    settings = _settings(strategy=StrategySettings(enabled=True))
+    container = build_container(settings)
+    assert isinstance(container.strategy_engine, StrategyEngine)
+    assert container.strategy_engine.registry.list_strategy_ids() == ("noop",)
+    port = InMemoryStrategyDecisionPort()
+    container.strategy_engine.create_session(
+        run_id="container-run-1",
+        session_id="container-session-1",
+        strategies=(
+            (
+                StrategyIdentity(
+                    strategy_id="noop",
+                    strategy_version="1.0.0",
+                    strategy_instance_id="noop:container",
+                ),
+                NoOpStrategyConfig(),
+            ),
+        ),
+        decision_port=port,
+    )
+    assert port.decisions == ()
+    await container.aclose()
+    with pytest.raises(StrategyClosedError):
+        container.strategy_engine.create_session(
+            run_id="after-close",
+            session_id="after-close",
+            strategies=(),
+        )
 
 
 @pytest.mark.asyncio

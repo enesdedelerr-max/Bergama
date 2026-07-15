@@ -30,6 +30,7 @@ from app.core.replay_settings import ReplaySettings
 from app.core.sec_settings import SecSettings
 from app.core.secrets import SecretSettings
 from app.core.security import JWT_ALGORITHM_HS256, JwtAlgorithm
+from app.core.strategy_settings import StrategySettings
 
 _ENV_PREFIX = "BERGAMA_"
 _DOTENV_NAME = ".env"
@@ -84,6 +85,7 @@ class AppSettings(BaseSettings):
     replay: ReplaySettings = Field(default_factory=ReplaySettings)
     backfill: BackfillSettings = Field(default_factory=BackfillSettings)
     data_quality: DataQualitySettings = Field(default_factory=DataQualitySettings)
+    strategy: StrategySettings = Field(default_factory=StrategySettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
@@ -281,6 +283,7 @@ class AppSettings(BaseSettings):
             "benzinga": self.benzinga.safe_summary(),
             "orchestrator": self.orchestrator.safe_summary(),
             "data_quality": self.data_quality.safe_summary(),
+            "strategy": self.strategy.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
         return summary
