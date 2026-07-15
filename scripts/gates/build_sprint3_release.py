@@ -368,7 +368,7 @@ def _validated_source_commit_for_build(root: Path, *, head_commit: str) -> str:
 
 
 def build_release(root: Path) -> None:
-    branch, head_commit = git_meta(root)
+    _, head_commit = git_meta(root)
     existing_manifest = _existing_release_manifest(root)
     validated_source_commit = _validated_source_commit_for_build(root, head_commit=head_commit)
     validation = validate_evidence(
@@ -428,7 +428,6 @@ def build_release(root: Path) -> None:
     manifest = {
         "release_version": RELEASE_VERSION,
         "validated_source_commit": validated_source_commit,
-        "source_branch": branch,
         "generated_at": normalized_created,
         "evidence_version": EVIDENCE_VERSION,
         "source_evidence_hashes": evidence_hashes,

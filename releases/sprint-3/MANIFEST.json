@@ -43,7 +43,6 @@
     ],
     "scan_target": "apps/api"
   },
-  "source_branch": "fix/sprint3-sbom-document-namespace",
   "source_evidence_hashes": {
     "artifacts/sprint3/evidence/environment.json": "56506b8e4b4f70d2e2a78d33de40277ddb5c2d1026542efb026baa54c05027ce",
     "artifacts/sprint3/evidence/focused-tests.json": "9e2d66685fcea682770ac6eea7dc9b65b61fae7793717798a7e7ae2c5efa98b0",

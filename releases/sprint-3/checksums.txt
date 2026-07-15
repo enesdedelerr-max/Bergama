@@ -1,4 +1,4 @@
-6d88728aaf561b458647efc082018051268be87a70afad91a61978d26edae4fd  releases/sprint-3/MANIFEST.json
+72340c642d851ed15321f2cbcd4d69600c79e4a6a7ef2c982f7b68f849785067  releases/sprint-3/MANIFEST.json
 18aa6e85a4828300de0f38d0e282f5c5b4ebbee3eda3abe8fc429c537955c1c7  releases/sprint-3/README.md
 8c9d2a4c13819d48d72a661c4d44f2f46552df8343ac2c1cef3316e902302fbf  releases/sprint-3/RELEASE_NOTES.md
 a07e77be0009f7ebafd4c705e463fd62f11331b2329fa471469e033132c1448f  releases/sprint-3/sbom.spdx.json

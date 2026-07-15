@@ -143,6 +143,17 @@ APPROVED_SPRINT3_RELEASE_PATHS = frozenset(
     }
 )
 
+APPROVED_SPRINT3_FINALIZATION_PATHS = frozenset(
+    {
+        *APPROVED_SPRINT3_RELEASE_PATHS,
+        "scripts/gates/build_sprint3_release.py",
+        "scripts/gates/gate_sprint3.py",
+        "scripts/gates/sprint3_common.py",
+        "scripts/gates/validate_sprint3_evidence.py",
+        "tests/gates/test_sprint3_gate.py",
+    }
+)
+
 STATIC_STEP_SPECS = (
     ("lint", ("make", "lint")),
     ("typecheck", ("make", "typecheck")),
