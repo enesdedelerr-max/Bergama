@@ -6,6 +6,10 @@ import logging
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from app.broker import BrokerAdapterClosedError, PaperBroker
+from app.broker.lifecycle import BrokerAdapterLifecycle
+from app.broker.models import SubmitExecutableOrder
+from app.core.broker_settings import BrokerSettings
 from app.core.clock import FixedClock, FixedJtiGenerator, SystemClock, UuidJtiGenerator
 from app.core.config import AppSettings
 from app.core.container import AppContainer, build_container
@@ -36,6 +40,7 @@ from app.strategy.reference import NoOpStrategyConfig
 from fastapi import FastAPI, Request
 from starlette.requests import Request as StarletteRequest
 from tests.conftest import VALID_PROD_JWT_SECRET
+from tests.support.broker_helpers import executable_order_from_submit
 from tests.support.order_helpers import submit_cmd
 from tests.support.risk_helpers import empty_snapshot, intent, policy
 
@@ -96,6 +101,7 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert container.portfolio_service is None
     assert container.risk_engine is None
     assert container.order_management_service is None
+    assert container.paper_broker is None
     assert container.settings.orchestrator.enabled is False
     assert container.settings.data_quality.enabled is False
     assert container.settings.replay.enabled is False
@@ -104,6 +110,7 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert container.settings.portfolio.enabled is False
     assert container.settings.risk.enabled is False
     assert container.settings.order.enabled is False
+    assert container.settings.broker.enabled is False
     assert container.registry_service.settings.enabled is False
 
 
@@ -332,6 +339,7 @@ async def test_order_management_container_enabled_no_startup_orders() -> None:
     container = build_container(settings)
     assert isinstance(container.order_management_service, OrderManagementService)
     assert container.order_management_service.metrics.commands_evaluated == 0
+    assert container.paper_broker is None
     result = await container.order_management_service.submit(
         submit_cmd(client_order_id="container-order-1")
     )
@@ -340,6 +348,35 @@ async def test_order_management_container_enabled_no_startup_orders() -> None:
     with pytest.raises(OrderClosedError):
         await container.order_management_service.submit(
             submit_cmd(client_order_id="after-close-order")
+        )
+
+
+@pytest.mark.asyncio
+async def test_paper_broker_container_lifecycle_disabled_by_default() -> None:
+    container = build_container(_settings())
+    assert container.paper_broker is None
+    await container.aclose()
+
+
+@pytest.mark.asyncio
+async def test_paper_broker_container_enabled_no_startup_submit() -> None:
+    settings = _settings(broker=BrokerSettings(enabled=True))
+    container = build_container(settings)
+    assert isinstance(container.paper_broker, PaperBroker)
+    assert container.paper_broker.lifecycle is BrokerAdapterLifecycle.CREATED
+    assert container.paper_broker.metrics.submits == 0
+    await container.paper_broker.start()
+    assert container.paper_broker.lifecycle is BrokerAdapterLifecycle.READY
+    await container.aclose()
+    assert container.paper_broker.lifecycle is BrokerAdapterLifecycle.CLOSED
+    with pytest.raises(BrokerAdapterClosedError):
+        await container.paper_broker.submit(
+            SubmitExecutableOrder(
+                executable_order=executable_order_from_submit(
+                    submit_cmd(client_order_id="broker-container-1")
+                ),
+                idempotency_key="after-close",
+            )
         )
 
 

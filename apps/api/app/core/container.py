@@ -6,6 +6,8 @@ from collections.abc import Sequence
 from contextlib import AsyncExitStack
 from dataclasses import dataclass, field
 
+from app.broker.identity import BrokerAccountId, BrokerIdentity, BrokerName
+from app.broker.paper_adapter import PaperBroker, PaperBrokerOrderPort, PaperBrokerPolicy
 from app.core.clock import Clock, JtiGenerator, SystemClock, UuidJtiGenerator
 from app.core.config import AppSettings
 from app.core.logging import get_logger, structured_extra
@@ -111,6 +113,7 @@ class AppContainer:
     portfolio_service: PortfolioService | None
     risk_engine: RiskEngine | None
     order_management_service: OrderManagementService | None
+    paper_broker: PaperBroker | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -140,6 +143,8 @@ class AppContainer:
                 await self.risk_engine.aclose()
             if self.order_management_service is not None:
                 await self.order_management_service.aclose()
+            if self.paper_broker is not None:
+                await self.paper_broker.close()
             # Iceberg writer: stop intake → flush → snapshots → offsets → consumer → catalog
             # before shared Kafka runtime is stopped (#307).
             if self.iceberg_writer_runtime is not None:
@@ -207,6 +212,7 @@ def build_container(
     portfolio_service: PortfolioService | None = None,
     risk_engine: RiskEngine | None = None,
     order_management_service: OrderManagementService | None = None,
+    paper_broker: PaperBroker | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -608,8 +614,32 @@ def build_container(
     else:
         resolved_risk_engine = None
 
+    # Paper broker (#405): construct when enabled/injected. Never submits on startup.
+    resolved_paper_broker: PaperBroker | None
+    if paper_broker is not None:
+        resolved_paper_broker = paper_broker
+    elif settings.broker.enabled:
+        resolved_paper_broker = PaperBroker(
+            clock=resolved_clock,
+            identity=BrokerIdentity(
+                broker_name=BrokerName(value=settings.broker.broker_name),
+                broker_account_id=BrokerAccountId(value=settings.broker.broker_account_id),
+            ),
+            policy=PaperBrokerPolicy(
+                auto_accept=settings.broker.auto_accept,
+                auto_fill_market=settings.broker.auto_fill_market,
+            ),
+            simulation_seed=settings.broker.simulation_seed,
+        )
+    else:
+        resolved_paper_broker = None
+
+    broker_port = (
+        PaperBrokerOrderPort(resolved_paper_broker) if resolved_paper_broker is not None else None
+    )
+
     # Order Management Service: construct when enabled/injected. Never creates or
-    # submits orders on startup (#404).
+    # submits orders on startup (#404). Optional PaperBroker port when broker enabled.
     resolved_order_service: OrderManagementService | None
     if order_management_service is not None:
         resolved_order_service = order_management_service
@@ -619,7 +649,7 @@ def build_container(
             repository=InMemoryOrderRepository(max_history=settings.order.max_history),
             audit_max_records=settings.order.audit_max_records,
             lock_timeout_seconds=settings.order.lock_timeout_seconds,
-            broker_port=None,
+            broker_port=broker_port,
             fill_port=None,
         )
     else:
@@ -706,4 +736,5 @@ def build_container(
         portfolio_service=resolved_portfolio_service,
         risk_engine=resolved_risk_engine,
         order_management_service=resolved_order_service,
+        paper_broker=resolved_paper_broker,
     )

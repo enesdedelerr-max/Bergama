@@ -17,6 +17,7 @@ from pydantic_settings import (
 
 from app.core.backfill_settings import BackfillSettings
 from app.core.benzinga_settings import BenzingaSettings
+from app.core.broker_settings import BrokerSettings
 from app.core.data_quality_settings import DataQualitySettings
 from app.core.environment import AppEnvironment
 from app.core.finnhub_settings import FinnhubSettings
@@ -92,6 +93,7 @@ class AppSettings(BaseSettings):
     portfolio: PortfolioSettings = Field(default_factory=PortfolioSettings)
     risk: RiskSettings = Field(default_factory=RiskSettings)
     order: OrderSettings = Field(default_factory=OrderSettings)
+    broker: BrokerSettings = Field(default_factory=BrokerSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)

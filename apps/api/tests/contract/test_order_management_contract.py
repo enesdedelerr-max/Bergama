@@ -45,11 +45,13 @@ def test_orders_package_has_no_forbidden_side_effect_imports() -> None:
                 modules.extend(alias.name for alias in node.names)
             elif isinstance(node, ast.ImportFrom) and node.module:
                 modules.append(node.module)
-            for module in modules:
-                root = module.split(".", 1)[0]
-                assert root not in forbidden, f"{path.name} imports {module}"
-                assert not module.startswith("app.broker")
-                assert not module.startswith("app.execution")
+                for module in modules:
+                    root = module.split(".", 1)[0]
+                    assert root not in forbidden, f"{path.name} imports {module}"
+                    # Broker abstraction (#405) is an allowed typed boundary; forbid
+                    # concrete execution/broker SDK packages only.
+                    assert not module.startswith("app.execution")
+                    assert not module.startswith("app.infrastructure.broker")
 
 
 def test_executable_order_is_frozen() -> None:

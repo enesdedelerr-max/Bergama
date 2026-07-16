@@ -7,6 +7,9 @@ from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from typing import Protocol
 
+from app.broker.errors import BrokerCapabilityMismatchError, BrokerError
+from app.broker.outcomes import BrokerCommandOutcome
+from app.broker.reference import validate_before_cancel, validate_before_submit
 from app.core.clock import Clock
 from app.orders.aggregate import OrderAggregate
 from app.orders.audit import InMemoryOrderAuditSink, OrderAuditRecord
@@ -19,7 +22,7 @@ from app.orders.errors import (
     OrderLockTimeoutError,
     OrderVersionConflictError,
 )
-from app.orders.events import BrokerCommandType, BrokerOrderCommand
+from app.orders.events import BrokerCommandType, BrokerOrderCommand, BrokerOrderEvent
 from app.orders.hashing import (
     broker_idempotency_key,
     build_order_id,
@@ -30,6 +33,7 @@ from app.orders.hashing import (
 from app.orders.identity import OrderId
 from app.orders.metrics import OrderMetrics
 from app.orders.models import (
+    BrokerLifecycleEventType,
     OrderMutationOutcome,
     OrderSnapshot,
     absolute_quantity,
@@ -200,7 +204,7 @@ class OrderManagementService:
                     idempotency_key=idempotency_key,
                 )
                 if not committed.duplicate:
-                    await self._dispatch_ports(committed)
+                    committed = await self._dispatch_ports(committed)
                     self._record_success(committed, kind=kind)
                 else:
                     self._metrics.record_outcome(OrderMutationOutcome.DUPLICATE, kind=kind)
@@ -213,31 +217,122 @@ class OrderManagementService:
                 self._record_error(exc)
                 raise
 
-    async def _dispatch_ports(self, result: OrderMutationResult) -> None:
+    async def _dispatch_ports(self, result: OrderMutationResult) -> OrderMutationResult:
+        current = result
         if self._broker_port is not None:
             for command in result.broker_commands:
                 try:
-                    await self._invoke_broker(command)
+                    current = await self._invoke_broker(command, current=current)
                 except OrderError:
                     raise
+                except BrokerCapabilityMismatchError as exc:
+                    self._metrics.broker_port_failures += 1
+                    raise OrderBrokerPortError(detail=exc.code) from exc
+                except BrokerError as exc:
+                    self._metrics.broker_port_failures += 1
+                    raise OrderBrokerPortError(detail=exc.code) from exc
                 except Exception as exc:
                     self._metrics.broker_port_failures += 1
                     raise OrderBrokerPortError(detail=type(exc).__name__) from exc
         if self._fill_port is not None:
-            for fill in result.fill_events:
+            for fill in current.fill_events:
                 try:
                     await self._fill_port.publish_fill(fill)
                 except OrderError:
                     raise
                 except Exception as exc:
                     raise OrderFillPortError(detail=type(exc).__name__) from exc
+        return current
 
-    async def _invoke_broker(self, command: BrokerOrderCommand) -> None:
+    async def _invoke_broker(
+        self,
+        command: BrokerOrderCommand,
+        *,
+        current: OrderMutationResult,
+    ) -> OrderMutationResult:
         assert self._broker_port is not None
+        caps = self._broker_port.capabilities()
         if command.command_type is BrokerCommandType.SUBMIT:
-            await self._broker_port.submit(command)
+            assert command.executable_order is not None
+            validate_before_submit(command.executable_order, caps)
+            outcome = (await self._broker_port.submit(command)).outcome
         else:
-            await self._broker_port.cancel(command)
+            validate_before_cancel(capabilities=caps)
+            outcome = (await self._broker_port.cancel(command)).outcome
+
+        if outcome is BrokerCommandOutcome.ACKNOWLEDGED:
+            return current
+        if outcome is BrokerCommandOutcome.FAILED_BEFORE_SEND:
+            self._metrics.broker_port_failures += 1
+            raise OrderBrokerPortError(detail="failed_before_send")
+        if outcome is BrokerCommandOutcome.REJECTED:
+            self._metrics.broker_port_failures += 1
+            raise OrderBrokerPortError(detail="rejected")
+        if outcome in (
+            BrokerCommandOutcome.OUTCOME_UNKNOWN,
+            BrokerCommandOutcome.RECONCILIATION_REQUIRED,
+        ):
+            self._metrics.broker_port_failures += 1
+            return await self._commit_reconciliation_required(
+                snapshot=current.next_snapshot,
+                command=command,
+                reason=outcome.value.lower(),
+            )
+        raise OrderBrokerPortError(detail=outcome.value)
+
+    async def _commit_reconciliation_required(
+        self,
+        *,
+        snapshot: OrderSnapshot,
+        command: BrokerOrderCommand,
+        reason: str,
+    ) -> OrderMutationResult:
+        broker_order_id = command.broker_order_id or f"unknown-{snapshot.order_id.value[:16]}"
+        event = BrokerOrderEvent(
+            broker_name="broker-port",
+            broker_order_id=broker_order_id,
+            broker_event_type=BrokerLifecycleEventType.PORT_FAILED,
+            broker_event_id=f"port-failure-{snapshot.order_id.value}-{snapshot.order_version}",
+            reason_code=reason,
+            correlation_id=command.correlation_id,
+            causation_id=command.causation_id,
+            safe_metadata={"reason": reason},
+        )
+        assert event.event_identity is not None
+        apply = ApplyBrokerEvent(
+            order_id=snapshot.order_id,
+            expected_version=snapshot.order_version,
+            broker_event=event,
+            idempotency_key=f"oms:port-failure:{event.event_identity}",
+        )
+        reserved = await self._repository.reserve_idempotency_key(
+            snapshot.order_id,
+            apply.idempotency_key,
+        )
+        if not reserved:
+            return OrderMutationResult(
+                outcome=OrderMutationOutcome.DUPLICATE,
+                duplicate=True,
+                next_snapshot=snapshot,
+                idempotency_key=apply.idempotency_key,
+            )
+        try:
+            mutation = OrderAggregate(snapshot, policy=self._policy).apply_broker_event(
+                apply,
+                updated_at=self._clock.now(),
+            )
+            return await self._repository.compare_and_commit(
+                order_id=snapshot.order_id,
+                expected_version=snapshot.order_version,
+                mutation=mutation,
+                idempotency_key=apply.idempotency_key,
+            )
+        except BaseException:
+            await self._repository.release_idempotency_key(
+                snapshot.order_id,
+                apply.idempotency_key,
+            )
+            raise
 
     def _record_success(self, result: OrderMutationResult, *, kind: str) -> None:
         self._metrics.record_outcome(result.outcome, kind=kind)

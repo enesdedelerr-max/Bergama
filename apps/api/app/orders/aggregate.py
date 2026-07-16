@@ -281,24 +281,7 @@ class OrderAggregate:
             broker_event_identity=event.event_identity,
             broker_order_id=event.broker_order_id,
             broker_event_sequence=event.broker_event_sequence,
-            extra_domain_events=(
-                (
-                    DomainEvent(
-                        event_type=DomainEventType.BROKER_PORT_FAILED,
-                        order_id=snapshot.order_id,
-                        transition_id="",  # filled in _transition path via rebuild
-                        previous_status=snapshot.status,
-                        next_status=next_status,
-                        previous_version=snapshot.order_version,
-                        next_version=snapshot.order_version + 1,
-                        correlation_id=event.correlation_id,
-                        causation_id=event.causation_id,
-                        safe_metadata={"reason": event.reason_code or "port_failed"},
-                    ),
-                )
-                if event.broker_event_type is BrokerLifecycleEventType.PORT_FAILED
-                else ()
-            ),
+            extra_domain_events=(),
         )
 
     def _apply_fill(
