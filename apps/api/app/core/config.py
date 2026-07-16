@@ -28,6 +28,7 @@ from app.core.polygon_settings import PolygonSettings
 from app.core.portfolio_settings import PortfolioSettings
 from app.core.registry_settings import RegistrySettings
 from app.core.replay_settings import ReplaySettings
+from app.core.risk_settings import RiskSettings
 from app.core.sec_settings import SecSettings
 from app.core.secrets import SecretSettings
 from app.core.security import JWT_ALGORITHM_HS256, JwtAlgorithm
@@ -88,6 +89,7 @@ class AppSettings(BaseSettings):
     data_quality: DataQualitySettings = Field(default_factory=DataQualitySettings)
     strategy: StrategySettings = Field(default_factory=StrategySettings)
     portfolio: PortfolioSettings = Field(default_factory=PortfolioSettings)
+    risk: RiskSettings = Field(default_factory=RiskSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)

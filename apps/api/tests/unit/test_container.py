@@ -11,6 +11,7 @@ from app.core.config import AppSettings
 from app.core.container import AppContainer, build_container
 from app.core.environment import AppEnvironment
 from app.core.portfolio_settings import PortfolioSettings
+from app.core.risk_settings import RiskSettings
 from app.core.secrets import SecretSettings
 from app.core.strategy_settings import StrategySettings
 from app.deps.container import get_app_container
@@ -21,6 +22,8 @@ from app.health.service import HealthService
 from app.portfolio import AccountId, PortfolioId, PortfolioService
 from app.portfolio.errors import PortfolioClosedError, PortfolioMissingError
 from app.registry.service import RegistryService
+from app.risk import RiskEngine
+from app.risk.errors import RiskClosedError
 from app.services.token_service import TokenService
 from app.strategy.engine import StrategyEngine
 from app.strategy.errors import StrategyClosedError
@@ -30,6 +33,7 @@ from app.strategy.reference import NoOpStrategyConfig
 from fastapi import FastAPI, Request
 from starlette.requests import Request as StarletteRequest
 from tests.conftest import VALID_PROD_JWT_SECRET
+from tests.support.risk_helpers import empty_snapshot, intent, policy
 
 
 def _settings(**overrides: object) -> AppSettings:
@@ -86,12 +90,14 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert container.backfill_engine is None
     assert container.strategy_engine is None
     assert container.portfolio_service is None
+    assert container.risk_engine is None
     assert container.settings.orchestrator.enabled is False
     assert container.settings.data_quality.enabled is False
     assert container.settings.replay.enabled is False
     assert container.settings.backfill.enabled is False
     assert container.settings.strategy.enabled is False
     assert container.settings.portfolio.enabled is False
+    assert container.settings.risk.enabled is False
     assert container.registry_service.settings.enabled is False
 
 
@@ -274,6 +280,36 @@ async def test_strategy_engine_container_enabled_no_startup_evaluation() -> None
             run_id="after-close",
             session_id="after-close",
             strategies=(),
+        )
+
+
+@pytest.mark.asyncio
+async def test_risk_engine_container_lifecycle_is_disabled_by_default() -> None:
+    container = build_container(_settings())
+    assert container.risk_engine is None
+    await container.aclose()
+
+
+@pytest.mark.asyncio
+async def test_risk_engine_container_enabled_no_startup_evaluation() -> None:
+    settings = _settings(risk=RiskSettings(enabled=True))
+    container = build_container(settings)
+    assert isinstance(container.risk_engine, RiskEngine)
+    assert container.risk_engine.metrics.assessments_evaluated == 0
+    assessment = container.risk_engine.evaluate(
+        intent=intent(expected_portfolio_version=1),
+        snapshot=empty_snapshot(version=1),
+        policy=policy(),
+        evaluated_at=datetime(2026, 7, 15, 15, 0, 1, tzinfo=UTC),
+    )
+    assert assessment.assessment_id
+    await container.aclose()
+    with pytest.raises(RiskClosedError):
+        container.risk_engine.evaluate(
+            intent=intent(expected_portfolio_version=1),
+            snapshot=empty_snapshot(version=1),
+            policy=policy(),
+            evaluated_at=datetime(2026, 7, 15, 15, 0, 1, tzinfo=UTC),
         )
 
 

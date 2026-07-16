@@ -65,6 +65,7 @@ from app.market_data.orchestrator.ports import PublishPort
 from app.market_data.replay.engine import ReplayEngine, build_replay_engine
 from app.portfolio import PortfolioPolicy, PortfolioService, build_portfolio_service
 from app.registry.service import RegistryService
+from app.risk import RiskEngine, build_risk_engine
 from app.services.token_service import TokenService
 from app.strategy.engine import StrategyEngine, build_strategy_engine
 from app.strategy.reference import NoOpStrategy, NoOpStrategyConfig
@@ -106,6 +107,7 @@ class AppContainer:
     backfill_engine: BackfillEngine | None
     strategy_engine: StrategyEngine | None
     portfolio_service: PortfolioService | None
+    risk_engine: RiskEngine | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -131,6 +133,8 @@ class AppContainer:
                 await self.strategy_engine.aclose()
             if self.portfolio_service is not None:
                 await self.portfolio_service.aclose()
+            if self.risk_engine is not None:
+                await self.risk_engine.aclose()
             # Iceberg writer: stop intake → flush → snapshots → offsets → consumer → catalog
             # before shared Kafka runtime is stopped (#307).
             if self.iceberg_writer_runtime is not None:
@@ -196,6 +200,7 @@ def build_container(
     backfill_engine: BackfillEngine | None = None,
     strategy_engine: StrategyEngine | None = None,
     portfolio_service: PortfolioService | None = None,
+    risk_engine: RiskEngine | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -585,6 +590,18 @@ def build_container(
     else:
         resolved_portfolio_service = None
 
+    # Risk Engine: construct when enabled/injected. Never evaluates on startup (#403).
+    resolved_risk_engine: RiskEngine | None
+    if risk_engine is not None:
+        resolved_risk_engine = risk_engine
+    elif settings.risk.enabled:
+        resolved_risk_engine = build_risk_engine(
+            assessment_sink=None,
+            audit_max_records=settings.risk.audit_max_records,
+        )
+    else:
+        resolved_risk_engine = None
+
     if health_checks is not None:
         resolved_checks: tuple[HealthCheck, ...] = tuple(health_checks)
     else:
@@ -664,4 +681,5 @@ def build_container(
         backfill_engine=resolved_backfill,
         strategy_engine=resolved_strategy_engine,
         portfolio_service=resolved_portfolio_service,
+        risk_engine=resolved_risk_engine,
     )
