@@ -70,6 +70,11 @@ class OrderLockTimeoutError(OrderError):
 class OrderBrokerPortError(OrderError):
     code = "order.broker_port_failed"
 
+    def __init__(self, message: str | None = None, *, detail: str | None = None) -> None:
+        super().__init__(
+            message or (f"{self.code}:{detail}" if detail else self.code), detail=detail
+        )
+
 
 class OrderFillPortError(OrderError):
     code = "order.fill_port_failed"
