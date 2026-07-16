@@ -24,6 +24,7 @@ from app.core.fred_settings import FredSettings
 from app.core.iceberg_writer_settings import IcebergWriterSettings
 from app.core.kafka_settings import KafkaSettings
 from app.core.orchestrator_settings import OrchestratorSettings
+from app.core.order_settings import OrderSettings
 from app.core.polygon_settings import PolygonSettings
 from app.core.portfolio_settings import PortfolioSettings
 from app.core.registry_settings import RegistrySettings
@@ -90,6 +91,7 @@ class AppSettings(BaseSettings):
     strategy: StrategySettings = Field(default_factory=StrategySettings)
     portfolio: PortfolioSettings = Field(default_factory=PortfolioSettings)
     risk: RiskSettings = Field(default_factory=RiskSettings)
+    order: OrderSettings = Field(default_factory=OrderSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)

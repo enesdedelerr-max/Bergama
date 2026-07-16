@@ -10,6 +10,7 @@ from app.core.clock import FixedClock, FixedJtiGenerator, SystemClock, UuidJtiGe
 from app.core.config import AppSettings
 from app.core.container import AppContainer, build_container
 from app.core.environment import AppEnvironment
+from app.core.order_settings import OrderSettings
 from app.core.portfolio_settings import PortfolioSettings
 from app.core.risk_settings import RiskSettings
 from app.core.secrets import SecretSettings
@@ -19,6 +20,8 @@ from app.events.topics import TopicRegistry
 from app.factory import create_app
 from app.health.runtime_state import RuntimeState
 from app.health.service import HealthService
+from app.orders import OrderManagementService
+from app.orders.errors import OrderClosedError
 from app.portfolio import AccountId, PortfolioId, PortfolioService
 from app.portfolio.errors import PortfolioClosedError, PortfolioMissingError
 from app.registry.service import RegistryService
@@ -33,6 +36,7 @@ from app.strategy.reference import NoOpStrategyConfig
 from fastapi import FastAPI, Request
 from starlette.requests import Request as StarletteRequest
 from tests.conftest import VALID_PROD_JWT_SECRET
+from tests.support.order_helpers import submit_cmd
 from tests.support.risk_helpers import empty_snapshot, intent, policy
 
 
@@ -91,6 +95,7 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert container.strategy_engine is None
     assert container.portfolio_service is None
     assert container.risk_engine is None
+    assert container.order_management_service is None
     assert container.settings.orchestrator.enabled is False
     assert container.settings.data_quality.enabled is False
     assert container.settings.replay.enabled is False
@@ -98,6 +103,7 @@ def test_build_container_creates_all_current_dependencies() -> None:
     assert container.settings.strategy.enabled is False
     assert container.settings.portfolio.enabled is False
     assert container.settings.risk.enabled is False
+    assert container.settings.order.enabled is False
     assert container.registry_service.settings.enabled is False
 
 
@@ -310,6 +316,30 @@ async def test_risk_engine_container_enabled_no_startup_evaluation() -> None:
             snapshot=empty_snapshot(version=1),
             policy=policy(),
             evaluated_at=datetime(2026, 7, 15, 15, 0, 1, tzinfo=UTC),
+        )
+
+
+@pytest.mark.asyncio
+async def test_order_management_container_lifecycle_is_disabled_by_default() -> None:
+    container = build_container(_settings())
+    assert container.order_management_service is None
+    await container.aclose()
+
+
+@pytest.mark.asyncio
+async def test_order_management_container_enabled_no_startup_orders() -> None:
+    settings = _settings(order=OrderSettings(enabled=True))
+    container = build_container(settings)
+    assert isinstance(container.order_management_service, OrderManagementService)
+    assert container.order_management_service.metrics.commands_evaluated == 0
+    result = await container.order_management_service.submit(
+        submit_cmd(client_order_id="container-order-1")
+    )
+    assert result.next_snapshot.order_id.value
+    await container.aclose()
+    with pytest.raises(OrderClosedError):
+        await container.order_management_service.submit(
+            submit_cmd(client_order_id="after-close-order")
         )
 
 
