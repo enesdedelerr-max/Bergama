@@ -23,7 +23,7 @@ API_DIR := $(ROOT)/apps/api
 	test-api-replay-engine smoke-api-replay-engine \
 	test-api-backfill smoke-api-backfill \
 	test-api-data-quality smoke-api-data-quality \
-	test-api-strategy-engine test-api-portfolio-service \
+	test-api-strategy-engine test-api-portfolio-service test-api-risk-engine \
 	smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred \
 	smoke-api-sec smoke-api-benzinga \
 	smoke-sprint3-runtime build-sprint3-release validate-sprint3-evidence \
@@ -33,7 +33,7 @@ help:
 	@echo "Sprint 1 targets: kind-bootstrap ingress-install argocd-bootstrap postgres-deploy redis-deploy kafka-deploy clickhouse-deploy minio-deploy iceberg-deploy observability-deploy helm-lint helm-template full-check verify-locks validate-secrets backup restore-smoke platform-validate build-release gate-sprint1 test-sprint1"
 	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate run-api"
 	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals test-api-fred-macro test-api-sec-filings test-api-benzinga-news test-api-provider-contracts test-api-market-orchestrator test-api-kafka-publish-adapter smoke-api-kafka-publish test-api-iceberg-writer smoke-api-iceberg-writer test-api-replay-engine smoke-api-replay-engine test-api-backfill smoke-api-backfill test-api-data-quality smoke-api-data-quality smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred smoke-api-sec smoke-api-benzinga smoke-sprint3-runtime build-sprint3-release validate-sprint3-evidence validate-sprint3-release test-sprint3-gate gate-sprint3"
-	@echo "Sprint 4 targets: test-api-strategy-engine test-api-portfolio-service"
+	@echo "Sprint 4 targets: test-api-strategy-engine test-api-portfolio-service test-api-risk-engine"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -299,6 +299,16 @@ test-api-portfolio-service:
 		tests/unit/test_portfolio_service.py \
 		tests/contract/test_portfolio_contract.py \
 		tests/integration/test_portfolio_replay.py \
+		tests/unit/test_container.py
+
+test-api-risk-engine:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_risk_models.py \
+		tests/unit/test_risk_policy.py \
+		tests/unit/test_risk_rules.py \
+		tests/unit/test_risk_engine.py \
+		tests/contract/test_risk_engine_contract.py \
+		tests/integration/test_risk_portfolio_integration.py \
 		tests/unit/test_container.py
 
 smoke-api-polygon:
