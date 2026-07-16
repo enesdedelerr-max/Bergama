@@ -63,6 +63,7 @@ from app.market_data.orchestrator.pipeline import (
 )
 from app.market_data.orchestrator.ports import PublishPort
 from app.market_data.replay.engine import ReplayEngine, build_replay_engine
+from app.portfolio import PortfolioPolicy, PortfolioService, build_portfolio_service
 from app.registry.service import RegistryService
 from app.services.token_service import TokenService
 from app.strategy.engine import StrategyEngine, build_strategy_engine
@@ -104,6 +105,7 @@ class AppContainer:
     replay_engine: ReplayEngine | None
     backfill_engine: BackfillEngine | None
     strategy_engine: StrategyEngine | None
+    portfolio_service: PortfolioService | None
     _exit_stack: AsyncExitStack = field(default_factory=AsyncExitStack, repr=False, compare=False)
     _closed: bool = field(default=False, init=False, repr=False, compare=False)
 
@@ -127,6 +129,8 @@ class AppContainer:
                 await self.backfill_engine.aclose()
             if self.strategy_engine is not None:
                 await self.strategy_engine.aclose()
+            if self.portfolio_service is not None:
+                await self.portfolio_service.aclose()
             # Iceberg writer: stop intake → flush → snapshots → offsets → consumer → catalog
             # before shared Kafka runtime is stopped (#307).
             if self.iceberg_writer_runtime is not None:
@@ -191,6 +195,7 @@ def build_container(
     replay_engine: ReplayEngine | None = None,
     backfill_engine: BackfillEngine | None = None,
     strategy_engine: StrategyEngine | None = None,
+    portfolio_service: PortfolioService | None = None,
 ) -> AppContainer:
     """Construct an application container. All long-lived deps are owned here."""
     resolved_clock = clock if clock is not None else SystemClock()
@@ -561,6 +566,25 @@ def build_container(
     else:
         resolved_strategy_engine = None
 
+    # Portfolio Service: construct when enabled/injected. Never creates accounts
+    # or mutates portfolio state on startup (#402).
+    resolved_portfolio_service: PortfolioService | None
+    if portfolio_service is not None:
+        resolved_portfolio_service = portfolio_service
+    elif settings.portfolio.enabled:
+        resolved_portfolio_service = build_portfolio_service(
+            clock=resolved_clock,
+            policy=PortfolioPolicy(
+                base_currency=settings.portfolio.base_currency,
+                allow_short_positions=settings.portfolio.allow_short_positions,
+                enforce_non_negative_cash=settings.portfolio.enforce_non_negative_cash,
+            ),
+            audit_max_records=settings.portfolio.audit_max_records,
+            lock_timeout_seconds=settings.portfolio.lock_timeout_seconds,
+        )
+    else:
+        resolved_portfolio_service = None
+
     if health_checks is not None:
         resolved_checks: tuple[HealthCheck, ...] = tuple(health_checks)
     else:
@@ -639,4 +663,5 @@ def build_container(
         replay_engine=resolved_replay,
         backfill_engine=resolved_backfill,
         strategy_engine=resolved_strategy_engine,
+        portfolio_service=resolved_portfolio_service,
     )
