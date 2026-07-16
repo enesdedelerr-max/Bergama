@@ -25,6 +25,7 @@ from app.core.iceberg_writer_settings import IcebergWriterSettings
 from app.core.kafka_settings import KafkaSettings
 from app.core.orchestrator_settings import OrchestratorSettings
 from app.core.polygon_settings import PolygonSettings
+from app.core.portfolio_settings import PortfolioSettings
 from app.core.registry_settings import RegistrySettings
 from app.core.replay_settings import ReplaySettings
 from app.core.sec_settings import SecSettings
@@ -86,6 +87,7 @@ class AppSettings(BaseSettings):
     backfill: BackfillSettings = Field(default_factory=BackfillSettings)
     data_quality: DataQualitySettings = Field(default_factory=DataQualitySettings)
     strategy: StrategySettings = Field(default_factory=StrategySettings)
+    portfolio: PortfolioSettings = Field(default_factory=PortfolioSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
@@ -284,6 +286,7 @@ class AppSettings(BaseSettings):
             "orchestrator": self.orchestrator.safe_summary(),
             "data_quality": self.data_quality.safe_summary(),
             "strategy": self.strategy.safe_summary(),
+            "portfolio": self.portfolio.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
         return summary
