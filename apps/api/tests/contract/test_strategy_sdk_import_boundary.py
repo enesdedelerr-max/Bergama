@@ -135,9 +135,15 @@ def test_stable_sdk_root_exports_authoring_contracts_only() -> None:
     assert "StrategyPluginManifest" in public
     assert "StrategyBatchExecutionResult" not in public
     assert "StrategyEngine" not in public
+    assert "PluginHealth" not in public
+    assert "PluginLifecycle" not in public
+    assert "StrategyCancellationError" not in public
+    assert "PUBLIC_API_VERSION" not in public
     assert "StrategySdkRuntimeSession" not in dir(bergama_strategy_sdk)
     assert "experimental" not in public
     assert not hasattr(bergama_strategy_sdk, "StrategyBatchExecutionResult")
+    assert not hasattr(bergama_strategy_sdk, "PluginHealth")
+    assert not hasattr(bergama_strategy_sdk, "PluginLifecycle")
 
 
 def test_experimental_namespace_is_not_reexported_from_stable_root() -> None:
@@ -145,6 +151,8 @@ def test_experimental_namespace_is_not_reexported_from_stable_root() -> None:
     import bergama_strategy_sdk.experimental as experimental
 
     assert experimental is not None
+    assert getattr(experimental, "EXPERIMENTAL_API_ENABLED", None) is False
+    assert not hasattr(bergama_strategy_sdk, "EXPERIMENTAL_API_ENABLED")
 
 
 def test_real_author_fixture_package_passes_boundary_scan() -> None:
