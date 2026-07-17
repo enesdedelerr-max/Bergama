@@ -32,9 +32,21 @@ See [`docs/sprints/sprint-2/README.md`](docs/sprints/sprint-2/README.md).
 
 ### Sprint 3 — Market Data Plane
 
-Status: in progress. Current issue: **#301 Canonical Market Data Contract**.
+Status: complete. Tag `v0.3.0-sprint3`. Gate: `make gate-sprint3` PASS.
 
 See [`docs/sprints/sprint-3/README.md`](docs/sprints/sprint-3/README.md).
+
+### Sprint 4 — Trading Foundations
+
+Status: complete. Issues **#401–#406** merged through PRs **#44–#49**.
+Implementation baseline: `199f8a04a87842ea4d44ea182ed45f5a28d4466a`.
+Release tag `v0.4.0-sprint4` is prepared but has not been created.
+
+See [`docs/sprints/sprint-4/README.md`](docs/sprints/sprint-4/README.md).
+
+### Next sprint
+
+Next sprint planning pending.
 
 ## Sprint sequence
 
@@ -42,7 +54,7 @@ See [`docs/sprints/sprint-3/README.md`](docs/sprints/sprint-3/README.md).
 2. Sprint 1 — Infrastructure
 3. Sprint 2 — FastAPI Runtime
 4. Sprint 3 — Market Data Plane
-5. Sprint 4 — Feature Platform
+5. Sprint 4 — Trading Foundations
 6. Sprint 5 — Premarket Intelligence
 7. Sprint 6 — AI Decision Engine
 8. Sprint 7 — Broker and Execution
