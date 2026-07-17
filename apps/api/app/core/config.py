@@ -34,6 +34,7 @@ from app.core.risk_settings import RiskSettings
 from app.core.sec_settings import SecSettings
 from app.core.secrets import SecretSettings
 from app.core.security import JWT_ALGORITHM_HS256, JwtAlgorithm
+from app.core.strategy_sdk_settings import StrategySdkRuntimeSettings
 from app.core.strategy_settings import StrategySettings
 
 _ENV_PREFIX = "BERGAMA_"
@@ -90,6 +91,7 @@ class AppSettings(BaseSettings):
     backfill: BackfillSettings = Field(default_factory=BackfillSettings)
     data_quality: DataQualitySettings = Field(default_factory=DataQualitySettings)
     strategy: StrategySettings = Field(default_factory=StrategySettings)
+    strategy_sdk: StrategySdkRuntimeSettings = Field(default_factory=StrategySdkRuntimeSettings)
     portfolio: PortfolioSettings = Field(default_factory=PortfolioSettings)
     risk: RiskSettings = Field(default_factory=RiskSettings)
     order: OrderSettings = Field(default_factory=OrderSettings)
@@ -292,6 +294,7 @@ class AppSettings(BaseSettings):
             "orchestrator": self.orchestrator.safe_summary(),
             "data_quality": self.data_quality.safe_summary(),
             "strategy": self.strategy.safe_summary(),
+            "strategy_sdk": self.strategy_sdk.safe_summary(),
             "portfolio": self.portfolio.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
