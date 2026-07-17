@@ -74,6 +74,16 @@ from app.services.token_service import TokenService
 from app.strategy.engine import StrategyEngine, build_strategy_engine
 from app.strategy.reference import NoOpStrategy, NoOpStrategyConfig
 from app.strategy.registry import StrategyRegistry
+from app.strategy.sdk_runtime.bootstrap import (
+    build_reference_feature_registry,
+    build_reference_plugin_registry,
+    reference_runtime_policy,
+)
+from app.strategy.sdk_runtime.budgets import ExecutionBudgets
+from app.strategy.sdk_runtime.engine import (
+    StrategySdkRuntimeEngine,
+    build_strategy_sdk_runtime_engine,
+)
 
 logger = get_logger(__name__)
 
@@ -110,6 +120,7 @@ class AppContainer:
     replay_engine: ReplayEngine | None
     backfill_engine: BackfillEngine | None
     strategy_engine: StrategyEngine | None
+    strategy_sdk_runtime_engine: StrategySdkRuntimeEngine | None
     portfolio_service: PortfolioService | None
     risk_engine: RiskEngine | None
     order_management_service: OrderManagementService | None
@@ -137,6 +148,8 @@ class AppContainer:
                 await self.backfill_engine.aclose()
             if self.strategy_engine is not None:
                 await self.strategy_engine.aclose()
+            if self.strategy_sdk_runtime_engine is not None:
+                await self.strategy_sdk_runtime_engine.aclose()
             if self.portfolio_service is not None:
                 await self.portfolio_service.aclose()
             if self.risk_engine is not None:
@@ -209,6 +222,7 @@ def build_container(
     replay_engine: ReplayEngine | None = None,
     backfill_engine: BackfillEngine | None = None,
     strategy_engine: StrategyEngine | None = None,
+    strategy_sdk_runtime_engine: StrategySdkRuntimeEngine | None = None,
     portfolio_service: PortfolioService | None = None,
     risk_engine: RiskEngine | None = None,
     order_management_service: OrderManagementService | None = None,
@@ -583,6 +597,47 @@ def build_container(
     else:
         resolved_strategy_engine = None
 
+    # Strategy SDK Runtime (#406): construct only when explicitly enabled.
+    # Never evaluates on startup.
+    resolved_strategy_sdk_runtime_engine: StrategySdkRuntimeEngine | None
+    if strategy_sdk_runtime_engine is not None:
+        resolved_strategy_sdk_runtime_engine = strategy_sdk_runtime_engine
+    elif settings.strategy_sdk.enabled:
+        sdk_budgets = ExecutionBudgets(
+            execution_timeout_ms=settings.strategy_sdk.execution_timeout_ms,
+            max_feature_payload_bytes=settings.strategy_sdk.max_feature_payload_bytes,
+            max_output_bytes=settings.strategy_sdk.max_output_bytes,
+            max_safe_metadata_bytes=settings.strategy_sdk.max_safe_metadata_bytes,
+            max_state_bytes=settings.strategy_sdk.max_state_bytes,
+            max_plugin_failures_per_batch=settings.strategy_sdk.max_plugin_failures_per_batch,
+            max_required_features=settings.strategy_sdk.max_required_features,
+            max_manifest_bytes=settings.strategy_sdk.max_manifest_bytes,
+        )
+        if settings.strategy_sdk.register_reference_plugin:
+            plugin_registry = build_reference_plugin_registry()
+        else:
+            from app.strategy.sdk_runtime.registry import StrategySdkPluginRegistry
+
+            plugin_registry = StrategySdkPluginRegistry()
+        resolved_strategy_sdk_runtime_engine = build_strategy_sdk_runtime_engine(
+            registry=plugin_registry,
+            feature_registry=build_reference_feature_registry(),
+            compatibility_policy=reference_runtime_policy().model_copy(
+                update={
+                    "sdk_schema_version": settings.strategy_sdk.sdk_schema_version,
+                    "runtime_protocol_version": settings.strategy_sdk.runtime_protocol_version,
+                    "feature_schema_version": settings.strategy_sdk.feature_schema_version,
+                    "config_schema_version": settings.strategy_sdk.config_schema_version,
+                    "allow_experimental": settings.strategy_sdk.allow_experimental,
+                }
+            ),
+            budgets=sdk_budgets,
+            audit_max_records=settings.strategy_sdk.audit_max_records,
+            max_plugins_per_session=settings.strategy_sdk.max_plugins_per_session,
+        )
+    else:
+        resolved_strategy_sdk_runtime_engine = None
+
     # Portfolio Service: construct when enabled/injected. Never creates accounts
     # or mutates portfolio state on startup (#402).
     resolved_portfolio_service: PortfolioService | None
@@ -733,6 +788,7 @@ def build_container(
         replay_engine=resolved_replay,
         backfill_engine=resolved_backfill,
         strategy_engine=resolved_strategy_engine,
+        strategy_sdk_runtime_engine=resolved_strategy_sdk_runtime_engine,
         portfolio_service=resolved_portfolio_service,
         risk_engine=resolved_risk_engine,
         order_management_service=resolved_order_service,

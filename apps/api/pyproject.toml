@@ -15,7 +15,11 @@ dependencies = [
     "pyyaml>=6.0.2",
     "websockets==16.1",
     "pyiceberg[pyarrow,sql-sqlite]==0.11.1",
+    "bergama-strategy-sdk",
 ]
+
+[tool.uv.sources]
+bergama-strategy-sdk = { path = "../../packages/strategy-sdk", editable = true }
 
 [project.scripts]
 app = "app.main:run"
