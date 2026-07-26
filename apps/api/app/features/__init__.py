@@ -17,6 +17,7 @@ from app.features.errors import (
     FeaturePlatformValidationError,
 )
 from app.features.materializer import materialize_bar_feature_snapshot
+from app.features.offline_replay import materialize_bar_feature_snapshot_sequence
 from app.features.settings import FeaturePlatformSettings
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "FeaturePlatformValidationError",
     "bar_feature_catalog",
     "materialize_bar_feature_snapshot",
+    "materialize_bar_feature_snapshot_sequence",
 ]
