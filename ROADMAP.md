@@ -40,32 +40,59 @@ See [`docs/sprints/sprint-3/README.md`](docs/sprints/sprint-3/README.md).
 
 Status: complete. Issues **#401–#406** merged through PRs **#44–#49**.
 Implementation baseline: `199f8a04a87842ea4d44ea182ed45f5a28d4466a`.
-Release tag `v0.4.0-sprint4` is prepared but has not been created.
+Release tag `v0.4.0-sprint4` exists.
 
 See [`docs/sprints/sprint-4/README.md`](docs/sprints/sprint-4/README.md).
 
-### Next sprint
+### Sprint 5 — Strategy SDK Hardening
 
-Next sprint planning pending.
+Status: complete. Issue **#51** merged through PR **#52**.
+Implementation baseline: `260ffbecb4113040705dc44a768ebf6e75f933ea`.
+Release tag `v0.5.0-sprint5` is prepared but has **not** been created.
+
+See [`docs/sprints/sprint-5/README.md`](docs/sprints/sprint-5/README.md).
+
+### Sprint 6 — Feature Platform
+
+Status: complete. Planning issue **#65**; implementation issues **#66–#68**
+merged through PR **#69**.
+Implementation baseline: `a04b9e5d5b5673a3f4f2022159915b520995bf06`.
+Release tag `v0.6.0-sprint6` is prepared but has **not** been created.
+
+See [`docs/sprints/sprint-6/README.md`](docs/sprints/sprint-6/README.md).
+
+### Next action
+
+1. Merge Sprint 5 / Sprint 6 governance closeout (documentation only).
+2. Create Sprint 5 and Sprint 6 release tags when explicitly approved.
+3. Begin Sprint 7 planning (Premarket Intelligence).
 
 ## Sprint sequence
 
-1. Sprint 0 — Repository and Toolchain
-2. Sprint 1 — Infrastructure
-3. Sprint 2 — FastAPI Runtime
-4. Sprint 3 — Market Data Plane
-5. Sprint 4 — Trading Foundations
-6. Sprint 5 — Premarket Intelligence
-7. Sprint 6 — AI Decision Engine
-8. Sprint 7 — Broker and Execution
-9. Sprint 8 — Portfolio Runtime
-10. Sprint 9 — Dashboard
-11. Sprint 10 — MLOps
-12. Sprint 11 — Research
-13. Sprint 12 — Compliance
-14. Sprint 13 — Production Hardening
-15. Sprint 14 — Live Pilot
-16. Sprint 15 — Limited Production Stabilization
+1. Sprint 0 — Repository and Toolchain — Complete
+2. Sprint 1 — Infrastructure — Complete
+3. Sprint 2 — FastAPI Runtime — Complete
+4. Sprint 3 — Market Data Plane — Complete
+5. Sprint 4 — Trading Foundations — Complete
+6. Sprint 5 — Strategy SDK Hardening — Complete
+7. Sprint 6 — Feature Platform — Complete
+8. Sprint 7 — Premarket Intelligence — Planned
+9. Sprint 8 — AI Decision Engine — Planned
+10. Sprint 9 — Dashboard — Planned
+11. Sprint 10 — MLOps — Planned
+12. Sprint 11 — Research — Planned
+13. Sprint 12 — Compliance — Planned
+14. Sprint 13 — Production Hardening — Planned
+15. Sprint 14 — Live Pilot — Planned
+16. Sprint 15 — Limited Production Stabilization — Planned
+
+### Notes on later themes
+
+Sprint 4 already delivered foundational Broker, Portfolio, Risk, OMS, and
+Strategy Engine / Strategy SDK runtime slices. Later sprints named historically
+as “Broker and Execution” or “Portfolio Runtime” should be treated as
+**deepening / productionization** of those foundations, not greenfield
+reintroduction of the same bounded contexts.
 
 ## Planning principles
 
