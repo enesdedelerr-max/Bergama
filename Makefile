@@ -23,7 +23,7 @@ API_DIR := $(ROOT)/apps/api
 	test-api-replay-engine smoke-api-replay-engine \
 	test-api-backfill smoke-api-backfill \
 	test-api-data-quality smoke-api-data-quality \
-	test-api-strategy-engine test-api-strategy-sdk test-api-portfolio-service test-api-risk-engine \
+	test-api-strategy-engine test-api-strategy-sdk test-api-feature-platform test-api-portfolio-service test-api-risk-engine \
 	test-api-order-management \
 	test-api-broker \
 	smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred \
@@ -36,6 +36,7 @@ help:
 	@echo "Sprint 2 targets: lint typecheck test-api test-api-auth test-api-container test-api-health test-api-kafka-core test-api-kafka-test-runtime test-api-registry smoke-api-kafka smoke-api-runtime validate-api-openapi build-sprint2-release gate-sprint2 test-sprint2-gate run-api"
 	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals test-api-fred-macro test-api-sec-filings test-api-benzinga-news test-api-provider-contracts test-api-market-orchestrator test-api-kafka-publish-adapter smoke-api-kafka-publish test-api-iceberg-writer smoke-api-iceberg-writer test-api-replay-engine smoke-api-replay-engine test-api-backfill smoke-api-backfill test-api-data-quality smoke-api-data-quality smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred smoke-api-sec smoke-api-benzinga smoke-sprint3-runtime build-sprint3-release validate-sprint3-evidence validate-sprint3-release test-sprint3-gate gate-sprint3"
 	@echo "Sprint 4 targets: test-api-strategy-engine test-api-strategy-sdk test-api-portfolio-service test-api-risk-engine test-api-order-management test-api-broker"
+	@echo "Sprint 6 targets: test-api-feature-platform"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -303,6 +304,15 @@ test-api-strategy-sdk:
 		tests/contract/test_strategy_sdk_contract.py \
 		tests/contract/test_strategy_sdk_import_boundary.py \
 		tests/integration/test_strategy_sdk_legacy_compatibility.py
+
+test-api-feature-platform:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_feature_platform_materializer.py \
+		tests/unit/test_feature_platform_host_resolution.py \
+		tests/unit/test_feature_platform_offline_replay.py \
+		tests/contract/test_feature_platform_contract.py \
+		tests/contract/test_feature_platform_offline_replay_contract.py \
+		tests/integration/test_feature_platform_host_integration.py
 
 test-api-portfolio-service:
 	@cd "$(API_DIR)" && uv run pytest -q \

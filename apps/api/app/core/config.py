@@ -20,6 +20,7 @@ from app.core.benzinga_settings import BenzingaSettings
 from app.core.broker_settings import BrokerSettings
 from app.core.data_quality_settings import DataQualitySettings
 from app.core.environment import AppEnvironment
+from app.core.feature_platform_settings import FeaturePlatformSettings
 from app.core.finnhub_settings import FinnhubSettings
 from app.core.fred_settings import FredSettings
 from app.core.iceberg_writer_settings import IcebergWriterSettings
@@ -92,6 +93,7 @@ class AppSettings(BaseSettings):
     data_quality: DataQualitySettings = Field(default_factory=DataQualitySettings)
     strategy: StrategySettings = Field(default_factory=StrategySettings)
     strategy_sdk: StrategySdkRuntimeSettings = Field(default_factory=StrategySdkRuntimeSettings)
+    feature_platform: FeaturePlatformSettings = Field(default_factory=FeaturePlatformSettings)
     portfolio: PortfolioSettings = Field(default_factory=PortfolioSettings)
     risk: RiskSettings = Field(default_factory=RiskSettings)
     order: OrderSettings = Field(default_factory=OrderSettings)
@@ -295,6 +297,7 @@ class AppSettings(BaseSettings):
             "data_quality": self.data_quality.safe_summary(),
             "strategy": self.strategy.safe_summary(),
             "strategy_sdk": self.strategy_sdk.safe_summary(),
+            "feature_platform": self.feature_platform.safe_summary(),
             "portfolio": self.portfolio.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
