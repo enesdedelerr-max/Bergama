@@ -29,6 +29,7 @@ from app.core.orchestrator_settings import OrchestratorSettings
 from app.core.order_settings import OrderSettings
 from app.core.polygon_settings import PolygonSettings
 from app.core.portfolio_settings import PortfolioSettings
+from app.core.premarket_settings import PremarketSettings
 from app.core.registry_settings import RegistrySettings
 from app.core.replay_settings import ReplaySettings
 from app.core.risk_settings import RiskSettings
@@ -94,6 +95,7 @@ class AppSettings(BaseSettings):
     strategy: StrategySettings = Field(default_factory=StrategySettings)
     strategy_sdk: StrategySdkRuntimeSettings = Field(default_factory=StrategySdkRuntimeSettings)
     feature_platform: FeaturePlatformSettings = Field(default_factory=FeaturePlatformSettings)
+    premarket: PremarketSettings = Field(default_factory=PremarketSettings)
     portfolio: PortfolioSettings = Field(default_factory=PortfolioSettings)
     risk: RiskSettings = Field(default_factory=RiskSettings)
     order: OrderSettings = Field(default_factory=OrderSettings)
@@ -298,6 +300,7 @@ class AppSettings(BaseSettings):
             "strategy": self.strategy.safe_summary(),
             "strategy_sdk": self.strategy_sdk.safe_summary(),
             "feature_platform": self.feature_platform.safe_summary(),
+            "premarket": self.premarket.safe_summary(),
             "portfolio": self.portfolio.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
