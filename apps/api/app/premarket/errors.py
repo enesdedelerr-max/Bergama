@@ -29,3 +29,27 @@ class WatchlistDuplicateInstrumentError(WatchlistValidationError):
 
 class WatchlistUnsupportedCandidateError(WatchlistValidationError):
     code = "premarket.watchlist.unsupported_candidate"
+
+
+class CatalystError(PremarketError):
+    code = "premarket.catalyst.error"
+
+
+class CatalystValidationError(CatalystError):
+    code = "premarket.catalyst.validation_failed"
+
+
+class CatalystUnsupportedEventError(CatalystValidationError):
+    code = "premarket.catalyst.unsupported_event"
+
+
+class CatalystIdentityConflictError(CatalystValidationError):
+    code = "premarket.catalyst.identity_conflict"
+
+
+class CatalystStaleKnownAtError(CatalystValidationError):
+    code = "premarket.catalyst.stale_known_at"
+
+
+class CatalystClassificationError(CatalystValidationError):
+    code = "premarket.catalyst.classification_failed"
