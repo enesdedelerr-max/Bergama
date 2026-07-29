@@ -1,8 +1,30 @@
-"""Premarket Intelligence bounded context — Sprint 7 Watchlist Engine foundation."""
+"""Premarket Intelligence bounded context — Sprint 7 Watchlist and Catalyst foundations."""
 
 from __future__ import annotations
 
+from app.premarket.catalyst import (
+    ORDERING_POLICY_KNOWN_AT_ASC_EVENT_TIME_ASC_TYPE_ASC_INSTRUMENT_KEY_ASC_ID_ASC,
+    UNLINKED_INSTRUMENT_KEY_SENTINEL,
+    CatalystClassificationRule,
+    CatalystCollection,
+    CatalystConfig,
+    CatalystNormalizationRequest,
+    CatalystProvenance,
+    CatalystRecord,
+    build_catalyst_record_id,
+    catalyst_sort_key,
+    coerce_news_events,
+    declared_source_identity,
+    normalize_catalysts,
+    normalize_catalysts_from_parts,
+)
 from app.premarket.errors import (
+    CatalystClassificationError,
+    CatalystError,
+    CatalystIdentityConflictError,
+    CatalystStaleKnownAtError,
+    CatalystUnsupportedEventError,
+    CatalystValidationError,
     PremarketDisabledError,
     PremarketError,
     WatchlistDuplicateInstrumentError,
@@ -28,7 +50,21 @@ from app.premarket.watchlist import (
 )
 
 __all__ = [
+    "ORDERING_POLICY_KNOWN_AT_ASC_EVENT_TIME_ASC_TYPE_ASC_INSTRUMENT_KEY_ASC_ID_ASC",
     "ORDERING_POLICY_RULE_PRIORITY_ASC_INSTRUMENT_KEY_ASC",
+    "UNLINKED_INSTRUMENT_KEY_SENTINEL",
+    "CatalystClassificationError",
+    "CatalystClassificationRule",
+    "CatalystCollection",
+    "CatalystConfig",
+    "CatalystError",
+    "CatalystIdentityConflictError",
+    "CatalystNormalizationRequest",
+    "CatalystProvenance",
+    "CatalystRecord",
+    "CatalystStaleKnownAtError",
+    "CatalystUnsupportedEventError",
+    "CatalystValidationError",
     "PremarketDisabledError",
     "PremarketError",
     "PremarketSettings",
@@ -43,9 +79,15 @@ __all__ = [
     "WatchlistProvenance",
     "WatchlistUnsupportedCandidateError",
     "WatchlistValidationError",
+    "build_catalyst_record_id",
+    "catalyst_sort_key",
+    "coerce_news_events",
+    "declared_source_identity",
     "generate_watchlist",
     "generate_watchlist_from_parts",
     "normalize_candidate",
     "normalize_candidates",
+    "normalize_catalysts",
+    "normalize_catalysts_from_parts",
     "watchlist_sort_key",
 ]

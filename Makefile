@@ -23,7 +23,7 @@ API_DIR := $(ROOT)/apps/api
 	test-api-replay-engine smoke-api-replay-engine \
 	test-api-backfill smoke-api-backfill \
 	test-api-data-quality smoke-api-data-quality \
-	test-api-strategy-engine test-api-strategy-sdk test-api-feature-platform test-api-premarket test-api-portfolio-service test-api-risk-engine \
+	test-api-strategy-engine test-api-strategy-sdk test-api-feature-platform test-api-premarket test-api-premarket-catalyst test-api-portfolio-service test-api-risk-engine \
 	test-api-order-management \
 	test-api-broker \
 	smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred \
@@ -37,7 +37,7 @@ help:
 	@echo "Sprint 3 targets: test-api-market-contracts test-api-polygon-historical test-api-polygon-realtime test-api-finnhub-fundamentals test-api-fred-macro test-api-sec-filings test-api-benzinga-news test-api-provider-contracts test-api-market-orchestrator test-api-kafka-publish-adapter smoke-api-kafka-publish test-api-iceberg-writer smoke-api-iceberg-writer test-api-replay-engine smoke-api-replay-engine test-api-backfill smoke-api-backfill test-api-data-quality smoke-api-data-quality smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred smoke-api-sec smoke-api-benzinga smoke-sprint3-runtime build-sprint3-release validate-sprint3-evidence validate-sprint3-release test-sprint3-gate gate-sprint3"
 	@echo "Sprint 4 targets: test-api-strategy-engine test-api-strategy-sdk test-api-portfolio-service test-api-risk-engine test-api-order-management test-api-broker"
 	@echo "Sprint 6 targets: test-api-feature-platform"
-	@echo "Sprint 7 targets: test-api-premarket"
+	@echo "Sprint 7 targets: test-api-premarket test-api-premarket-catalyst"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -319,7 +319,16 @@ test-api-premarket:
 	@cd "$(API_DIR)" && uv run pytest -q \
 		tests/unit/test_premarket_watchlist_engine.py \
 		tests/contract/test_premarket_watchlist_contract.py \
-		tests/integration/test_premarket_watchlist_market_data_boundary.py
+		tests/integration/test_premarket_watchlist_market_data_boundary.py \
+		tests/unit/test_premarket_catalyst_engine.py \
+		tests/contract/test_premarket_catalyst_contract.py \
+		tests/integration/test_premarket_catalyst_market_data_boundary.py
+
+test-api-premarket-catalyst:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_premarket_catalyst_engine.py \
+		tests/contract/test_premarket_catalyst_contract.py \
+		tests/integration/test_premarket_catalyst_market_data_boundary.py
 
 test-api-portfolio-service:
 	@cd "$(API_DIR)" && uv run pytest -q \
