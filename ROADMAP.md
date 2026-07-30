@@ -61,11 +61,20 @@ Release tag `v0.6.0-sprint6` is prepared but has **not** been created.
 
 See [`docs/sprints/sprint-6/README.md`](docs/sprints/sprint-6/README.md).
 
+### Sprint 7 — Premarket Intelligence
+
+Status: complete. Planning issue **#71**; implementation issues **#72**,
+**#74**, and **#76** merged through PRs **#73**, **#75**, and **#77**.
+Implementation baseline: `3b8358e728555bc17da87786b3a2f41792559433`.
+Release tag `v0.7.0-sprint7`.
+
+See [`docs/sprints/sprint-7/README.md`](docs/sprints/sprint-7/README.md).
+
 ### Next action
 
-1. Merge Sprint 5 / Sprint 6 governance closeout (documentation only).
-2. Create Sprint 5 and Sprint 6 release tags when explicitly approved.
-3. Begin Sprint 7 planning (Premarket Intelligence).
+1. Sprint 7 governance closeout and release tag `v0.7.0-sprint7` are complete.
+2. Next sprint planning remains pending and is not authorized by Sprint 7
+   closeout.
 
 ## Sprint sequence
 
@@ -76,7 +85,7 @@ See [`docs/sprints/sprint-6/README.md`](docs/sprints/sprint-6/README.md).
 5. Sprint 4 — Trading Foundations — Complete
 6. Sprint 5 — Strategy SDK Hardening — Complete
 7. Sprint 6 — Feature Platform — Complete
-8. Sprint 7 — Premarket Intelligence — Planned
+8. Sprint 7 — Premarket Intelligence — Complete
 9. Sprint 8 — AI Decision Engine — Planned
 10. Sprint 9 — Dashboard — Planned
 11. Sprint 10 — MLOps — Planned
