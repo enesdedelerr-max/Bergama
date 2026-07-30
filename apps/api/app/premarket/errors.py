@@ -53,3 +53,35 @@ class CatalystStaleKnownAtError(CatalystValidationError):
 
 class CatalystClassificationError(CatalystValidationError):
     code = "premarket.catalyst.classification_failed"
+
+
+class GapError(PremarketError):
+    code = "premarket.gap.error"
+
+
+class GapValidationError(GapError):
+    code = "premarket.gap.validation_failed"
+
+
+class GapUnsupportedEventError(GapValidationError):
+    code = "premarket.gap.unsupported_event"
+
+
+class GapStaleKnownAtError(GapValidationError):
+    code = "premarket.gap.stale_known_at"
+
+
+class GapMissingBarError(GapValidationError):
+    code = "premarket.gap.missing_bar"
+
+
+class GapZeroCloseError(GapValidationError):
+    code = "premarket.gap.zero_close"
+
+
+class GapAmbiguousSelectionError(GapValidationError):
+    code = "premarket.gap.ambiguous_selection"
+
+
+class GapDuplicateInstrumentError(GapValidationError):
+    code = "premarket.gap.duplicate_instrument"
