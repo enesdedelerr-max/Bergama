@@ -85,3 +85,35 @@ class GapAmbiguousSelectionError(GapValidationError):
 
 class GapDuplicateInstrumentError(GapValidationError):
     code = "premarket.gap.duplicate_instrument"
+
+
+class ScoreError(PremarketError):
+    code = "premarket.score.error"
+
+
+class ScoreValidationError(ScoreError):
+    code = "premarket.score.validation_failed"
+
+
+class ScoreUnsupportedPolicyError(ScoreValidationError):
+    code = "premarket.score.unsupported_policy"
+
+
+class ScoreDuplicateInstrumentError(ScoreValidationError):
+    code = "premarket.score.duplicate_instrument"
+
+
+class ScoreConflictError(ScoreValidationError):
+    code = "premarket.score.conflict"
+
+
+class ScoreDomainError(ScoreValidationError):
+    code = "premarket.score.domain_violation"
+
+
+class ScoreStaleKnownAtError(ScoreValidationError):
+    code = "premarket.score.stale_known_at"
+
+
+class ScoreInvariantError(ScoreValidationError):
+    code = "premarket.score.invariant_violation"
