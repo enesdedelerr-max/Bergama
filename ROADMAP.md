@@ -74,7 +74,7 @@ See [`docs/sprints/sprint-7/README.md`](docs/sprints/sprint-7/README.md).
 
 Status: complete. Issue **#78** merged through PR **#79**.
 Implementation baseline: `dedccab35d3238f6cc9840689ca61a99cc454ce6`.
-Release tag `v0.8.0-sprint8` is prepared but has **not** been created.
+Release tag `v0.8.0-sprint8` — Released.
 
 See [`docs/sprints/sprint-8/README.md`](docs/sprints/sprint-8/README.md).
 
