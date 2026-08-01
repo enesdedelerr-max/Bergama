@@ -1,10 +1,6 @@
-# Sprint 8 — Premarket Scoring Foundation
+# Sprint 8 — Issue #78 — Premarket Scoring Foundation
 
-GitHub Issue: <GitHub Issue Number>
-
-> No GitHub implementation issue number was available in the repository at authoring
-> time. Rename this file to `issue-<N>-premarket-scoring-foundation.md` and replace
-> the placeholder above when the issue is filed.
+GitHub Issue: [#78](https://github.com/enesdedelerr-max/Bergama/issues/78)
 
 ## Authorization
 
@@ -63,8 +59,6 @@ git diff --check
 - Process-global binder registry overrides are single-threaded only
   (documented on `override_binder_registry`; not redesigned here)
 - No HTTP/persistence/observability surfaces (Architecture non-goals)
-- Sprint GitHub issue number not yet assigned (this document uses the
-  unnumbered filename until filed)
 
 ## Rollback boundary
 
