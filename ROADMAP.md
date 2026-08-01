@@ -70,10 +70,20 @@ Release tag `v0.7.0-sprint7`.
 
 See [`docs/sprints/sprint-7/README.md`](docs/sprints/sprint-7/README.md).
 
+### Sprint 8 — Premarket Scoring Foundation
+
+Status: complete. Issue **#78** merged through PR **#79**.
+Implementation baseline: `dedccab35d3238f6cc9840689ca61a99cc454ce6`.
+Release tag `v0.8.0-sprint8` is prepared but has **not** been created.
+
+See [`docs/sprints/sprint-8/README.md`](docs/sprints/sprint-8/README.md).
+
 ### Next action
 
-1. Sprint 7 governance closeout and release tag `v0.7.0-sprint7` are complete.
-2. Next sprint planning remains pending and is not authorized by Sprint 7
+1. Merge Sprint 8 governance closeout documentation to `main`.
+2. Create release tag / GitHub Release `v0.8.0-sprint8` after approval.
+3. Close the Sprint 8 milestone after closeout merge.
+4. Next planning gate remains pending and is not authorized by Sprint 8
    closeout.
 
 ## Sprint sequence
@@ -86,7 +96,7 @@ See [`docs/sprints/sprint-7/README.md`](docs/sprints/sprint-7/README.md).
 6. Sprint 5 — Strategy SDK Hardening — Complete
 7. Sprint 6 — Feature Platform — Complete
 8. Sprint 7 — Premarket Intelligence — Complete
-9. Sprint 8 — AI Decision Engine — Planned
+9. Sprint 8 — Premarket Scoring Foundation — Complete
 10. Sprint 9 — Dashboard — Planned
 11. Sprint 10 — MLOps — Planned
 12. Sprint 11 — Research — Planned
@@ -102,6 +112,11 @@ Strategy Engine / Strategy SDK runtime slices. Later sprints named historically
 as “Broker and Execution” or “Portfolio Runtime” should be treated as
 **deepening / productionization** of those foundations, not greenfield
 reintroduction of the same bounded contexts.
+
+Earlier roadmap drafts listed Sprint 8 as “AI Decision Engine”. Sprint 8
+delivered **Premarket Scoring Foundation** instead. AI Decision Engine remains
+deferred future work and was not delivered by Sprint 8. Future sprint
+numbering below Sprint 9 is unchanged by this reconciliation.
 
 ## Planning principles
 
