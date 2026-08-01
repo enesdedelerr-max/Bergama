@@ -365,12 +365,12 @@ ReplayService
 - Enforce Premarket settings fail-closed
 - Validate config IDs (`policy_version_id`, `weight_profile_id`, ordering/quantize ids)
 
-**Inputs:** `ScoreRequest`, optional `PremarketSettings`  
-**Outputs:** `ValidatedScoreRequest`  
-**Dependencies:** Premarket Watchlist/Catalyst/Gap models; scoring models; errors  
-**Failure Modes:** validation / disabled / unsupported input errors  
-**Determinism:** Pure function of request+settings  
-**Replay:** Same request ⇒ same validation outcome  
+**Inputs:** `ScoreRequest`, optional `PremarketSettings`
+**Outputs:** `ValidatedScoreRequest`
+**Dependencies:** Premarket Watchlist/Catalyst/Gap models; scoring models; errors
+**Failure Modes:** validation / disabled / unsupported input errors
+**Determinism:** Pure function of request+settings
+**Replay:** Same request ⇒ same validation outcome
 **Extension Points:** Additional config validators per Policy Version via binder hooks (optional)
 
 ---
@@ -384,12 +384,12 @@ ReplayService
 - Load registered `PolicyVersionBinder`
 - Reject unknown / mismatched Policy Versions
 
-**Inputs:** Validated config  
-**Outputs:** `BoundPolicyContext`  
-**Dependencies:** Binder registry  
-**Failure Modes:** unsupported policy / weight profile  
-**Determinism:** Registry lookup by immutable IDs only  
-**Replay:** Same IDs ⇒ same binder  
+**Inputs:** Validated config
+**Outputs:** `BoundPolicyContext`
+**Dependencies:** Binder registry
+**Failure Modes:** unsupported policy / weight profile
+**Determinism:** Registry lookup by immutable IDs only
+**Replay:** Same IDs ⇒ same binder
 **Extension Points:** Register `PolicyVersionV2Binder` without changing orchestrator
 
 ---
@@ -404,12 +404,12 @@ ReplayService
 - Apply duplicate/conflict eligibility checks that Feature Specs require before observation emission
 - Emit `FeatureObservation` or `AbsentFeature`
 
-**Inputs:** Validated request + BoundPolicyContext  
-**Outputs:** Per-instrument feature bags  
-**Dependencies:** Watchlist/Catalyst/Gap contracts; FeatureExtractor ports  
-**Failure Modes:** duplicate instrument; gap conflict; invalid upstream  
-**Determinism:** Stable instrument iteration order = Watchlist entry order for extraction; final collection order deferred to Ordering Engine  
-**Replay:** Same upstream collections ⇒ same observations  
+**Inputs:** Validated request + BoundPolicyContext
+**Outputs:** Per-instrument feature bags
+**Dependencies:** Watchlist/Catalyst/Gap contracts; FeatureExtractor ports
+**Failure Modes:** duplicate instrument; gap conflict; invalid upstream
+**Determinism:** Stable instrument iteration order = Watchlist entry order for extraction; final collection order deferred to Ordering Engine
+**Replay:** Same upstream collections ⇒ same observations
 **Extension Points:** New FeatureExtractor adapters for future Feature Specs
 
 ---
@@ -423,12 +423,12 @@ ReplayService
 - Quantize components with `decimal_8dp_half_even`
 - Never fabricate absent features
 
-**Inputs:** Feature observations + PolicyParams (`GAP_REF`, quantize policy)  
-**Outputs:** Normalized components / absences  
-**Dependencies:** Decimal utilities (`canonical_decimal_str` / quantize helpers as used elsewhere)  
-**Failure Modes:** invalid upstream numeric evidence  
-**Determinism:** Pure Decimal transforms  
-**Replay:** Identical observations ⇒ identical components  
+**Inputs:** Feature observations + PolicyParams (`GAP_REF`, quantize policy)
+**Outputs:** Normalized components / absences
+**Dependencies:** Decimal utilities (`canonical_decimal_str` / quantize helpers as used elsewhere)
+**Failure Modes:** invalid upstream numeric evidence
+**Determinism:** Pure Decimal transforms
+**Replay:** Identical observations ⇒ identical components
 **Extension Points:** Feature Spec strategy objects plugged by binder
 
 ---
@@ -442,12 +442,12 @@ ReplayService
 - Treat absent optional components as zero contribution terms without redistributing weights
 - Reject unknown feature IDs
 
-**Inputs:** Normalized components + Weight Profile  
-**Outputs:** Weighted terms  
-**Dependencies:** Weight Profile value object from binder  
-**Failure Modes:** profile mismatch; unknown feature  
-**Determinism:** Pure mapping  
-**Replay:** Same profile + components ⇒ same terms  
+**Inputs:** Normalized components + Weight Profile
+**Outputs:** Weighted terms
+**Dependencies:** Weight Profile value object from binder
+**Failure Modes:** profile mismatch; unknown feature
+**Determinism:** Pure mapping
+**Replay:** Same profile + components ⇒ same terms
 **Extension Points:** Alternate Weight Profiles via new Policy Versions
 
 ---
@@ -461,12 +461,12 @@ ReplayService
 - Quantize with `decimal_8dp_half_even`
 - Reject out-of-domain results (no clamp)
 
-**Inputs:** Weighted terms + PolicyParams  
-**Outputs:** Quantized score + retained component snapshot  
-**Dependencies:** Decimal quantize policy constants  
-**Failure Modes:** non-finite / out-of-domain score  
-**Determinism:** Pure function  
-**Replay:** Identical terms ⇒ identical score  
+**Inputs:** Weighted terms + PolicyParams
+**Outputs:** Quantized score + retained component snapshot
+**Dependencies:** Decimal quantize policy constants
+**Failure Modes:** non-finite / out-of-domain score
+**Determinism:** Pure function
+**Replay:** Identical terms ⇒ identical score
 **Extension Points:** New aggregation strategy interface for future Policy Versions only
 
 ---
@@ -480,12 +480,12 @@ ReplayService
 - Apply tie-breaks: `instrument_key` ASC, then `score_record_id` ASC
 - Preserve equal scores without mutation
 
-**Inputs:** Score drafts with score + identity  
-**Outputs:** Ordered draft tuple  
-**Dependencies:** Ordering policy id; sort key function  
-**Failure Modes:** missing identity before order (pipeline invariant)  
-**Determinism:** Total order key only  
-**Replay:** Same drafts ⇒ same order  
+**Inputs:** Score drafts with score + identity
+**Outputs:** Ordered draft tuple
+**Dependencies:** Ordering policy id; sort key function
+**Failure Modes:** missing identity before order (pipeline invariant)
+**Determinism:** Total order key only
+**Replay:** Same drafts ⇒ same order
 **Extension Points:** Alternate sort key providers per Policy Version
 
 ---
@@ -500,12 +500,12 @@ ReplayService
 - Digest via Identity Spec method
 - Forbid UUID / wall-clock / mutable state
 
-**Inputs:** Score identity input DTO  
-**Outputs:** 64-char hex id  
-**Dependencies:** `strategy_sha256` / money canonical decimal helpers (repository convention used by Identity Spec v1)  
-**Failure Modes:** incomplete identity inputs  
-**Determinism:** Canonical payload hashing  
-**Replay:** Identical inputs ⇒ identical id  
+**Inputs:** Score identity input DTO
+**Outputs:** 64-char hex id
+**Dependencies:** `strategy_sha256` / money canonical decimal helpers (repository convention used by Identity Spec v1)
+**Failure Modes:** incomplete identity inputs
+**Determinism:** Canonical payload hashing
+**Replay:** Identical inputs ⇒ identical id
 **Extension Points:** New Identity Spec adapters for future Policy Versions
 
 ---
@@ -522,12 +522,12 @@ ReplayService
   (unique by `catalyst_record_id`, ascending) so fingerprints are order-independent
 - Ensure every record carries required provenance linkage
 
-**Inputs:** Validated request + drafts + BoundPolicyContext  
-**Outputs:** Record provenance fields + `ScoreProvenance`  
-**Dependencies:** Deterministic hashing utilities  
-**Failure Modes:** incomplete provenance inputs  
-**Determinism:** Canonical dumps only  
-**Replay:** Identical fingerprints  
+**Inputs:** Validated request + drafts + BoundPolicyContext
+**Outputs:** Record provenance fields + `ScoreProvenance`
+**Dependencies:** Deterministic hashing utilities
+**Failure Modes:** incomplete provenance inputs
+**Determinism:** Canonical dumps only
+**Replay:** Identical fingerprints
 **Extension Points:** Additional fingerprint fields only via new Policy Version / Provenance extension rules
 
 ---
@@ -541,12 +541,12 @@ ReplayService
 - Build `ScoreCollection`
 - Freeze tuples / models (`extra=forbid`, `frozen=True`)
 
-**Inputs:** Ordered provenanced drafts  
-**Outputs:** `ScoreCollection`  
-**Dependencies:** scoring models  
-**Failure Modes:** model validation errors  
-**Determinism:** Pure mapping  
-**Replay:** Stable serialization  
+**Inputs:** Ordered provenanced drafts
+**Outputs:** `ScoreCollection`
+**Dependencies:** scoring models
+**Failure Modes:** model validation errors
+**Determinism:** Pure mapping
+**Replay:** Stable serialization
 **Extension Points:** None for v1 public fields beyond Policy Version output contract
 
 ---
@@ -562,12 +562,12 @@ ReplayService
 - Provenance presence for every record
 - Empty-universe allowed with empty records + valid collection provenance
 
-**Inputs:** Candidate `ScoreCollection`  
-**Outputs:** Same collection or fail closed  
-**Dependencies:** Policy Params / invariants module  
-**Failure Modes:** invariant violations  
-**Determinism:** Pure checks  
-**Replay:** Same collection ⇒ same result  
+**Inputs:** Candidate `ScoreCollection`
+**Outputs:** Same collection or fail closed
+**Dependencies:** Policy Params / invariants module
+**Failure Modes:** invariant violations
+**Determinism:** Pure checks
+**Replay:** Same collection ⇒ same result
 **Extension Points:** Version-specific invariant packs from binder
 
 ---
@@ -581,12 +581,12 @@ ReplayService
 - Structural equality compare (`model_dump` / canonical compare)
 - Expose test/helper API only; not a live runtime side effect
 
-**Inputs:** Pinned `ScoreRequest` (+ optional expected collection)  
-**Outputs:** Replayed collection / assertion result  
-**Dependencies:** Orchestrator  
-**Failure Modes:** inequality → test/helper failure  
-**Determinism:** Relies on orchestrator determinism  
-**Replay:** Primary consumer of replay guarantees  
+**Inputs:** Pinned `ScoreRequest` (+ optional expected collection)
+**Outputs:** Replayed collection / assertion result
+**Dependencies:** Orchestrator
+**Failure Modes:** inequality → test/helper failure
+**Determinism:** Relies on orchestrator determinism
+**Replay:** Primary consumer of replay guarantees
 **Extension Points:** Golden-file adapters in tests
 
 ## 14. Repository Package Layout

@@ -33,41 +33,41 @@ This definition is a governance concept only.
 
 Provenance governance for Policy Version v1 is frozen as follows:
 
-1. **Scope**  
+1. **Scope**
    This decision does not govern metadata schema, logging, storage, database, serialization, or implementation fields.
 
-2. **Presence**  
+2. **Presence**
    Every Premarket Score shall have repository-governed provenance.
 
-3. **Governance context**  
+3. **Governance context**
    Provenance shall identify the governance context used, including association with the applicable Policy Version under Decision #9.
 
-4. **No fabrication**  
-   Provenance shall never fabricate evidence.  
+4. **No fabrication**
+   Provenance shall never fabricate evidence.
    Provenance shall never infer, synthesize, or invent history that was not produced by authorized scoring evaluation.
 
-5. **Semantic boundary**  
+5. **Semantic boundary**
    Provenance shall preserve Decision #1 semantic meaning and shall not redefine it.
 
-6. **Domain boundary**  
+6. **Domain boundary**
    Provenance shall preserve Decision #2 score domain and shall not alter it.
 
-7. **Compatibility**  
+7. **Compatibility**
    Provenance shall remain compatible with Decisions #1–#10.
 
-8. **Determinism**  
-   Provenance shall remain deterministic.  
+8. **Determinism**
+   Provenance shall remain deterministic.
    Identical authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of` shall always produce the same provenance outcome.
 
-9. **Replay**  
-   Replay shall preserve provenance.  
-   Replay shall reproduce identical provenance outcomes for identical authorized evidence under the same frozen Policy Version.  
-   Accordingly, provenance shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.  
+9. **Replay**
+   Replay shall preserve provenance.
+   Replay shall reproduce identical provenance outcomes for identical authorized evidence under the same frozen Policy Version.
+   Accordingly, provenance shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.
    Provenance shall never depend on wall-clock time, randomness, or mutable runtime state.
 
-10. **PIT**  
-    Provenance shall remain PIT-compatible.  
-    Provenance assumes Decision #3 and Decision #8 PIT constraints remain in force.  
+10. **PIT**
+    Provenance shall remain PIT-compatible.
+    Provenance assumes Decision #3 and Decision #8 PIT constraints remain in force.
     It validates compatibility and does not repair PIT violations.
 
 This decision does not define provenance schemas, field layouts, logging sinks, storage, or serialization formats.

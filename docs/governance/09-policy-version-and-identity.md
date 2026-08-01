@@ -31,39 +31,39 @@ This definition is a governance concept only.
 
 Policy Version identity governance for Policy Version v1 is frozen as follows:
 
-1. **Scope**  
-   Policy Version is a repository governance identity.  
+1. **Scope**
+   Policy Version is a repository governance identity.
    This decision does not govern algorithms, configuration contents, implementation, identity generation for score records, provenance, ordering, tie-breaking, storage, or migration.
 
-2. **Association**  
+2. **Association**
    Every scoring decision shall be associated with exactly one Policy Version.
 
-3. **Immutability**  
+3. **Immutability**
    Policy Version identity shall be immutable once assigned to a scoring evaluation.
 
-4. **Uniqueness of governance rules**  
+4. **Uniqueness of governance rules**
    Policy Version identity shall uniquely identify the governance rules used for that evaluation.
 
-5. **Semantic boundary**  
+5. **Semantic boundary**
    Policy Version identity shall preserve Decision #1 semantic meaning and shall not redefine it.
 
-6. **Domain boundary**  
+6. **Domain boundary**
    Policy Version identity shall preserve Decision #2 score domain and shall not alter it.
 
-7. **Authorized-input boundary**  
+7. **Authorized-input boundary**
    Policy Version identity shall preserve Decision #3 authorized-input boundary and shall not expand it through identity alone.
 
-8. **Determinism**  
-   Policy Version association shall remain deterministic.  
+8. **Determinism**
+   Policy Version association shall remain deterministic.
    Identical authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of` shall always produce the same Policy Version association outcome.
 
-9. **Replay**  
-   Replay shall use the identical Policy Version.  
-   Replay shall reproduce identical Policy Version association outcomes for identical authorized evidence under the same frozen Policy Version.  
-   Accordingly, Policy Version association shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.  
+9. **Replay**
+   Replay shall use the identical Policy Version.
+   Replay shall reproduce identical Policy Version association outcomes for identical authorized evidence under the same frozen Policy Version.
+   Accordingly, Policy Version association shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.
    Policy Version association shall never depend on wall-clock time, randomness, or mutable runtime state.
 
-10. **Compatibility**  
+10. **Compatibility**
     Policy Version shall preserve compatibility with Decisions #1–#8.
 
 This decision does not define version format, numbering, semantic versioning, storage, migration, or implementation identifiers.

@@ -32,38 +32,38 @@ These definitions are governance concepts only.
 
 Ordering and tie-break governance for Policy Version v1 is frozen as follows:
 
-1. **Scope**  
-   Ordering is a repository governance concern.  
+1. **Scope**
+   Ordering is a repository governance concern.
    This decision does not govern sorting algorithms, ranking formulas, comparison implementation, stable-sort algorithms, or execution order.
 
-2. **Score-priority boundary**  
-   Ordering shall preserve Decision #1 semantic meaning.  
-   Ordering shall preserve Decision #2 score domain and higher-is-higher-priority comparison semantics.  
+2. **Score-priority boundary**
+   Ordering shall preserve Decision #1 semantic meaning.
+   Ordering shall preserve Decision #2 score domain and higher-is-higher-priority comparison semantics.
    Legal ties under Decision #2 shall not be silently treated as unequal scores.
 
-3. **Determinism**  
-   Ordering shall be deterministic.  
-   Tie-breaking shall be deterministic.  
+3. **Determinism**
+   Ordering shall be deterministic.
+   Tie-breaking shall be deterministic.
    Identical authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of` shall always produce the same ordering and tie-break outcome.
 
-4. **No fabrication**  
+4. **No fabrication**
    Ordering and tie-breaking shall never fabricate, infer, synthesize, or invent evidence or score values to force an order.
 
-5. **No silent repair**  
+5. **No silent repair**
    Ordering and tie-breaking shall never silently repair invalid scores, invalid identities, or invalid provenance to continue ordering.
 
-6. **Compatibility**  
+6. **Compatibility**
    Ordering shall remain compatible with Decisions #1–#11.
 
-7. **Replay**  
-   Replay shall preserve ordering.  
-   Replay shall reproduce identical ordering and tie-break outcomes for identical authorized evidence under the same frozen Policy Version.  
-   Accordingly, ordering and tie-breaking shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.  
+7. **Replay**
+   Replay shall preserve ordering.
+   Replay shall reproduce identical ordering and tie-break outcomes for identical authorized evidence under the same frozen Policy Version.
+   Accordingly, ordering and tie-breaking shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.
    Ordering and tie-breaking shall never depend on wall-clock time, randomness, or mutable runtime state.
 
-8. **PIT**  
-   Ordering and tie-breaking shall remain PIT-compatible.  
-   Handling assumes Decision #3 and Decision #8 PIT constraints remain in force.  
+8. **PIT**
+   Ordering and tie-breaking shall remain PIT-compatible.
+   Handling assumes Decision #3 and Decision #8 PIT constraints remain in force.
    It validates compatibility and does not repair PIT violations.
 
 This decision does not define sorting algorithms, ranking formulas, precedence tables, comparison implementations, or stable-sort mechanics.

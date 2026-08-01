@@ -26,37 +26,37 @@ Missing Input Policy governs only the existence of authorized inputs under Decis
 
 Missing-input governance for Policy Version v1 is frozen as follows:
 
-1. **Scope**  
+1. **Scope**
    Authorized inputs may be missing. This decision governs absence of authorized inputs only. It does not govern duplicate handling, conflict resolution, aggregation, weighting, identity, provenance, or Decimal precision.
 
-2. **No fabrication**  
+2. **No fabrication**
    Missing evidence shall never be fabricated.
 
-3. **No inference**  
+3. **No inference**
    Missing evidence shall never be inferred.
 
-4. **No synthesis**  
+4. **No synthesis**
    Missing evidence shall never be synthesized, imputed, interpolated, estimated, predicted, or otherwise invented.
 
-5. **No silent repair**  
-   Implementation shall not silently repair missing inputs by introducing values that are not explicitly authorized by repository policy.  
+5. **No silent repair**
+   Implementation shall not silently repair missing inputs by introducing values that are not explicitly authorized by repository policy.
    Examples include defaults, fallbacks, null replacements, redistributed weights, or other implementation-defined substitutions.
 
-6. **Semantic boundary**  
+6. **Semantic boundary**
    Missing-input handling must preserve Decision #1 semantic meaning.
 
-7. **Domain boundary**  
+7. **Domain boundary**
    Missing-input handling must preserve Decision #2 score domain. Absence of evidence must never produce silent domain repair.
 
-8. **Determinism**  
+8. **Determinism**
    Missing-input handling must remain deterministic under identical authorized input presence/absence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.
 
-9. **Replay**  
-   Replay shall reproduce identical missing-input outcomes for identical authorized input presence/absence under the same frozen Policy Version.  
-   Accordingly, missing-input handling shall depend only on authorized input presence/absence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.  
+9. **Replay**
+   Replay shall reproduce identical missing-input outcomes for identical authorized input presence/absence under the same frozen Policy Version.
+   Accordingly, missing-input handling shall depend only on authorized input presence/absence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.
    Missing-input handling shall never depend on wall-clock time, randomness, or mutable runtime state.
 
-10. **PIT**  
+10. **PIT**
     Missing-input handling must remain PIT-compatible. It assumes Decision #3 PIT constraints remain in force. It validates compatibility and does not repair PIT violations.
 
 This decision does not define which optional absences are acceptable, which absences fail closed, or any recovery, continuation, or scoring arithmetic for partial input sets.

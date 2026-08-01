@@ -34,37 +34,37 @@ These definitions are governance concepts only.
 
 Duplicate and conflict governance for Policy Version v1 is frozen as follows:
 
-1. **Scope**  
-   Duplicate and conflict handling is a repository policy concern.  
+1. **Scope**
+   Duplicate and conflict handling is a repository policy concern.
    This decision does not govern missing input, weighting, normalization, aggregation, identity, provenance, ordering, tie-breaking, or policy versioning.
 
-2. **No silent discard**  
+2. **No silent discard**
    Duplicate evidence shall never be silently discarded.
 
-3. **No silent reconciliation**  
+3. **No silent reconciliation**
    Conflicting evidence shall never be silently reconciled.
 
-4. **No fabrication**  
+4. **No fabrication**
    Implementation shall never fabricate, infer, synthesize, or otherwise invent evidence while processing duplicate or conflicting authorized evidence.
 
-5. **Semantic boundary**  
+5. **Semantic boundary**
    Duplicate and conflict handling must preserve Decision #1 semantic meaning.
 
-6. **Domain boundary**  
+6. **Domain boundary**
    Duplicate and conflict handling must preserve Decision #2 score domain.
 
-7. **Determinism**  
-   Duplicate and conflict handling shall remain deterministic.  
+7. **Determinism**
+   Duplicate and conflict handling shall remain deterministic.
    Identical authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of` shall always produce the same governance decision.
 
-8. **Replay**  
-   Replay shall reproduce identical duplicate and conflict outcomes for identical authorized evidence under the same frozen Policy Version.  
-   Accordingly, duplicate and conflict handling shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.  
+8. **Replay**
+   Replay shall reproduce identical duplicate and conflict outcomes for identical authorized evidence under the same frozen Policy Version.
+   Accordingly, duplicate and conflict handling shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.
    Duplicate and conflict handling shall never depend on wall-clock time, randomness, or mutable runtime state.
 
-9. **PIT**  
-   Duplicate and conflict handling shall remain PIT-compatible.  
-   Handling assumes Decision #3 PIT constraints remain in force.  
+9. **PIT**
+   Duplicate and conflict handling shall remain PIT-compatible.
+   Handling assumes Decision #3 PIT constraints remain in force.
    It validates compatibility and does not repair PIT violations.
 
 This decision does not define precedence, merge, winner selection, matching, or reconciliation algorithms.

@@ -32,34 +32,34 @@ This definition is a governance concept only.
 
 Deterministic identity governance for Policy Version v1 is frozen as follows:
 
-1. **Scope**  
+1. **Scope**
    This decision does not govern identity algorithms, identity encoding, storage, serialization, database keys, UUID generation, or hash functions.
 
-2. **Determinism**  
-   Identity shall be deterministic.  
+2. **Determinism**
+   Identity shall be deterministic.
    Identical authorized evidence, Policy Version, configuration, and explicit UTC `as_of` shall produce identical identity.
 
-3. **No silent reuse**  
+3. **No silent reuse**
    Different governance inputs shall not silently reuse identity.
 
-4. **Semantic boundary**  
+4. **Semantic boundary**
    Identity shall preserve Decision #1 semantic meaning and shall not redefine it.
 
-5. **Domain boundary**  
+5. **Domain boundary**
    Identity shall preserve Decision #2 score domain and shall not alter it.
 
-6. **Input and policy boundary**  
+6. **Input and policy boundary**
    Identity shall preserve Decisions #3–#9 and shall not expand authorized inputs, fabricate evidence, or reinterpret Policy Version identity through identity alone.
 
-7. **Replay**  
-   Identity shall remain replay-safe.  
-   Replay shall reproduce identical identities for identical authorized evidence under the same frozen Policy Version.  
-   Accordingly, identity shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.  
+7. **Replay**
+   Identity shall remain replay-safe.
+   Replay shall reproduce identical identities for identical authorized evidence under the same frozen Policy Version.
+   Accordingly, identity shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.
    Identity shall never depend on wall-clock time, randomness, or mutable runtime state.
 
-8. **PIT**  
-   Identity shall remain PIT-compatible.  
-   Identity assumes Decision #3 and Decision #8 PIT constraints remain in force.  
+8. **PIT**
+   Identity shall remain PIT-compatible.
+   Identity assumes Decision #3 and Decision #8 PIT constraints remain in force.
    It validates compatibility and does not repair PIT violations.
 
 This decision does not define identity algorithms, encodings, serialization, storage, or UUID generation.

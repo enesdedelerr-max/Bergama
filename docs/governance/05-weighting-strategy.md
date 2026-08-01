@@ -27,31 +27,31 @@ Weighting is a policy concern, not an implementation concern.
 
 Weighting governance for Policy Version v1 is frozen as follows:
 
-1. **Policy ownership**  
+1. **Policy ownership**
    Weights are governed exclusively by the frozen Policy Version. Implementation may consume weights, but it may never define, infer, or substitute them.
 
-2. **Authorized scope**  
+2. **Authorized scope**
    Weights apply only to normalized components derived from authorized inputs under Decisions #3 and #4. Weights never expand authorized inputs.
 
-3. **Semantic boundary**  
+3. **Semantic boundary**
    Weights never redefine Decision #1 semantic meaning.
 
-4. **Domain boundary**  
+4. **Domain boundary**
    Weights never change Decision #2 score domain. Emitting a score outside `[0, 1]`, or silently repairing an out-of-domain result, is prohibited.
 
-5. **No fabrication**  
+5. **No fabrication**
    Weights never fabricate missing upstream evidence or invent components that are not grounded in authorized normalized inputs.
 
-6. **No silent repair**  
+6. **No silent repair**
    Weights never silently repair invalid normalized components or invalid weighted results by clamping, coercing, inventing, or otherwise rewriting them into validity.
 
-7. **Determinism**  
+7. **Determinism**
    Weighting shall be deterministic. Identical normalized authorized inputs, frozen configuration, frozen Policy Version, and explicit UTC `as_of` shall produce identical weighted results eligible for score emission.
 
-8. **Replay**  
+8. **Replay**
    Weighting output must depend only on authorized normalized inputs, frozen configuration, frozen Policy Version, and explicit UTC `as_of`. It must never depend on wall-clock time, randomness, or mutable runtime state.
 
-9. **PIT**  
+9. **PIT**
    Weighting assumes authorized inputs and normalized components already satisfy repository PIT guarantees and Decision #4 constraints. Weighting validates compatibility. Weighting does not repair PIT violations.
 
 This decision does not select a weighting algorithm and does not define numeric weights, percentages, formulas, coefficients, automatic renormalization rules, single-input behavior, all-inputs-missing behavior, Decimal quantize rules, duplicate/conflict handling, identity, or provenance schema.

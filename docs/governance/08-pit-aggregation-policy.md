@@ -35,48 +35,48 @@ These definitions are governance concepts only.
 
 PIT aggregation governance for Policy Version v1 is frozen as follows:
 
-1. **Scope**  
-   Aggregation is a repository policy concern.  
+1. **Scope**
+   Aggregation is a repository policy concern.
    This decision does not govern normalization, weighting, duplicate handling, conflict handling, missing input, identity, provenance, ordering, tie-breaking, or policy versioning.
 
-2. **Authorized evidence only**  
-   Aggregation shall consume only repository-authorized evidence permitted under Decision #3.  
+2. **Authorized evidence only**
+   Aggregation shall consume only repository-authorized evidence permitted under Decision #3.
    All participating evidence shall satisfy the common Point-in-Time context defined by this decision.
 
-3. **Common PIT context**  
-   Aggregation shall occur only within a common Point-in-Time context defined by a single explicit UTC `as_of`.  
+3. **Common PIT context**
+   Aggregation shall occur only within a common Point-in-Time context defined by a single explicit UTC `as_of`.
    Aggregation shall never combine authorized evidence originating from different logical PIT contexts unless explicitly authorized by repository policy.
 
-4. **No fabrication**  
+4. **No fabrication**
    Aggregation shall never fabricate evidence.
 
-5. **No inference**  
+5. **No inference**
    Aggregation shall never infer evidence.
 
-6. **No synthesis**  
+6. **No synthesis**
    Aggregation shall never synthesize evidence.
 
-7. **No silent PIT repair**  
+7. **No silent PIT repair**
    Aggregation shall never silently repair invalid PIT relationships.
 
-8. **Semantic boundary**  
+8. **Semantic boundary**
    Aggregation shall preserve Decision #1 semantic meaning.
 
-9. **Domain boundary**  
+9. **Domain boundary**
    Aggregation shall preserve Decision #2 score domain.
 
-10. **Determinism**  
-    Aggregation shall remain deterministic.  
+10. **Determinism**
+    Aggregation shall remain deterministic.
     Identical authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of` shall always produce the same aggregation outcome.
 
-11. **Replay**  
-    Replay shall reproduce identical aggregation outcomes for identical authorized evidence under the same frozen Policy Version.  
-    Accordingly, aggregation shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.  
+11. **Replay**
+    Replay shall reproduce identical aggregation outcomes for identical authorized evidence under the same frozen Policy Version.
+    Accordingly, aggregation shall depend only on authorized evidence, frozen configuration, frozen Policy Version, and explicit UTC `as_of`.
     Aggregation shall never depend on wall-clock time, randomness, or mutable runtime state.
 
-12. **PIT**  
-    Aggregation shall remain PIT-compatible.  
-    Aggregation assumes Decision #3 PIT constraints remain in force.  
+12. **PIT**
+    Aggregation shall remain PIT-compatible.
+    Aggregation assumes Decision #3 PIT constraints remain in force.
     It validates compatibility and does not repair PIT violations.
 
 This decision does not define aggregation algorithms, formulas, aggregation windows, ordering, precedence, partial-aggregation arithmetic, or execution mechanics.
