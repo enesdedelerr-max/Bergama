@@ -107,17 +107,17 @@ Stage execution order is immutable within Policy Version v1.
 
 Before Policy Version Binding, implementation SHALL validate all of the following:
 
-1. Explicit UTC `as_of` is present and timezone-aware UTC.  
-2. Morning Briefing configuration is present.  
-3. Requested Policy Version identity equals `morning-briefing.policy.v1`.  
-4. Premarket Scoring public output is present.  
-5. Premarket Scoring public output declares Policy Version `premarket.scoring.policy.v1`.  
-6. Every Score Record carries `score_record_id`, finite `Decimal` score in `[0, 1]`, `instrument_key`, `as_of`, Policy Version identity, and score provenance.  
-7. No unauthorized input category from Governance Decision #2 is present.  
+1. Explicit UTC `as_of` is present and timezone-aware UTC.
+2. Morning Briefing configuration is present.
+3. Requested Policy Version identity equals `morning-briefing.policy.v1`.
+4. Premarket Scoring public output is present.
+5. Premarket Scoring public output declares Policy Version `premarket.scoring.policy.v1`.
+6. Every Score Record carries `score_record_id`, finite `Decimal` score in `[0, 1]`, `instrument_key`, `as_of`, Policy Version identity, and score provenance.
+7. No unauthorized input category from Governance Decision #2 is present.
 8. Premarket settings, when supplied and disabled, fail closed.
 
-Unauthorized inputs SHALL fail closed.  
-Missing required inputs SHALL fail closed.  
+Unauthorized inputs SHALL fail closed.
+Missing required inputs SHALL fail closed.
 Fabrication, inference, synthesis, substitution, and silent repair are forbidden.
 
 ## Policy Version Binding
@@ -128,7 +128,7 @@ Each Morning Briefing evaluation SHALL bind to exactly one Policy Version identi
 morning-briefing.policy.v1
 ```
 
-Unsupported, missing, or mismatched Policy Version identity SHALL fail closed.  
+Unsupported, missing, or mismatched Policy Version identity SHALL fail closed.
 Silent Policy Version substitution is forbidden.
 
 ### Configuration Stability
@@ -141,11 +141,11 @@ Configuration shall not be replaced, reloaded, or mutated during execution.
 
 v1 PIT rules:
 
-1. Exactly one explicit UTC `as_of` per evaluation.  
-2. The Morning Briefing `as_of` MUST equal the Premarket Scoring public output `as_of`.  
-3. Only Premarket Scoring outputs already valid for that `as_of` may participate.  
-4. Future-known evidence SHALL fail closed.  
-5. Cross-PIT mixing SHALL fail closed.  
+1. Exactly one explicit UTC `as_of` per evaluation.
+2. The Morning Briefing `as_of` MUST equal the Premarket Scoring public output `as_of`.
+3. Only Premarket Scoring outputs already valid for that `as_of` may participate.
+4. Future-known evidence SHALL fail closed.
+5. Cross-PIT mixing SHALL fail closed.
 6. PIT violations are validated and SHALL NOT be repaired.
 
 ## Assembly Rules
@@ -156,12 +156,12 @@ Assembly SHALL consume authorized inputs as immutable artifacts.
 
 Assembly SHALL NEVER:
 
-- regenerate Premarket Scores  
-- mutate Premarket Scores  
-- reorder Premarket Scores  
-- reinterpret Premarket Scores as recommendations, approvals, or execution authority  
-- invent briefing content  
-- fabricate, infer, or synthesize evidence  
+- regenerate Premarket Scores
+- mutate Premarket Scores
+- reorder Premarket Scores
+- reinterpret Premarket Scores as recommendations, approvals, or execution authority
+- invent briefing content
+- fabricate, infer, or synthesize evidence
 
 ### Score reference preservation
 
@@ -183,12 +183,12 @@ For each Score Record in the Premarket Scoring public output, assembly SHALL pre
 
 Assembly SHALL bind the briefing to:
 
-- Morning Briefing Policy Version identity `morning-briefing.policy.v1`  
-- Morning Briefing configuration as supplied and validated  
-- Explicit UTC `as_of`  
-- Ordering Preservation Policy ID `preserve_premarket_scoring_order.v1`  
-- Identity Specification ID `morning-briefing.identity.v1`  
-- Provenance Specification ID `morning-briefing.provenance.v1`  
+- Morning Briefing Policy Version identity `morning-briefing.policy.v1`
+- Morning Briefing configuration as supplied and validated
+- Explicit UTC `as_of`
+- Ordering Preservation Policy ID `preserve_premarket_scoring_order.v1`
+- Identity Specification ID `morning-briefing.identity.v1`
+- Provenance Specification ID `morning-briefing.provenance.v1`
 
 ### Empty universe
 
@@ -202,10 +202,10 @@ Morning Briefing SHALL preserve Premarket Scoring ordering exactly as received f
 
 Normative rules:
 
-1. Briefing record sequence index `i` SHALL reference Score Record at scoring-collection index `i`.  
-2. Implementation SHALL NOT apply independent ranking.  
-3. Implementation SHALL NOT mutate score values to affect order.  
-4. Implementation SHALL NOT invent tie-breaks that replace Premarket Scoring order.  
+1. Briefing record sequence index `i` SHALL reference Score Record at scoring-collection index `i`.
+2. Implementation SHALL NOT apply independent ranking.
+3. Implementation SHALL NOT mutate score values to affect order.
+4. Implementation SHALL NOT invent tie-breaks that replace Premarket Scoring order.
 5. Ordering preservation is mandatory for non-empty and empty collections alike.
 
 ## Identity
@@ -234,9 +234,9 @@ Governance Decision #5 remains algorithm-agnostic at Governance fidelity. Identi
 | Ordered `score_record_id` sequence | Exact sequence preserved from Premarket Scoring public output |
 | Upstream scoring collection provenance fingerprints | Canonical encoding of scoring collection provenance as received |
 
-Identity SHALL remain distinct from every `score_record_id`.  
-Identity SHALL NEVER reuse a Premarket Score identity as `briefing_id`.  
-Identity SHALL NEVER rewrite, invent, or synthesize upstream identities.  
+Identity SHALL remain distinct from every `score_record_id`.
+Identity SHALL NEVER reuse a Premarket Score identity as `briefing_id`.
+Identity SHALL NEVER rewrite, invent, or synthesize upstream identities.
 Identity SHALL NOT use UUID, wall-clock, or mutable runtime state.
 
 Later identity schemes SHALL be introduced as new Identity Specifications and bound by a new Policy Version. They SHALL NOT silently replace `morning-briefing.identity.v1` inside this Policy Version.
@@ -245,12 +245,12 @@ Later identity schemes SHALL be introduced as new Identity Specifications and bo
 
 The following repository contracts shall remain invariant throughout Policy Version v1 execution:
 
-- Premarket Score semantic meaning  
-- Premarket Score ordering  
-- `score_record_id` values  
-- score provenance references  
-- Policy Version identity  
-- explicit UTC `as_of`  
+- Premarket Score semantic meaning
+- Premarket Score ordering
+- `score_record_id` values
+- score provenance references
+- Policy Version identity
+- explicit UTC `as_of`
 
 Implementation shall not modify these invariants at any stage of the Assembly Pipeline.
 
@@ -276,41 +276,41 @@ Every Morning Briefing output SHALL carry repository-governed provenance contain
 | `source_identifiers` | Deterministic ordered identifiers of consumed Score Records (`score_record_id` sequence exactly as preserved) |
 | Upstream score provenance linkage | Exact preserved score provenance references for every consumed Score Record |
 
-Provenance SHALL preserve upstream provenance exactly as received.  
-Provenance SHALL NEVER rewrite, invent, omit, or synthesize provenance.  
+Provenance SHALL preserve upstream provenance exactly as received.
+Provenance SHALL NEVER rewrite, invent, omit, or synthesize provenance.
 Provenance SHALL maintain complete lineage from briefing output to authorized inputs, configuration, Policy Version identity, and explicit UTC `as_of`.
 
-Fingerprint digests SHALL use `canonical_payload_sha256_v1`.  
-Source-identifier order MUST equal Ordering Preservation order.  
+Fingerprint digests SHALL use `canonical_payload_sha256_v1`.
+Source-identifier order MUST equal Ordering Preservation order.
 Input collection iteration artifacts outside the preserved scoring order MUST NOT affect fingerprints.
 
 ## Replay
 
 Replay SHALL re-execute the Assembly Pipeline under pinned:
 
-- authorized inputs  
-- explicit UTC `as_of`  
-- Policy Version identity `morning-briefing.policy.v1`  
-- Morning Briefing configuration  
+- authorized inputs
+- explicit UTC `as_of`
+- Policy Version identity `morning-briefing.policy.v1`
+- Morning Briefing configuration
 
 Replay SHALL reproduce identical:
 
-- briefing identity  
-- briefing provenance fingerprints  
-- ordered score references  
-- preserved score values  
-- preserved score identities  
-- preserved score provenance references  
-- output post-validation result  
+- briefing identity
+- briefing provenance fingerprints
+- ordered score references
+- preserved score values
+- preserved score identities
+- preserved score provenance references
+- output post-validation result
 
 Replay SHALL NEVER depend on:
 
-- wall-clock time  
-- randomness  
-- mutable runtime state  
-- implementation discovery  
-- external side effects  
-- downstream consumers  
+- wall-clock time
+- randomness
+- mutable runtime state
+- implementation discovery
+- external side effects
+- downstream consumers
 
 Replay inequality under identical pinned conditions SHALL fail closed.
 
@@ -320,7 +320,7 @@ Replay inequality under identical pinned conditions SHALL fail closed.
 
 After Identity Generation and Provenance Generation, Output Construction SHALL materialize exactly one Morning Briefing output for the evaluation.
 
-The output SHALL remain presentation-neutral.  
+The output SHALL remain presentation-neutral.
 The output SHALL NOT define UI, Dashboard, rendering, Markdown formatting, JSON schema, HTTP, APIs, persistence, storage, or notification delivery.
 
 ### Output contract
@@ -354,12 +354,12 @@ Each briefing record SHALL include at least:
 
 Output SHALL preserve:
 
-- Morning Briefing semantic meaning under Governance Decision #1  
-- Premarket Score semantic meaning under Premarket Scoring Governance Decision #1  
-- Premarket Scoring ordering  
-- Premarket Score identity references  
-- Premarket Score provenance references  
-- Morning Briefing identity and provenance  
+- Morning Briefing semantic meaning under Governance Decision #1
+- Premarket Score semantic meaning under Premarket Scoring Governance Decision #1
+- Premarket Scoring ordering
+- Premarket Score identity references
+- Premarket Score provenance references
+- Morning Briefing identity and provenance
 
 Output SHALL NEVER become investment advice, Human Review, AI Decision Engine, or Broker Execution authority.
 
@@ -379,73 +379,73 @@ Performed by Input Validation, Policy Version Binding, PIT Validation, and Autho
 
 Before emission, implementation SHALL validate all of the following:
 
-1. `policy_version_id` equals `morning-briefing.policy.v1`  
-2. `ordering_preservation_policy_id` equals `preserve_premarket_scoring_order.v1`  
-3. `identity_specification_id` equals `morning-briefing.identity.v1`  
-4. `provenance_specification_id` equals `morning-briefing.provenance.v1`  
-5. `as_of` is present, UTC-aware, and equal to upstream scoring `as_of`  
-6. Upstream scoring Policy Version equals `premarket.scoring.policy.v1`  
-7. Briefing record count equals upstream Score Record count  
-8. For every index `i`, briefing record `i` references upstream Score Record `i` with exact `score_record_id`, `score`, identity, and provenance preservation  
-9. No score value has been mutated  
-10. No independent ranking has been applied  
-11. `briefing_id` matches `morning-briefing.identity.v1` over the canonical payload  
-12. Briefing provenance is present and matches `morning-briefing.provenance.v1`  
-13. Unauthorized inputs remain absent  
-14. Premarket settings fail-closed when supplied and disabled  
-15. Contract Invariants remain unmodified  
-16. Bound configuration remains immutable throughout the evaluation  
+1. `policy_version_id` equals `morning-briefing.policy.v1`
+2. `ordering_preservation_policy_id` equals `preserve_premarket_scoring_order.v1`
+3. `identity_specification_id` equals `morning-briefing.identity.v1`
+4. `provenance_specification_id` equals `morning-briefing.provenance.v1`
+5. `as_of` is present, UTC-aware, and equal to upstream scoring `as_of`
+6. Upstream scoring Policy Version equals `premarket.scoring.policy.v1`
+7. Briefing record count equals upstream Score Record count
+8. For every index `i`, briefing record `i` references upstream Score Record `i` with exact `score_record_id`, `score`, identity, and provenance preservation
+9. No score value has been mutated
+10. No independent ranking has been applied
+11. `briefing_id` matches `morning-briefing.identity.v1` over the canonical payload
+12. Briefing provenance is present and matches `morning-briefing.provenance.v1`
+13. Unauthorized inputs remain absent
+14. Premarket settings fail-closed when supplied and disabled
+15. Contract Invariants remain unmodified
+16. Bound configuration remains immutable throughout the evaluation
 
-Invalid outputs SHALL fail closed.  
+Invalid outputs SHALL fail closed.
 No silent repair.
 
 ## Error Handling
 
 v1 SHALL fail closed when any of the following occur:
 
-- unauthorized input present  
-- required input missing  
-- Policy Version mismatch  
-- PIT violation  
-- upstream scoring Policy Version mismatch  
-- missing or invalid upstream score identity  
-- missing or invalid upstream score provenance  
-- score domain violation visible in consumed records  
-- ordering preservation violation  
-- identity generation inputs incomplete  
-- provenance generation inputs incomplete  
-- Contract Invariant violation  
-- Pipeline Isolation violation  
-- Configuration Stability violation  
-- Output Completeness violation  
-- post-validation failure  
-- replay inequality under identical pinned conditions  
+- unauthorized input present
+- required input missing
+- Policy Version mismatch
+- PIT violation
+- upstream scoring Policy Version mismatch
+- missing or invalid upstream score identity
+- missing or invalid upstream score provenance
+- score domain violation visible in consumed records
+- ordering preservation violation
+- identity generation inputs incomplete
+- provenance generation inputs incomplete
+- Contract Invariant violation
+- Pipeline Isolation violation
+- Configuration Stability violation
+- Output Completeness violation
+- post-validation failure
+- replay inequality under identical pinned conditions
 
 Error handling rules:
 
-1. No partial success for prohibited conditions.  
-2. No silent substitution.  
-3. No automatic repair.  
-4. No fabrication, inference, or synthesis.  
+1. No partial success for prohibited conditions.
+2. No silent substitution.
+3. No automatic repair.
+4. No fabrication, inference, or synthesis.
 5. Original failure context SHALL be preserved at Policy boundaries.
 
 ## Determinism
 
 Identical:
 
-- authorized inputs  
-- Morning Briefing configuration  
-- Policy Version identity `morning-briefing.policy.v1`  
-- explicit UTC `as_of`  
+- authorized inputs
+- Morning Briefing configuration
+- Policy Version identity `morning-briefing.policy.v1`
+- explicit UTC `as_of`
 
 SHALL always produce identical Morning Briefing outputs, including identical:
 
-- `briefing_id`  
-- briefing provenance fingerprints  
-- ordered briefing records  
-- preserved score values  
-- preserved score identities  
-- preserved score provenance references  
+- `briefing_id`
+- briefing provenance fingerprints
+- ordered briefing records
+- preserved score values
+- preserved score identities
+- preserved score provenance references
 
 ## Policy Constants
 
@@ -473,15 +473,15 @@ No additional constants are defined by this Policy Version.
 | `provenance_specification_id` | `morning-briefing.provenance.v1` |
 | `digest_method_id` | `canonical_payload_sha256_v1` |
 
-Implementation SHALL consume these defaults exactly when this Policy Version is selected.  
+Implementation SHALL consume these defaults exactly when this Policy Version is selected.
 Implementation SHALL NOT ambient-default a different Policy Version, ordering preservation policy, identity specification, provenance specification, or digest method.
 
 ## Version Compatibility
 
-- This Policy Version is identified solely by `morning-briefing.policy.v1`  
-- Evaluations MUST bind to exactly this Policy Version ID  
-- Ordering Preservation Policy, Identity Specification, Provenance Specification, and Digest Method bound by this Policy Version are part of the concrete v1 contract  
-- A different Policy Version ID or subordinate specification ID selects a different concrete behavior set and MUST NOT be treated as equivalent  
+- This Policy Version is identified solely by `morning-briefing.policy.v1`
+- Evaluations MUST bind to exactly this Policy Version ID
+- Ordering Preservation Policy, Identity Specification, Provenance Specification, and Digest Method bound by this Policy Version are part of the concrete v1 contract
+- A different Policy Version ID or subordinate specification ID selects a different concrete behavior set and MUST NOT be treated as equivalent
 
 ## Implementation Impact
 
@@ -489,11 +489,11 @@ This Policy Version authorizes deterministic implementation consistent with Morn
 
 Implementation SHALL remain fully subordinate to:
 
-- Morning Briefing Governance Decisions #1–#8  
-- Premarket Scoring Governance Decisions #1–#12  
-- Premarket Scoring Policy Version `premarket.scoring.policy.v1`  
-- Morning Briefing Architecture v1  
-- Sprint 9 Planning Gate  
+- Morning Briefing Governance Decisions #1–#8
+- Premarket Scoring Governance Decisions #1–#12
+- Premarket Scoring Policy Version `premarket.scoring.policy.v1`
+- Morning Briefing Architecture v1
+- Sprint 9 Planning Gate
 
 Implementation SHALL NOT redefine semantic meaning, expand authorized inputs, regenerate or reorder Premarket Scores, invent evidence, or bypass fail-closed, PIT, replay, identity, or provenance obligations.
 
@@ -503,19 +503,19 @@ This Policy Version does not authorize UI, Dashboard, Human Review, AI Decision 
 
 Future Policy Versions may change:
 
-- assembly algorithms within Governance bounds  
-- validation sequence details within Governance bounds  
-- identity algorithms via new Identity Specifications  
-- provenance algorithms via new Provenance Specifications  
-- output algorithms within Governance bounds  
+- assembly algorithms within Governance bounds
+- validation sequence details within Governance bounds
+- identity algorithms via new Identity Specifications
+- provenance algorithms via new Provenance Specifications
+- output algorithms within Governance bounds
 
 Future Policy Versions SHALL preserve compatibility with Morning Briefing Governance Decisions #1–#8 and Premarket Scoring Governance Decisions #1–#12 unless those governance decisions are superseded by a subsequent approved Governance Decision.
 
-Implementation changes alone SHALL NOT alter this Policy Version.  
+Implementation changes alone SHALL NOT alter this Policy Version.
 Any change to v1 concrete behavior requires a new Policy Version ID and/or new subordinate specification IDs.
 
 ## Resolution
 
-**Status:** APPROVED  
+**Status:** APPROVED
 
 **Policy effect:** Deterministic Morning Briefing behavior under `morning-briefing.policy.v1` is frozen for Implementation Authorization and subsequent authorized implementation.
