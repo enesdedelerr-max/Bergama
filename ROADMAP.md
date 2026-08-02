@@ -74,16 +74,24 @@ See [`docs/sprints/sprint-7/README.md`](docs/sprints/sprint-7/README.md).
 
 Status: complete. Issue **#78** merged through PR **#79**.
 Implementation baseline: `dedccab35d3238f6cc9840689ca61a99cc454ce6`.
-Release tag `v0.8.0-sprint8` is prepared but has **not** been created.
+Release tag `v0.8.0-sprint8`.
 
 See [`docs/sprints/sprint-8/README.md`](docs/sprints/sprint-8/README.md).
 
+### Sprint 9 — Morning Briefing Foundation
+
+Status: complete. Issue **#82** merged through PR **#83**.
+Implementation baseline: `a713bea13b352f35a9390f68ce43081b68587eb9`.
+Release tag `v0.9.0-sprint9` is prepared but has **not** been created.
+
+See [`docs/sprints/sprint-9/README.md`](docs/sprints/sprint-9/README.md).
+
 ### Next action
 
-1. Merge Sprint 8 governance closeout documentation to `main`.
-2. Create release tag / GitHub Release `v0.8.0-sprint8` after approval.
-3. Close the Sprint 8 milestone after closeout merge.
-4. Next planning gate remains pending and is not authorized by Sprint 8
+1. Merge Sprint 9 governance closeout documentation to `main`.
+2. Create release tag / GitHub Release `v0.9.0-sprint9` after approval.
+3. Close the Sprint 9 milestone after closeout merge.
+4. Next planning gate remains pending and is not authorized by Sprint 9
    closeout.
 
 ## Sprint sequence
@@ -97,26 +105,38 @@ See [`docs/sprints/sprint-8/README.md`](docs/sprints/sprint-8/README.md).
 7. Sprint 6 — Feature Platform — Complete
 8. Sprint 7 — Premarket Intelligence — Complete
 9. Sprint 8 — Premarket Scoring Foundation — Complete
-10. Sprint 9 — Dashboard — Planned
-11. Sprint 10 — MLOps — Planned
-12. Sprint 11 — Research — Planned
-13. Sprint 12 — Compliance — Planned
-14. Sprint 13 — Production Hardening — Planned
-15. Sprint 14 — Live Pilot — Planned
-16. Sprint 15 — Limited Production Stabilization — Planned
+10. Sprint 9 — Morning Briefing Foundation — Complete
+
+### Downstream sequencing (future Planning Gates required)
+
+```text
+Sprint 8 Premarket Scoring
+  → Sprint 9 Morning Briefing
+  → Dashboard (future)
+  → Human Review (future)
+  → AI Decision Engine (future)
+```
+
+Dashboard, Human Review, and AI Decision Engine remain deferred future work.
+They are not authorized by Sprint 9 closeout and require their own Planning
+Gates before implementation.
 
 ### Notes on later themes
 
 Sprint 4 already delivered foundational Broker, Portfolio, Risk, OMS, and
-Strategy Engine / Strategy SDK runtime slices. Later sprints named historically
+Strategy Engine / Strategy SDK runtime slices. Later work named historically
 as “Broker and Execution” or “Portfolio Runtime” should be treated as
 **deepening / productionization** of those foundations, not greenfield
 reintroduction of the same bounded contexts.
 
 Earlier roadmap drafts listed Sprint 8 as “AI Decision Engine”. Sprint 8
 delivered **Premarket Scoring Foundation** instead. AI Decision Engine remains
-deferred future work and was not delivered by Sprint 8. Future sprint
-numbering below Sprint 9 is unchanged by this reconciliation.
+deferred future work and was not delivered by Sprint 8.
+
+Earlier roadmap drafts listed Sprint 9 as “Dashboard”. Sprint 9 delivered
+**Morning Briefing Foundation** instead. Dashboard remains deferred after
+Morning Briefing per Sprint 9 Planning Gate sequencing and is not authorized
+by Sprint 9 closeout.
 
 ## Planning principles
 
