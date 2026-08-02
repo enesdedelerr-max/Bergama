@@ -19,3 +19,7 @@ subsequent approved Policy Freeze.
 | 10 | [Deterministic Identity](10-deterministic-identity.md) |
 | 11 | [Provenance Policy](11-provenance-policy.md) |
 | 12 | [Ordering & Tie-Break Policy](12-ordering-and-tie-break-policy.md) |
+
+## Morning Briefing
+
+See [morning-briefing/README.md](morning-briefing/README.md) for Decisions #1–#8.

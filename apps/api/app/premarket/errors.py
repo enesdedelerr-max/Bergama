@@ -117,3 +117,27 @@ class ScoreStaleKnownAtError(ScoreValidationError):
 
 class ScoreInvariantError(ScoreValidationError):
     code = "premarket.score.invariant_violation"
+
+
+class BriefingError(PremarketError):
+    code = "premarket.briefing.error"
+
+
+class BriefingValidationError(BriefingError):
+    code = "premarket.briefing.validation_failed"
+
+
+class BriefingUnsupportedPolicyError(BriefingValidationError):
+    code = "premarket.briefing.unsupported_policy"
+
+
+class BriefingConflictError(BriefingValidationError):
+    code = "premarket.briefing.conflict"
+
+
+class BriefingInvariantError(BriefingValidationError):
+    code = "premarket.briefing.invariant_violation"
+
+
+class BriefingDomainError(BriefingValidationError):
+    code = "premarket.briefing.domain_violation"

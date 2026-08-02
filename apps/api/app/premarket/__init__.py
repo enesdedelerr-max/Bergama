@@ -1,4 +1,4 @@
-"""Premarket Intelligence bounded context — Watchlist, Catalyst, Gap, and Scoring foundations."""
+"""Premarket Intelligence — Watchlist, Catalyst, Gap, Scoring, Morning Briefing."""
 
 from __future__ import annotations
 
@@ -19,6 +19,12 @@ from app.premarket.catalyst import (
     normalize_catalysts_from_parts,
 )
 from app.premarket.errors import (
+    BriefingConflictError,
+    BriefingDomainError,
+    BriefingError,
+    BriefingInvariantError,
+    BriefingUnsupportedPolicyError,
+    BriefingValidationError,
     CatalystClassificationError,
     CatalystError,
     CatalystIdentityConflictError,
@@ -66,6 +72,34 @@ from app.premarket.gap import (
     scan_gaps,
     scan_gaps_from_parts,
 )
+from app.premarket.morning_briefing import (
+    DIGEST_METHOD_V1 as BRIEFING_DIGEST_METHOD_V1,
+)
+from app.premarket.morning_briefing import (
+    IDENTITY_SPECIFICATION_V1 as BRIEFING_IDENTITY_SPECIFICATION_V1,
+)
+from app.premarket.morning_briefing import (
+    ORDERING_PRESERVATION_POLICY_V1 as BRIEFING_ORDERING_PRESERVATION_POLICY_V1,
+)
+from app.premarket.morning_briefing import (
+    POLICY_VERSION_V1 as BRIEFING_POLICY_VERSION_V1,
+)
+from app.premarket.morning_briefing import (
+    PROVENANCE_SPECIFICATION_V1 as BRIEFING_PROVENANCE_SPECIFICATION_V1,
+)
+from app.premarket.morning_briefing import (
+    BriefingCollection,
+    BriefingConfig,
+    BriefingProvenance,
+    BriefingRecord,
+    BriefingRequest,
+    assemble_briefing,
+    assemble_briefing_from_parts,
+    reassemble,
+)
+from app.premarket.morning_briefing import (
+    assert_replay_equal as assert_briefing_replay_equal,
+)
 from app.premarket.scoring import (
     ORDERING_POLICY_SCORE_DESC_INSTRUMENT_KEY_ASC_ID_ASC,
     POLICY_VERSION_V1,
@@ -101,6 +135,11 @@ from app.premarket.watchlist import (
 )
 
 __all__ = [
+    "BRIEFING_DIGEST_METHOD_V1",
+    "BRIEFING_IDENTITY_SPECIFICATION_V1",
+    "BRIEFING_ORDERING_PRESERVATION_POLICY_V1",
+    "BRIEFING_POLICY_VERSION_V1",
+    "BRIEFING_PROVENANCE_SPECIFICATION_V1",
     "GAP_DIRECTION_DOWN",
     "GAP_DIRECTION_FLAT",
     "GAP_DIRECTION_UP",
@@ -114,6 +153,17 @@ __all__ = [
     "SELECTION_POLICY_TWO_BARS_BY_CLOSE_TIME_V1",
     "UNLINKED_INSTRUMENT_KEY_SENTINEL",
     "WEIGHT_PROFILE_DEFAULT_V1",
+    "BriefingCollection",
+    "BriefingConfig",
+    "BriefingConflictError",
+    "BriefingDomainError",
+    "BriefingError",
+    "BriefingInvariantError",
+    "BriefingProvenance",
+    "BriefingRecord",
+    "BriefingRequest",
+    "BriefingUnsupportedPolicyError",
+    "BriefingValidationError",
     "CatalystClassificationError",
     "CatalystClassificationRule",
     "CatalystCollection",
@@ -167,6 +217,9 @@ __all__ = [
     "WatchlistProvenance",
     "WatchlistUnsupportedCandidateError",
     "WatchlistValidationError",
+    "assemble_briefing",
+    "assemble_briefing_from_parts",
+    "assert_briefing_replay_equal",
     "assert_replay_equal",
     "build_catalyst_record_id",
     "build_gap_record_id",
@@ -181,6 +234,7 @@ __all__ = [
     "normalize_candidates",
     "normalize_catalysts",
     "normalize_catalysts_from_parts",
+    "reassemble",
     "rescore",
     "scan_gaps",
     "scan_gaps_from_parts",
