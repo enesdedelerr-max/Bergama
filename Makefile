@@ -23,7 +23,7 @@ API_DIR := $(ROOT)/apps/api
 	test-api-replay-engine smoke-api-replay-engine \
 	test-api-backfill smoke-api-backfill \
 	test-api-data-quality smoke-api-data-quality \
-	test-api-strategy-engine test-api-strategy-sdk test-api-feature-platform test-api-premarket test-api-premarket-catalyst test-api-premarket-gap test-api-premarket-scoring test-api-premarket-morning-briefing test-api-portfolio-service test-api-risk-engine \
+	test-api-strategy-engine test-api-strategy-sdk test-api-feature-platform test-api-premarket test-api-premarket-catalyst test-api-premarket-gap test-api-premarket-scoring test-api-premarket-morning-briefing test-api-dashboard test-api-portfolio-service test-api-risk-engine \
 	test-api-order-management \
 	test-api-broker \
 	smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred \
@@ -39,6 +39,7 @@ help:
 	@echo "Sprint 6 targets: test-api-feature-platform"
 	@echo "Sprint 7 targets: test-api-premarket test-api-premarket-catalyst test-api-premarket-gap test-api-premarket-scoring"
 	@echo "Sprint 9 targets: test-api-premarket-morning-briefing"
+	@echo "Sprint 10 targets: test-api-dashboard"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -357,6 +358,12 @@ test-api-premarket-morning-briefing:
 		tests/unit/test_premarket_morning_briefing_engine.py \
 		tests/contract/test_premarket_morning_briefing_contract.py \
 		tests/integration/test_premarket_morning_briefing_boundary.py
+
+test-api-dashboard:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_dashboard_engine.py \
+		tests/contract/test_dashboard_contract.py \
+		tests/integration/test_dashboard_boundary.py
 
 test-api-portfolio-service:
 	@cd "$(API_DIR)" && uv run pytest -q \
