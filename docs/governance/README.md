@@ -23,3 +23,7 @@ subsequent approved Policy Freeze.
 ## Morning Briefing
 
 See [morning-briefing/README.md](morning-briefing/README.md) for Decisions #1–#8.
+
+## Dashboard
+
+See [dashboard/README.md](dashboard/README.md) for Decisions #1–#8.
