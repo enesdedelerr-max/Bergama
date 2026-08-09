@@ -82,16 +82,25 @@ See [`docs/sprints/sprint-8/README.md`](docs/sprints/sprint-8/README.md).
 
 Status: complete. Issue **#82** merged through PR **#83**.
 Implementation baseline: `a713bea13b352f35a9390f68ce43081b68587eb9`.
-Release tag `v0.9.0-sprint9` is prepared but has **not** been created.
+Release tag `v0.9.0-sprint9` exists. GitHub Release is published. Milestone
+is closed.
 
 See [`docs/sprints/sprint-9/README.md`](docs/sprints/sprint-9/README.md).
 
+### Sprint 10 — Dashboard Foundation
+
+Status: complete. Issue **#85** merged through PR **#86**.
+Implementation baseline: `c87b1afdca60f0eb4c734c75ed1aeba71de69646`.
+Release tag `v0.10.0-sprint10` is prepared but has **not** been created.
+
+See [`docs/sprints/sprint-10/README.md`](docs/sprints/sprint-10/README.md).
+
 ### Next action
 
-1. Merge Sprint 9 governance closeout documentation to `main`.
-2. Create release tag / GitHub Release `v0.9.0-sprint9` after approval.
-3. Close the Sprint 9 milestone after closeout merge.
-4. Next planning gate remains pending and is not authorized by Sprint 9
+1. Merge Sprint 10 governance closeout documentation to `main`.
+2. Create release tag / GitHub Release `v0.10.0-sprint10` after approval.
+3. Close the Sprint 10 milestone after closeout merge.
+4. Next Planning Gate remains pending and is not authorized by Sprint 10
    closeout.
 
 ## Sprint sequence
@@ -106,20 +115,23 @@ See [`docs/sprints/sprint-9/README.md`](docs/sprints/sprint-9/README.md).
 8. Sprint 7 — Premarket Intelligence — Complete
 9. Sprint 8 — Premarket Scoring Foundation — Complete
 10. Sprint 9 — Morning Briefing Foundation — Complete
+11. Sprint 10 — Dashboard Foundation — Complete
 
 ### Downstream sequencing (future Planning Gates required)
 
 ```text
 Sprint 8 Premarket Scoring
   → Sprint 9 Morning Briefing
-  → Dashboard (future)
-  → Human Review (future)
-  → AI Decision Engine (future)
+  → Sprint 10 Dashboard Foundation (complete)
+  → Human Review (future; not authorized)
+  → AI Decision Engine (future; not authorized)
+  → Broker Execution (future; not authorized)
 ```
 
-Dashboard, Human Review, and AI Decision Engine remain deferred future work.
-They are not authorized by Sprint 9 closeout and require their own Planning
-Gates before implementation.
+Dashboard Foundation is implemented. Human Review, AI Decision Engine, and
+Broker Execution remain deferred future work. They are **not** authorized by
+Sprint 10 closeout. No sprint number is assigned to them. Next implementation
+work requires a new approved Planning Gate.
 
 ### Notes on later themes
 
@@ -134,9 +146,9 @@ delivered **Premarket Scoring Foundation** instead. AI Decision Engine remains
 deferred future work and was not delivered by Sprint 8.
 
 Earlier roadmap drafts listed Sprint 9 as “Dashboard”. Sprint 9 delivered
-**Morning Briefing Foundation** instead. Dashboard remains deferred after
-Morning Briefing per Sprint 9 Planning Gate sequencing and is not authorized
-by Sprint 9 closeout.
+**Morning Briefing Foundation** instead. Dashboard Foundation was delivered by
+Sprint 10. Human Review, AI Decision Engine, and Broker Execution remain
+unauthorized until a new Planning Gate.
 
 ## Planning principles
 
