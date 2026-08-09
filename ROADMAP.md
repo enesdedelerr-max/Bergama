@@ -91,17 +91,15 @@ See [`docs/sprints/sprint-9/README.md`](docs/sprints/sprint-9/README.md).
 
 Status: complete. Issue **#85** merged through PR **#86**.
 Implementation baseline: `c87b1afdca60f0eb4c734c75ed1aeba71de69646`.
-Release tag `v0.10.0-sprint10` is prepared but has **not** been created.
+Closeout merge: `1ed9e86deed12088399e5b74b648c664de4dc123`.
+Release tag `v0.10.0-sprint10` is **RELEASED**. GitHub Release is **PUBLISHED**.
+Sprint 10 milestone is **CLOSED**.
 
 See [`docs/sprints/sprint-10/README.md`](docs/sprints/sprint-10/README.md).
 
 ### Next action
 
-1. Merge Sprint 10 governance closeout documentation to `main`.
-2. Create release tag / GitHub Release `v0.10.0-sprint10` after approval.
-3. Close the Sprint 10 milestone after closeout merge.
-4. Next Planning Gate remains pending and is not authorized by Sprint 10
-   closeout.
+Next repository work requires a new Planning Gate.
 
 ## Sprint sequence
 
