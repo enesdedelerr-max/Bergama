@@ -97,6 +97,16 @@ Sprint 10 milestone is **CLOSED**.
 
 See [`docs/sprints/sprint-10/README.md`](docs/sprints/sprint-10/README.md).
 
+### Sprint 11 — Human Review Foundation
+
+Status: complete. Issue **#89** merged through PR **#90**.
+Implementation baseline: `baf1ae03312418cfe6a17d8615ccfec62d14f8c0`.
+Release tag `v0.11.0-sprint11` is **PREPARED** / **NOT CREATED**. GitHub
+Release is **NOT PUBLISHED**. Sprint 11 milestone remains **OPEN** pending
+closeout merge, tag creation, and GitHub Release publication.
+
+See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
+
 ### Next action
 
 Next repository work requires a new Planning Gate.
@@ -114,6 +124,7 @@ Next repository work requires a new Planning Gate.
 9. Sprint 8 — Premarket Scoring Foundation — Complete
 10. Sprint 9 — Morning Briefing Foundation — Complete
 11. Sprint 10 — Dashboard Foundation — Complete
+12. Sprint 11 — Human Review Foundation — Complete
 
 ### Downstream sequencing (future Planning Gates required)
 
@@ -121,15 +132,15 @@ Next repository work requires a new Planning Gate.
 Sprint 8 Premarket Scoring
   → Sprint 9 Morning Briefing
   → Sprint 10 Dashboard Foundation (complete)
-  → Human Review (future; not authorized)
+  → Sprint 11 Human Review Foundation (complete)
   → AI Decision Engine (future; not authorized)
   → Broker Execution (future; not authorized)
 ```
 
-Dashboard Foundation is implemented. Human Review, AI Decision Engine, and
-Broker Execution remain deferred future work. They are **not** authorized by
-Sprint 10 closeout. No sprint number is assigned to them. Next implementation
-work requires a new approved Planning Gate.
+Human Review Foundation is implemented. AI Decision Engine and Broker Execution
+remain deferred future work. They are **not** authorized by Sprint 11 closeout.
+No sprint number is assigned to them. Next implementation work requires a new
+approved Planning Gate.
 
 ### Notes on later themes
 
@@ -145,8 +156,8 @@ deferred future work and was not delivered by Sprint 8.
 
 Earlier roadmap drafts listed Sprint 9 as “Dashboard”. Sprint 9 delivered
 **Morning Briefing Foundation** instead. Dashboard Foundation was delivered by
-Sprint 10. Human Review, AI Decision Engine, and Broker Execution remain
-unauthorized until a new Planning Gate.
+Sprint 10. Human Review Foundation was delivered by Sprint 11. AI Decision
+Engine and Broker Execution remain unauthorized until a new Planning Gate.
 
 ## Planning principles
 
