@@ -101,9 +101,9 @@ See [`docs/sprints/sprint-10/README.md`](docs/sprints/sprint-10/README.md).
 
 Status: complete. Issue **#89** merged through PR **#90**.
 Implementation baseline: `baf1ae03312418cfe6a17d8615ccfec62d14f8c0`.
-Release tag `v0.11.0-sprint11` is **PREPARED** / **NOT CREATED**. GitHub
-Release is **NOT PUBLISHED**. Sprint 11 milestone remains **OPEN** pending
-closeout merge, tag creation, and GitHub Release publication.
+Closeout merge: `201999b101a745d64d479fda8303b5dc5bd74d9a`.
+Release tag `v0.11.0-sprint11` is **RELEASED**. GitHub Release is **PUBLISHED**.
+Sprint 11 milestone is **CLOSED**.
 
 See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 

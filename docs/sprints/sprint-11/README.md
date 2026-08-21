@@ -12,6 +12,12 @@ implementation baseline / rollback reference is:
 baf1ae03312418cfe6a17d8615ccfec62d14f8c0
 ```
 
+Governance closeout merge (PR **#91**) on `main`:
+
+```text
+201999b101a745d64d479fda8303b5dc5bd74d9a
+```
+
 | Field | Value |
 | --- | --- |
 | Sprint | Sprint 11 |
@@ -25,11 +31,13 @@ baf1ae03312418cfe6a17d8615ccfec62d14f8c0
 | Implementation Authorization | APPROVED (`human-review.implementation-authorization.v1`) |
 | Implementation Issue | [#89](https://github.com/enesdedelerr-max/Bergama/issues/89) — CLOSED / COMPLETED |
 | Implementation PR | [#90](https://github.com/enesdedelerr-max/Bergama/pull/90) — MERGED |
+| Closeout PR | [#91](https://github.com/enesdedelerr-max/Bergama/pull/91) — MERGED |
 | Implementation baseline | `baf1ae03312418cfe6a17d8615ccfec62d14f8c0` |
+| Closeout merge | `201999b101a745d64d479fda8303b5dc5bd74d9a` |
 | Feature branch | `feature/sprint11-89-human-review-foundation` — deleted |
-| Milestone | Sprint 11 — still **OPEN** pending closeout completion |
-| Release tag | `v0.11.0-sprint11` — PREPARED / **NOT CREATED** |
-| GitHub Release | **NOT PUBLISHED** |
+| Milestone | Sprint 11 — **CLOSED** |
+| Release tag | `v0.11.0-sprint11` — **RELEASED** |
+| GitHub Release | **PUBLISHED** |
 
 AI Decision Engine, Broker Execution, UI, HTTP APIs, persistence, workers,
 schedulers, notifications, reviewer-role management, and workflow expansion
@@ -43,9 +51,8 @@ Authorization v1 are repository-backed under `docs/sprints/sprint-11/`,
 They were merged with PR #90 and are immutable relative to this closeout.
 
 Governance closeout is recorded in [`CLOSEOUT.md`](CLOSEOUT.md). Release tag
-creation for Sprint 11 remains a separate maintainer action after this closeout
-is merged. Preferred tag target is the closeout merge tip on `main`, not the
-implementation baseline.
+`v0.11.0-sprint11` points at the closeout merge tip on `main`
+(`201999b101a745d64d479fda8303b5dc5bd74d9a`), not the implementation baseline.
 
 ## Objective
 
@@ -122,14 +129,16 @@ Authoritative specification documents (merged with PR #90):
 ## Repository status
 
 - Implementation baseline: `baf1ae03312418cfe6a17d8615ccfec62d14f8c0`
+- Closeout merge: `201999b101a745d64d479fda8303b5dc5bd74d9a`
 - Final Sprint 11 implementation PR: #90 (MERGED)
+- Governance closeout PR: #91 (MERGED)
 - Issue #89: CLOSED / COMPLETED
 - Feature branch: deleted
 - Breaking changes: none claimed for SDK public surface or Market Data
   contracts
-- Milestone: still OPEN pending closeout completion
-- Release tag: `v0.11.0-sprint11` (PREPARED / **NOT CREATED**)
-- GitHub Release: **NOT PUBLISHED**
+- Milestone: CLOSED
+- Release tag: `v0.11.0-sprint11` (**RELEASED**)
+- GitHub Release: **PUBLISHED**
 
 ## Closeout evidence
 
