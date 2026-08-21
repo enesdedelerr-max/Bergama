@@ -20,6 +20,7 @@ from app.core.secrets import SecretSettings
 from app.infrastructure.polygon.errors import (
     PolygonMappingFailedError,
     PolygonWebsocketAuthFailedError,
+    PolygonWebsocketError,
     PolygonWebsocketOverflowError,
     PolygonWebsocketProtocolError,
     PolygonWebsocketReconnectExhaustedError,
@@ -45,6 +46,7 @@ from app.infrastructure.polygon.ws_schemas import (
 from app.infrastructure.polygon.ws_transport import (
     build_auth_frame,
     build_subscribe_frame,
+    parse_incoming_frames,
     redact_control_frame,
 )
 from app.market_data.enums import AdjustmentState, AssetClass
@@ -583,3 +585,86 @@ async def test_container_wiring_disabled_and_isolated() -> None:
     assert c1.polygon_realtime is not c2.polygon_realtime
     await c1.aclose()
     await c2.aclose()
+
+
+_HIGH_PRECISION = "1.234567890123456789012345"
+
+
+def test_ws_raw_json_numeric_trade_quote_am_preserve_decimals() -> None:
+    clock = FixedClock(datetime(2024, 6, 15, 12, 0, tzinfo=UTC))
+    frames = parse_incoming_frames(
+        "["
+        f'{{"ev":"T","sym":"AAPL","p":0.1,"s":10,"t":{T_MS}}},'
+        f'{{"ev":"Q","sym":"AAPL","bp":190.12,"bs":1,"ap":190.13,"as":1,"t":{T_MS}}},'
+        f'{{"ev":"AM","sym":"AAPL","o":0.1,"h":0.1,"l":0.1,"c":0.1,"v":1000,'
+        f'"av":{_HIGH_PRECISION},"op":1,"vw":0.1,"a":1,"z":1,'
+        f'"s":{T_MS},"e":{T_MS + 60_000}}}'
+        "]"
+    )
+    assert frames[0]["p"] == Decimal("0.1")
+    assert frames[0]["p"] != Decimal(0.1)
+    assert frames[1]["bp"] == Decimal("190.12")
+    assert frames[2]["av"] == Decimal(_HIGH_PRECISION)
+
+    trade_msg = parse_ws_message(frames[0])
+    quote_msg = parse_ws_message(frames[1])
+    bar_msg = parse_ws_message(frames[2])
+    assert isinstance(trade_msg, PolygonWsTradeMessage)
+    assert isinstance(quote_msg, PolygonWsQuoteMessage)
+    assert isinstance(bar_msg, PolygonWsMinuteAggregateMessage)
+    assert bar_msg.av == Decimal(_HIGH_PRECISION)
+
+    trade = map_ws_trade(
+        trade_msg,
+        instrument=_instrument(),
+        currency="USD",
+        venue="XNAS",
+        known_at=clock.now(),
+        clock=clock,
+    )
+    quote = map_ws_quote(
+        quote_msg,
+        instrument=_instrument(),
+        currency="USD",
+        venue="XNAS",
+        known_at=clock.now(),
+        clock=clock,
+    )
+    bar = map_ws_minute_bar(
+        bar_msg,
+        instrument=_instrument(),
+        currency="USD",
+        venue="XNAS",
+        known_at=clock.now(),
+        clock=clock,
+    )
+    assert isinstance(trade, TradeEvent)
+    assert trade.price == Decimal("0.1")
+    assert quote.bid_price == Decimal("190.12")
+    assert market_event_to_payload(quote)["bid_price"] == "190.12"
+    assert bar.close == Decimal("0.1")
+
+
+def test_ws_raw_json_nan_is_websocket_error_not_value_error() -> None:
+    with pytest.raises(PolygonWebsocketError) as caught:
+        parse_incoming_frames(f'[{{"ev":"T","sym":"AAPL","p":NaN,"s":1,"t":{T_MS}}}]')
+    assert type(caught.value) is PolygonWebsocketError
+    assert isinstance(caught.value.__cause__, ValueError)
+
+
+def test_ws_am_unmapped_financial_field_rejects_python_float() -> None:
+    with pytest.raises(ValidationError, match="python float is not admitted"):
+        PolygonWsMinuteAggregateMessage.model_validate(
+            {
+                "ev": "AM",
+                "sym": "AAPL",
+                "o": "1",
+                "h": "1",
+                "l": "1",
+                "c": "1",
+                "v": "1",
+                "z": 0.1,
+                "s": T_MS,
+                "e": T_MS + 1,
+            }
+        )

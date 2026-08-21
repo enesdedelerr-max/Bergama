@@ -23,7 +23,7 @@ from app.market_data.enums import AdjustmentState, AssetClass
 from app.market_data.identity import InstrumentId
 from app.market_data.keys import build_deduplication_key, build_idempotency_key
 from app.market_data.serialization import market_event_to_envelope, market_event_to_payload
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 
 def _instrument() -> InstrumentId:
@@ -109,10 +109,46 @@ def test_minute_hour_day_window_derivation_and_dst() -> None:
 def test_ms_to_utc_and_decimal() -> None:
     assert ms_to_utc(1_577_941_200_000) == datetime(2020, 1, 2, 5, 0, tzinfo=UTC)
     assert decimal_from_provider("75.0875", field_name="open") == Decimal("75.0875")
+    assert decimal_from_provider(Decimal("0.1"), field_name="open") == Decimal("0.1")
+    assert decimal_from_provider(10, field_name="open") == Decimal("10")
+    with pytest.raises(ValueError, match="must not be a Python float"):
+        decimal_from_provider(0.1, field_name="open")  # type: ignore[arg-type]
     with pytest.raises(ValueError):
         decimal_from_provider("NaN", field_name="open")
     with pytest.raises(ValueError):
         decimal_from_provider("Infinity", field_name="open")
+
+
+def test_polygon_agg_bar_rejects_python_float() -> None:
+    with pytest.raises(ValidationError, match="python float is not admitted"):
+        PolygonAggBar.model_validate(
+            {"o": 0.1, "h": 1, "l": 1, "c": 1, "v": 1, "t": 1_700_000_000_000}
+        )
+
+
+def test_polygon_financial_number_rejects_bool_and_accepts_decimal_int_str() -> None:
+    timestamp_ms = 1_700_000_000_000
+    with pytest.raises(ValidationError, match="python bool is not admitted"):
+        PolygonAggBar.model_validate({"o": True, "h": 1, "l": 1, "c": 1, "v": 1, "t": timestamp_ms})
+    with pytest.raises(ValidationError, match="python bool is not admitted"):
+        PolygonAggBar.model_validate(
+            {"o": False, "h": 1, "l": 1, "c": 1, "v": 1, "t": timestamp_ms}
+        )
+    accepted = PolygonAggBar.model_validate(
+        {
+            "o": Decimal("10.5"),
+            "h": 12,
+            "l": "9",
+            "c": 11,
+            "v": 1000,
+            "t": timestamp_ms,
+        }
+    )
+    assert accepted.open == Decimal("10.5")
+    assert accepted.high == 12
+    assert accepted.low == "9"
+    with pytest.raises(ValidationError, match="python float is not admitted"):
+        PolygonAggBar.model_validate({"o": 0.1, "h": 1, "l": 1, "c": 1, "v": 1, "t": timestamp_ms})
 
 
 def test_sanitize_and_cross_host_next_url() -> None:
@@ -150,7 +186,7 @@ def test_map_bar_preserves_identity_currency_and_keys() -> None:
                     "l": 9,
                     "c": 11,
                     "v": 1000,
-                    "vw": 10.5,
+                    "vw": "10.5",
                     "t": 1_704_110_400_000,
                     "n": 3,
                 }

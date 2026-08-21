@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.infrastructure.polygon.schemas import PolygonFinancialNumber
+
 
 class PolygonWsStatusMessage(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
@@ -25,8 +27,8 @@ class PolygonWsTradeMessage(BaseModel):
     x: int | str | None = None
     i: int | str | None = None
     z: int | str | None = None
-    p: float | int | str
-    s: float | int | str
+    p: PolygonFinancialNumber
+    s: PolygonFinancialNumber
     c: list[int] | None = None
     t: int
 
@@ -48,11 +50,11 @@ class PolygonWsQuoteMessage(BaseModel):
     ev: Literal["Q"] = "Q"
     sym: str
     bx: int | str | None = None
-    bp: float | int | str
-    bs: float | int | str
+    bp: PolygonFinancialNumber
+    bs: PolygonFinancialNumber
     ax: int | str | None = None
-    ap: float | int | str
-    as_: float | int | str = Field(alias="as")
+    ap: PolygonFinancialNumber
+    as_: PolygonFinancialNumber = Field(alias="as")
     c: int | None = None
     t: int
     z: int | str | None = None
@@ -74,16 +76,16 @@ class PolygonWsMinuteAggregateMessage(BaseModel):
 
     ev: Literal["AM"] = "AM"
     sym: str
-    v: float | int | str
-    av: float | int | str | None = None
-    op: float | int | str | None = None
-    vw: float | int | str | None = None
-    o: float | int | str
-    c: float | int | str
-    h: float | int | str
-    low: float | int | str = Field(alias="l")
-    a: float | int | str | None = None
-    z: float | int | str | None = None
+    v: PolygonFinancialNumber
+    av: PolygonFinancialNumber | None = None
+    op: PolygonFinancialNumber | None = None
+    vw: PolygonFinancialNumber | None = None
+    o: PolygonFinancialNumber
+    c: PolygonFinancialNumber
+    h: PolygonFinancialNumber
+    low: PolygonFinancialNumber = Field(alias="l")
+    a: PolygonFinancialNumber | None = None
+    z: PolygonFinancialNumber | None = None
     s: int
     e: int
 

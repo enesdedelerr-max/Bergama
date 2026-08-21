@@ -2,7 +2,27 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from decimal import Decimal
+from typing import Annotated
+
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
+
+_PYTHON_FLOAT_REJECTED = "python float is not admitted for polygon financial fields"
+_PYTHON_BOOL_REJECTED = "python bool is not admitted for polygon financial fields"
+
+
+def _reject_python_float(value: object) -> object:
+    if type(value) is float:
+        raise ValueError(_PYTHON_FLOAT_REJECTED)
+    if type(value) is bool:
+        raise ValueError(_PYTHON_BOOL_REJECTED)
+    return value
+
+
+type PolygonFinancialNumber = Annotated[
+    Decimal | int | str,
+    BeforeValidator(_reject_python_float),
+]
 
 
 class PolygonAggBar(BaseModel):
@@ -10,12 +30,12 @@ class PolygonAggBar(BaseModel):
 
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
-    open: float | int | str = Field(alias="o")
-    high: float | int | str = Field(alias="h")
-    low: float | int | str = Field(alias="l")
-    close: float | int | str = Field(alias="c")
-    volume: float | int | str = Field(alias="v")
-    vwap: float | int | str | None = Field(default=None, alias="vw")
+    open: PolygonFinancialNumber = Field(alias="o")
+    high: PolygonFinancialNumber = Field(alias="h")
+    low: PolygonFinancialNumber = Field(alias="l")
+    close: PolygonFinancialNumber = Field(alias="c")
+    volume: PolygonFinancialNumber = Field(alias="v")
+    vwap: PolygonFinancialNumber | None = Field(default=None, alias="vw")
     timestamp_ms: int = Field(alias="t")
     transactions: int | None = Field(default=None, alias="n")
     otc: bool | None = None

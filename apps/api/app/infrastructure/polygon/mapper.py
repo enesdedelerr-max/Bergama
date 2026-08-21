@@ -41,9 +41,12 @@ def ms_to_utc(timestamp_ms: int) -> datetime:
         raise PolygonMappingFailedError("invalid polygon bar timestamp") from exc
 
 
-def decimal_from_provider(value: float | int | str, *, field_name: str) -> Decimal:
-    # Convert via str to avoid float binary residue where possible.
-    return require_finite_decimal(str(value), field_name=field_name)
+def decimal_from_provider(value: Decimal | int | str, *, field_name: str) -> Decimal:
+    """Convert provider numeric input to a finite Decimal. Rejects Python float."""
+    if type(value) is float:
+        msg = f"{field_name} must not be a Python float"
+        raise ValueError(msg)
+    return require_finite_decimal(value, field_name=field_name)
 
 
 def map_adjustment(*, adjusted: bool | None, requested_adjusted: bool) -> AdjustmentState:
