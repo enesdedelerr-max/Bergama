@@ -166,6 +166,7 @@ test-api-market-contracts:
 
 test-api-polygon-historical:
 	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_polygon_json_decode.py \
 		tests/unit/test_polygon_settings_and_mapper.py \
 		tests/unit/test_polygon_historical_connector.py
 

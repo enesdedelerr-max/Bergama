@@ -40,6 +40,7 @@ from app.infrastructure.polygon.http import PolygonHttpClient
 from app.infrastructure.polygon.mapper import DAILY_WINDOW_POLICY, map_bar_event, ms_to_utc
 from app.infrastructure.polygon.schemas import PolygonAggBar, PolygonAggsResponse
 from app.market_data.enums import AdjustmentState, AssetClass
+from app.market_data.events.bar import BarEvent
 from app.market_data.identity import InstrumentId
 from app.market_data.keys import build_deduplication_key, build_idempotency_key
 from app.market_data.serialization import market_event_to_envelope, market_event_to_payload
@@ -84,7 +85,7 @@ def _bar(
     c: float = 11,
     v: float = 1000,
 ) -> dict[str, Any]:
-    return {"o": o, "h": h, "l": low, "c": c, "v": v, "vw": 10.5, "t": t_ms, "n": 2}
+    return {"o": o, "h": h, "l": low, "c": c, "v": v, "vw": "10.5", "t": t_ms, "n": 2}
 
 
 def _ok_body(
@@ -608,6 +609,73 @@ async def test_provider_error_after_retryable_exhaustion() -> None:
     connector, http, _ = await _connector(handler, settings=_settings(max_retries=2))
     try:
         with pytest.raises(PolygonProviderError):
+            await connector.fetch_bars(_request())
+    finally:
+        await http.aclose()
+
+
+_RAW_TS_MS = 1_704_196_800_000
+_HIGH_PRECISION = "1.234567890123456789012345"
+
+
+def _raw_aggs_content(*, ohlc_literal: str, volume_literal: str = "1000") -> bytes:
+    return (
+        '{"status":"OK","request_id":"req-1","ticker":"AAPL","adjusted":true,'
+        f'"results":[{{"o":{ohlc_literal},"h":{ohlc_literal},"l":{ohlc_literal},'
+        f'"c":{ohlc_literal},"v":{volume_literal},"t":{_RAW_TS_MS}}}]}}'
+    ).encode()
+
+
+async def _fetch_raw_numeric_bar(ohlc_literal: str) -> BarEvent:
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=_raw_aggs_content(ohlc_literal=ohlc_literal))
+
+    connector, http, _ = await _connector(handler)
+    try:
+        result = await connector.fetch_bars(_request())
+    finally:
+        await http.aclose()
+    assert len(result.bars) == 1
+    return result.bars[0]
+
+
+@pytest.mark.asyncio
+async def test_raw_json_numeric_zero_point_one() -> None:
+    bar = await _fetch_raw_numeric_bar("0.1")
+    assert bar.close == Decimal("0.1")
+    assert bar.close != Decimal(0.1)
+
+
+@pytest.mark.asyncio
+async def test_raw_json_numeric_high_precision_preserved() -> None:
+    bar = await _fetch_raw_numeric_bar(_HIGH_PRECISION)
+    assert bar.close == Decimal(_HIGH_PRECISION)
+
+
+@pytest.mark.asyncio
+async def test_raw_json_numeric_equity_tick_canonical_payload() -> None:
+    bar = await _fetch_raw_numeric_bar("190.12")
+    assert bar.close == Decimal("190.12")
+    assert market_event_to_payload(bar)["close"] == "190.12"
+    assert build_idempotency_key(bar) == build_idempotency_key(bar)
+    assert build_deduplication_key(bar) == build_deduplication_key(bar)
+
+
+@pytest.mark.asyncio
+async def test_raw_json_string_numeric_compatibility() -> None:
+    bar = await _fetch_raw_numeric_bar('"10.125"')
+    assert bar.open == Decimal("10.125")
+    assert market_event_to_payload(bar)["open"] == "10.125"
+
+
+@pytest.mark.asyncio
+async def test_raw_json_nan_maps_to_invalid_response() -> None:
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=_raw_aggs_content(ohlc_literal="NaN"))
+
+    connector, http, _ = await _connector(handler)
+    try:
+        with pytest.raises(PolygonInvalidResponseError):
             await connector.fetch_bars(_request())
     finally:
         await http.aclose()

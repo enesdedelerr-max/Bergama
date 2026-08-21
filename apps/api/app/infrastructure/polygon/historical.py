@@ -20,6 +20,7 @@ from app.infrastructure.polygon.errors import (
     PolygonProviderError,
 )
 from app.infrastructure.polygon.http import PolygonHttpClient
+from app.infrastructure.polygon.json_decode import loads_polygon_json
 from app.infrastructure.polygon.mapper import map_bar_event
 from app.infrastructure.polygon.pagination import PaginationGuard, sanitize_url, validate_next_url
 from app.infrastructure.polygon.schemas import PolygonAggsResponse
@@ -162,7 +163,7 @@ class PolygonHistoricalConnector:
             response = await self._http.get(url, params=call_params)
             self._raise_for_status(response.status_code)
             try:
-                payload = response.json()
+                payload = loads_polygon_json(response.content)
                 parsed = PolygonAggsResponse.model_validate(payload)
             except Exception as exc:
                 raise PolygonInvalidResponseError("invalid polygon aggregates response") from exc
