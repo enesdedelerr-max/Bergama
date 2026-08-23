@@ -9,6 +9,7 @@ import websockets
 from websockets.asyncio.client import ClientConnection
 
 from app.infrastructure.polygon.errors import PolygonWebsocketError
+from app.infrastructure.polygon.json_decode import loads_polygon_json
 
 
 class PolygonWebSocketTransport(Protocol):
@@ -103,8 +104,8 @@ def build_subscribe_frame(channels: list[str]) -> str:
 def parse_incoming_frames(raw: str) -> list[dict[str, Any]]:
     """Polygon emits JSON arrays of objects (occasionally a single object)."""
     try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError as exc:
+        payload = loads_polygon_json(raw)
+    except (json.JSONDecodeError, ValueError) as exc:
         raise PolygonWebsocketError("invalid polygon websocket JSON") from exc
     if isinstance(payload, dict):
         return [payload]
