@@ -5,16 +5,43 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+_FINITE_DECIMAL_REQUIRED = "must be a finite Decimal"
+_NON_FINITE_DECIMAL = "must be finite (no NaN or Infinity)"
+_PYTHON_FLOAT_REJECTED = "must not be a Python float"
+_PYTHON_BOOL_REJECTED = "must not be a Python bool"
+
 
 def require_finite_decimal(value: Decimal | int | str, *, field_name: str) -> Decimal:
-    """Parse and reject NaN / Infinity."""
-    try:
-        decimal_value = value if isinstance(value, Decimal) else Decimal(str(value))
-    except (InvalidOperation, ValueError, TypeError) as exc:
-        msg = f"{field_name} must be a finite Decimal"
-        raise ValueError(msg) from exc
+    """Parse a finite Decimal from Decimal, non-bool int, or str.
+
+    Rejects Python ``float`` and ``bool`` before construction. Does not parse
+    arbitrary objects via ``Decimal(str(value))``.
+    """
+    return _parse_finite_decimal(value, field_name=field_name)
+
+
+def _parse_finite_decimal(value: object, *, field_name: str) -> Decimal:
+    if type(value) is bool:
+        msg = f"{field_name} {_PYTHON_BOOL_REJECTED}"
+        raise ValueError(msg)
+    if type(value) is float:
+        msg = f"{field_name} {_PYTHON_FLOAT_REJECTED}"
+        raise ValueError(msg)
+    if isinstance(value, Decimal):
+        decimal_value = value
+    elif type(value) is int:
+        decimal_value = Decimal(value)
+    elif isinstance(value, str):
+        try:
+            decimal_value = Decimal(value)
+        except (InvalidOperation, ValueError, TypeError) as exc:
+            msg = f"{field_name} {_FINITE_DECIMAL_REQUIRED}"
+            raise ValueError(msg) from exc
+    else:
+        msg = f"{field_name} {_FINITE_DECIMAL_REQUIRED}"
+        raise ValueError(msg)
     if not decimal_value.is_finite():
-        msg = f"{field_name} must be finite (no NaN or Infinity)"
+        msg = f"{field_name} {_NON_FINITE_DECIMAL}"
         raise ValueError(msg)
     return decimal_value
 

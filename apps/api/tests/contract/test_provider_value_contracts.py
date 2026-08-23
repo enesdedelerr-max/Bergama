@@ -23,6 +23,12 @@ def test_require_finite_decimal_rejects_nan_and_infinity() -> None:
         require_finite_decimal("NaN", field_name="price")
     with pytest.raises(ValueError, match="finite"):
         require_finite_decimal("Infinity", field_name="price")
+    with pytest.raises(ValueError, match="finite"):
+        require_finite_decimal("-Infinity", field_name="price")
+    with pytest.raises(ValueError, match="finite"):
+        require_finite_decimal(Decimal("NaN"), field_name="price")
+    with pytest.raises(ValueError, match="finite"):
+        require_finite_decimal(Decimal("Infinity"), field_name="price")
 
 
 def test_decimal_fields_survive_transport_boundary() -> None:

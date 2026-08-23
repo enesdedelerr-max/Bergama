@@ -161,6 +161,7 @@ test-api-registry:
 
 test-api-market-contracts:
 	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_market_data_money.py \
 		tests/unit/test_market_data_contracts.py \
 		tests/contract/test_canonical_market_event_envelope.py
 

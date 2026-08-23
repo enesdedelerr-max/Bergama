@@ -115,6 +115,24 @@ def test_nan_and_infinity_rejected() -> None:
         make_trade(price=Decimal("Infinity"))
 
 
+def test_python_float_price_fails_closed_before_canonical_decimal() -> None:
+    with pytest.raises(ValidationError, match="Python float"):
+        make_quote(bid_price=0.1)
+    with pytest.raises(ValidationError, match="Python float"):
+        make_trade(price=0.1)
+    with pytest.raises(ValidationError, match="Python float"):
+        make_bar(open=0.1)
+
+
+def test_python_bool_cannot_become_financial_one_or_zero() -> None:
+    with pytest.raises(ValidationError, match="Python bool"):
+        make_trade(price=True)
+    with pytest.raises(ValidationError, match="Python bool"):
+        make_quote(bid_size=False)
+    with pytest.raises(ValidationError, match="Python bool"):
+        make_bar(volume=False)
+
+
 def test_source_provider_identity_retention() -> None:
     event = make_quote(
         source=source(
