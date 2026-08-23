@@ -107,9 +107,37 @@ Sprint 11 milestone is **CLOSED**.
 
 See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 
+### Sprint 12 — AI Decision Engine Foundation
+
+Status: Planning APPROVED. Sprint 12 is **not** complete.
+
+Theme: AI Decision Engine Foundation.
+Planning Gate ID: `sprint-12.planning-gate`.
+
+| Field | Value |
+| --- | --- |
+| Planning | APPROVED |
+| Architecture | AUTHORIZED — documentation-only |
+| Architecture status | NOT STARTED |
+| Architecture approved | No |
+| Governance | DENIED |
+| Policy Freeze | DENIED |
+| Implementation Authorization | DENIED |
+| Implementation | DENIED |
+| Broker Execution | DENIED / DEFERRED |
+
+Planning approval does **not** authorize AI Decision Engine implementation.
+No Architecture artifact exists. Architecture is not APPROVED.
+
+See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md).
+
 ### Next action
 
-Next repository work requires a new Planning Gate.
+Human-authorized AI Decision Engine Architecture v1, documentation-only.
+
+Architecture must not begin until this Sprint 12 Planning repository-state
+change is reviewed and merged. Architecture remains not APPROVED.
+Implementation remains DENIED. Broker Execution remains DENIED / DEFERRED.
 
 ## Sprint sequence
 
@@ -125,22 +153,22 @@ Next repository work requires a new Planning Gate.
 10. Sprint 9 — Morning Briefing Foundation — Complete
 11. Sprint 10 — Dashboard Foundation — Complete
 12. Sprint 11 — Human Review Foundation — Complete
+13. Sprint 12 — AI Decision Engine Foundation — Planning APPROVED
 
-### Downstream sequencing (future Planning Gates required)
+### Downstream sequencing
 
 ```text
-Sprint 8 Premarket Scoring
-  → Sprint 9 Morning Briefing
-  → Sprint 10 Dashboard Foundation (complete)
-  → Sprint 11 Human Review Foundation (complete)
-  → AI Decision Engine (future; not authorized)
-  → Broker Execution (future; not authorized)
+Sprint 8  Premarket Scoring       COMPLETE / RELEASED
+  → Sprint 9  Morning Briefing        COMPLETE / RELEASED
+  → Sprint 10 Dashboard               COMPLETE / RELEASED
+  → Sprint 11 Human Review            COMPLETE / RELEASED
+  → Sprint 12 AI Decision Engine      PLANNING APPROVED
+  → Broker Execution                  future / unauthorized
 ```
 
-Human Review Foundation is implemented. AI Decision Engine and Broker Execution
-remain deferred future work. They are **not** authorized by Sprint 11 closeout.
-No sprint number is assigned to them. Next implementation work requires a new
-approved Planning Gate.
+Human Review Foundation is implemented. Sprint 12 Planning is APPROVED.
+AI Decision Engine implementation is **not** authorized. Broker Execution
+remains deferred future work and is **not** authorized.
 
 ### Notes on later themes
 
@@ -151,13 +179,14 @@ as “Broker and Execution” or “Portfolio Runtime” should be treated as
 reintroduction of the same bounded contexts.
 
 Earlier roadmap drafts listed Sprint 8 as “AI Decision Engine”. Sprint 8
-delivered **Premarket Scoring Foundation** instead. AI Decision Engine remains
-deferred future work and was not delivered by Sprint 8.
+delivered **Premarket Scoring Foundation** instead. AI Decision Engine was
+not delivered by Sprint 8.
 
 Earlier roadmap drafts listed Sprint 9 as “Dashboard”. Sprint 9 delivered
 **Morning Briefing Foundation** instead. Dashboard Foundation was delivered by
-Sprint 10. Human Review Foundation was delivered by Sprint 11. AI Decision
-Engine and Broker Execution remain unauthorized until a new Planning Gate.
+Sprint 10. Human Review Foundation was delivered by Sprint 11. Sprint 12
+Planning for AI Decision Engine Foundation is APPROVED. Implementation remains
+DENIED. Broker Execution remains unauthorized.
 
 ## Planning principles
 
