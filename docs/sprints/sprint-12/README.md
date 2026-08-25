@@ -2,9 +2,11 @@
 
 ## Status
 
-Planning is APPROVED. Architecture is AUTHORIZED for documentation-only work
-and is NOT STARTED. Architecture is not APPROVED. No Architecture artifact
-exists.
+Planning is APPROVED. Architecture v1 is APPROVED. Architecture approval
+authorizes documentation-only Governance work. Governance is NOT STARTED.
+Governance Decisions are not RESOLVED. Architecture approval does not
+authorize Policy Freeze, Implementation Authorization, Implementation, or
+Broker Execution.
 
 | Field | Value |
 | --- | --- |
@@ -12,8 +14,9 @@ exists.
 | Theme | AI Decision Engine Foundation |
 | Planning Gate ID | `sprint-12.planning-gate` |
 | Planning | APPROVED |
-| Architecture | AUTHORIZED — documentation-only / NOT STARTED |
-| Governance | DENIED |
+| Architecture | APPROVED (`ai-decision-engine.architecture.v1`) |
+| Architecture approved | Yes |
+| Governance | AUTHORIZED — documentation-only / NOT STARTED |
 | Policy Freeze | DENIED |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
@@ -25,9 +28,10 @@ generated Planning Gate formerly identified as `ai-decision-engine.planning-gate
 ## Artifacts
 
 - Planning Gate: [`planning-gate.md`](planning-gate.md)
+- Architecture v1: [`../../architecture/ai-decision-engine-architecture-v1.md`](../../architecture/ai-decision-engine-architecture-v1.md) — APPROVED
 
-Architecture, Governance, Policy Freeze, Implementation Authorization,
-implementation, GitHub issues, and pull requests remain not started.
+Governance, Policy Freeze, Implementation Authorization, implementation,
+GitHub issues, and pull requests remain not started.
 
 Broker Execution remains deferred and unauthorized.
 
