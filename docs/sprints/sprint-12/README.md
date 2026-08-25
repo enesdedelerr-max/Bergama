@@ -2,11 +2,11 @@
 
 ## Status
 
-Planning is APPROVED. Architecture v1 is APPROVED. Architecture approval
-authorizes documentation-only Governance work. Governance is NOT STARTED.
-Governance Decisions are not RESOLVED. Architecture approval does not
-authorize Policy Freeze, Implementation Authorization, Implementation, or
-Broker Execution.
+Planning is APPROVED. Architecture v1 is APPROVED. Governance Decision #1
+is RESOLVED. Governance overall is IN PROGRESS — documentation-only and is
+**not** complete. Decisions #2–#8 are NOT STARTED. Architecture approval
+does not authorize Policy Freeze, Implementation Authorization,
+Implementation, or Broker Execution.
 
 | Field | Value |
 | --- | --- |
@@ -16,7 +16,9 @@ Broker Execution.
 | Planning | APPROVED |
 | Architecture | APPROVED (`ai-decision-engine.architecture.v1`) |
 | Architecture approved | Yes |
-| Governance | AUTHORIZED — documentation-only / NOT STARTED |
+| Governance | AUTHORIZED — documentation-only / IN PROGRESS |
+| Governance Decision #1 | RESOLVED (`ai-decision-engine.governance.01-semantic-boundary`) |
+| Governance Decisions #2–#8 | NOT STARTED |
 | Policy Freeze | DENIED |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
@@ -29,9 +31,11 @@ generated Planning Gate formerly identified as `ai-decision-engine.planning-gate
 
 - Planning Gate: [`planning-gate.md`](planning-gate.md)
 - Architecture v1: [`../../architecture/ai-decision-engine-architecture-v1.md`](../../architecture/ai-decision-engine-architecture-v1.md) — APPROVED
+- Governance Decision #1: [`../../governance/ai-decision-engine/01-semantic-boundary.md`](../../governance/ai-decision-engine/01-semantic-boundary.md) — RESOLVED
+- Governance index: [`../../governance/ai-decision-engine/README.md`](../../governance/ai-decision-engine/README.md) — IN PROGRESS
 
-Governance, Policy Freeze, Implementation Authorization, implementation,
-GitHub issues, and pull requests remain not started.
+Policy Freeze, Implementation Authorization, implementation, GitHub issues,
+and implementation pull requests remain not started.
 
 Broker Execution remains deferred and unauthorized.
 
