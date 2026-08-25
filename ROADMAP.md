@@ -109,35 +109,37 @@ See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 
 ### Sprint 12 — AI Decision Engine Foundation
 
-Status: Planning APPROVED. Sprint 12 is **not** complete.
+Status: Planning APPROVED. Architecture APPROVED. Sprint 12 is **not** complete.
 
 Theme: AI Decision Engine Foundation.
 Planning Gate ID: `sprint-12.planning-gate`.
+Architecture ID: `ai-decision-engine.architecture.v1`.
 
 | Field | Value |
 | --- | --- |
 | Planning | APPROVED |
-| Architecture | AUTHORIZED — documentation-only |
-| Architecture status | NOT STARTED |
-| Architecture approved | No |
-| Governance | DENIED |
+| Architecture | APPROVED |
+| Architecture approved | Yes |
+| Governance | AUTHORIZED — documentation-only / NOT STARTED |
 | Policy Freeze | DENIED |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
 | Broker Execution | DENIED / DEFERRED |
 
-Planning approval does **not** authorize AI Decision Engine implementation.
-No Architecture artifact exists. Architecture is not APPROVED.
+Architecture approval does **not** authorize AI Decision Engine implementation.
+Governance documentation is authorized and is not started. Governance Decisions
+are not RESOLVED. Policy Freeze remains DENIED.
 
 See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md).
 
 ### Next action
 
-Human-authorized AI Decision Engine Architecture v1, documentation-only.
+Human-authorized AI Decision Engine Governance documentation.
 
-Architecture must not begin until this Sprint 12 Planning repository-state
-change is reviewed and merged. Architecture remains not APPROVED.
-Implementation remains DENIED. Broker Execution remains DENIED / DEFERRED.
+Governance must not begin until this Architecture approval change is reviewed
+and merged. Governance Decisions are not RESOLVED. Policy Freeze remains
+DENIED. Implementation remains DENIED. Broker Execution remains DENIED /
+DEFERRED.
 
 ## Sprint sequence
 

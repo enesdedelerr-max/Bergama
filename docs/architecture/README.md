@@ -7,5 +7,6 @@
 | [morning-briefing-architecture-v1.md](morning-briefing-architecture-v1.md) | Morning Briefing Architecture v1 (immutable) |
 | [dashboard-architecture-v1.md](dashboard-architecture-v1.md) | Dashboard Architecture v1 (APPROVED) |
 | [human-review-architecture-v1.md](human-review-architecture-v1.md) | Human Review Architecture v1 (APPROVED) |
+| [ai-decision-engine-architecture-v1.md](ai-decision-engine-architecture-v1.md) | AI Decision Engine Architecture v1 (APPROVED) |
 
 Architecture v1 content must not be edited in place once APPROVED.
