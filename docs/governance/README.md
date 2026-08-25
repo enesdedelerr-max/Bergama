@@ -46,3 +46,22 @@ Status: **RESOLVED**. Governance set complete.
 
 See [human-review/README.md](human-review/README.md) for the Human Review
 Governance set.
+
+## AI Decision Engine
+
+AI Decision Engine Governance is **IN PROGRESS** — documentation-only.
+Governance set is **not** complete.
+
+| # | Document | Status |
+|---|----------|--------|
+| 1 | [Semantic Boundary](ai-decision-engine/01-semantic-boundary.md) | RESOLVED |
+| 2 | Authorized Inputs | NOT STARTED / PLANNED |
+| 3 | AI Decision Authority | NOT STARTED / PLANNED |
+| 4 | Identity | NOT STARTED / PLANNED |
+| 5 | Provenance | NOT STARTED / PLANNED |
+| 6 | Replay / PIT | NOT STARTED / PLANNED |
+| 7 | Output / Abstention | NOT STARTED / PLANNED |
+| 8 | Human Authority over AI Decision Engine Outputs | NOT STARTED / PLANNED |
+
+See [ai-decision-engine/README.md](ai-decision-engine/README.md) for the AI
+Decision Engine Governance set.

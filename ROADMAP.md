@@ -109,37 +109,40 @@ See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 
 ### Sprint 12 — AI Decision Engine Foundation
 
-Status: Planning APPROVED. Architecture APPROVED. Sprint 12 is **not** complete.
+Status: Planning APPROVED. Architecture APPROVED. Governance Decision #1
+RESOLVED. Governance IN PROGRESS. Sprint 12 is **not** complete.
 
 Theme: AI Decision Engine Foundation.
 Planning Gate ID: `sprint-12.planning-gate`.
 Architecture ID: `ai-decision-engine.architecture.v1`.
+Governance Decision #1 ID: `ai-decision-engine.governance.01-semantic-boundary`.
 
 | Field | Value |
 | --- | --- |
 | Planning | APPROVED |
 | Architecture | APPROVED |
 | Architecture approved | Yes |
-| Governance | AUTHORIZED — documentation-only / NOT STARTED |
+| Governance | AUTHORIZED — documentation-only / IN PROGRESS |
+| Governance Decision #1 | RESOLVED |
+| Governance Decisions #2–#8 | NOT STARTED |
 | Policy Freeze | DENIED |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
 | Broker Execution | DENIED / DEFERRED |
 
 Architecture approval does **not** authorize AI Decision Engine implementation.
-Governance documentation is authorized and is not started. Governance Decisions
-are not RESOLVED. Policy Freeze remains DENIED.
+Governance Decision #1 is RESOLVED. The Governance set is not complete.
+Policy Freeze remains DENIED.
 
 See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md).
 
 ### Next action
 
-Human-authorized AI Decision Engine Governance documentation.
+Human review of AI Decision Engine Governance Decision #1 — Semantic Boundary.
 
-Governance must not begin until this Architecture approval change is reviewed
-and merged. Governance Decisions are not RESOLVED. Policy Freeze remains
-DENIED. Implementation remains DENIED. Broker Execution remains DENIED /
-DEFERRED.
+Decision #2 is not authorized merely because Decision #1 exists.
+Governance is not COMPLETE. Policy Freeze remains DENIED. Implementation
+remains DENIED. Broker Execution remains DENIED / DEFERRED.
 
 ## Sprint sequence
 
