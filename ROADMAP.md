@@ -109,7 +109,7 @@ See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 
 ### Sprint 12 — AI Decision Engine Foundation
 
-Status: Planning APPROVED. Architecture APPROVED. Governance Decisions #1–#3
+Status: Planning APPROVED. Architecture APPROVED. Governance Decisions #1–#4
 RESOLVED. Governance IN PROGRESS. Sprint 12 is **not** complete.
 
 Theme: AI Decision Engine Foundation.
@@ -118,6 +118,7 @@ Architecture ID: `ai-decision-engine.architecture.v1`.
 Governance Decision #1 ID: `ai-decision-engine.governance.01-semantic-boundary`.
 Governance Decision #2 ID: `ai-decision-engine.governance.02-authorized-inputs`.
 Governance Decision #3 ID: `ai-decision-engine.governance.03-ai-decision-authority`.
+Governance Decision #4 ID: `ai-decision-engine.governance.04-identity`.
 
 | Field | Value |
 | --- | --- |
@@ -128,21 +129,22 @@ Governance Decision #3 ID: `ai-decision-engine.governance.03-ai-decision-authori
 | Governance Decision #1 | RESOLVED |
 | Governance Decision #2 | RESOLVED |
 | Governance Decision #3 | RESOLVED |
-| Governance Decisions #4–#8 | NOT STARTED |
+| Governance Decision #4 | RESOLVED |
+| Governance Decisions #5–#8 | NOT STARTED |
 | Policy Freeze | DENIED |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
 | Broker Execution | DENIED / DEFERRED |
 
 Architecture approval does **not** authorize AI Decision Engine implementation.
-Governance Decisions #1–#3 are RESOLVED. The Governance set is not complete.
+Governance Decisions #1–#4 are RESOLVED. The Governance set is not complete.
 Policy Freeze remains DENIED.
 
 See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md).
 
 ### Next action
 
-Human review of Governance Decision #3 — AI Decision Authority.
+Human review of Governance Decision #4 — Identity.
 
 Decision #4 is not authorized merely because Decision #3 exists.
 Governance is not COMPLETE. Policy Freeze remains DENIED. Implementation
