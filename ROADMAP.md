@@ -109,14 +109,15 @@ See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 
 ### Sprint 12 — AI Decision Engine Foundation
 
-Status: Planning APPROVED. Architecture APPROVED. Governance Decisions #1
-and #2 RESOLVED. Governance IN PROGRESS. Sprint 12 is **not** complete.
+Status: Planning APPROVED. Architecture APPROVED. Governance Decisions #1–#3
+RESOLVED. Governance IN PROGRESS. Sprint 12 is **not** complete.
 
 Theme: AI Decision Engine Foundation.
 Planning Gate ID: `sprint-12.planning-gate`.
 Architecture ID: `ai-decision-engine.architecture.v1`.
 Governance Decision #1 ID: `ai-decision-engine.governance.01-semantic-boundary`.
 Governance Decision #2 ID: `ai-decision-engine.governance.02-authorized-inputs`.
+Governance Decision #3 ID: `ai-decision-engine.governance.03-ai-decision-authority`.
 
 | Field | Value |
 | --- | --- |
@@ -126,23 +127,24 @@ Governance Decision #2 ID: `ai-decision-engine.governance.02-authorized-inputs`.
 | Governance | AUTHORIZED — documentation-only / IN PROGRESS |
 | Governance Decision #1 | RESOLVED |
 | Governance Decision #2 | RESOLVED |
-| Governance Decisions #3–#8 | NOT STARTED |
+| Governance Decision #3 | RESOLVED |
+| Governance Decisions #4–#8 | NOT STARTED |
 | Policy Freeze | DENIED |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
 | Broker Execution | DENIED / DEFERRED |
 
 Architecture approval does **not** authorize AI Decision Engine implementation.
-Governance Decisions #1–#2 are RESOLVED. The Governance set is not complete.
+Governance Decisions #1–#3 are RESOLVED. The Governance set is not complete.
 Policy Freeze remains DENIED.
 
 See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md).
 
 ### Next action
 
-Human review of AI Decision Engine Governance Decision #2 — Authorized Inputs.
+Human review of Governance Decision #3 — AI Decision Authority.
 
-Decision #3 is not authorized merely because Decision #2 exists.
+Decision #4 is not authorized merely because Decision #3 exists.
 Governance is not COMPLETE. Policy Freeze remains DENIED. Implementation
 remains DENIED. Broker Execution remains DENIED / DEFERRED.
 

@@ -56,7 +56,7 @@ Governance set is **not** complete.
 |---|----------|--------|
 | 1 | [Semantic Boundary](ai-decision-engine/01-semantic-boundary.md) | RESOLVED |
 | 2 | [Authorized Inputs](ai-decision-engine/02-authorized-inputs.md) | RESOLVED |
-| 3 | AI Decision Authority | NOT STARTED / PLANNED |
+| 3 | [AI Decision Authority](ai-decision-engine/03-ai-decision-authority.md) | RESOLVED |
 | 4 | Identity | NOT STARTED / PLANNED |
 | 5 | Provenance | NOT STARTED / PLANNED |
 | 6 | Replay / PIT | NOT STARTED / PLANNED |
