@@ -2,9 +2,9 @@
 
 ## Status
 
-Planning is APPROVED. Architecture v1 is APPROVED. Governance Decisions #1–#4
+Planning is APPROVED. Architecture v1 is APPROVED. Governance Decisions #1–#5
 are RESOLVED. Governance overall is IN PROGRESS — documentation-only and is
-**not** complete. Decisions #5–#8 are NOT STARTED. Architecture
+**not** complete. Decisions #6–#8 are NOT STARTED. Architecture
 approval does not authorize Policy Freeze, Implementation Authorization,
 Implementation, or Broker Execution.
 
@@ -21,7 +21,8 @@ Implementation, or Broker Execution.
 | Governance Decision #2 | RESOLVED (`ai-decision-engine.governance.02-authorized-inputs`) |
 | Governance Decision #3 | RESOLVED (`ai-decision-engine.governance.03-ai-decision-authority`) |
 | Governance Decision #4 | RESOLVED (`ai-decision-engine.governance.04-identity`) |
-| Governance Decisions #5–#8 | NOT STARTED |
+| Governance Decision #5 | RESOLVED (`ai-decision-engine.governance.05-provenance`) |
+| Governance Decisions #6–#8 | NOT STARTED |
 | Policy Freeze | DENIED |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
@@ -38,6 +39,7 @@ generated Planning Gate formerly identified as `ai-decision-engine.planning-gate
 - Governance Decision #2: [`../../governance/ai-decision-engine/02-authorized-inputs.md`](../../governance/ai-decision-engine/02-authorized-inputs.md) — RESOLVED
 - Governance Decision #3: [`../../governance/ai-decision-engine/03-ai-decision-authority.md`](../../governance/ai-decision-engine/03-ai-decision-authority.md) — RESOLVED
 - Governance Decision #4: [`../../governance/ai-decision-engine/04-identity.md`](../../governance/ai-decision-engine/04-identity.md) — RESOLVED
+- Governance Decision #5: [`../../governance/ai-decision-engine/05-provenance.md`](../../governance/ai-decision-engine/05-provenance.md) — RESOLVED
 - Governance index: [`../../governance/ai-decision-engine/README.md`](../../governance/ai-decision-engine/README.md) — IN PROGRESS
 
 Policy Freeze, Implementation Authorization, implementation, GitHub issues,

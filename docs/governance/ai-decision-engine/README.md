@@ -8,12 +8,12 @@ Status: **IN PROGRESS** — documentation-only. Governance set is **not** comple
 | #2 Authorized Inputs | [02-authorized-inputs.md](02-authorized-inputs.md) | RESOLVED |
 | #3 AI Decision Authority | [03-ai-decision-authority.md](03-ai-decision-authority.md) | RESOLVED |
 | #4 Identity | [04-identity.md](04-identity.md) | RESOLVED |
-| #5 Provenance | — | NOT STARTED / PLANNED |
+| #5 Provenance | [05-provenance.md](05-provenance.md) | RESOLVED |
 | #6 Replay / PIT | — | NOT STARTED / PLANNED |
 | #7 Output / Abstention | — | NOT STARTED / PLANNED |
 | #8 Human Authority over AI Decision Engine Outputs | — | NOT STARTED / PLANNED |
 
-Decisions #1–#4 are materialized and RESOLVED. Decisions #5–#8 are planned sequence entries only and are not RESOLVED.
+Decisions #1–#5 are materialized and RESOLVED. Decisions #6–#8 are planned sequence entries only and are not RESOLVED.
 
 These decisions are distinct from Premarket Scoring Governance Decisions #1–#12 under `docs/governance/`, Morning Briefing Governance Decisions #1–#8 under `docs/governance/morning-briefing/`, Dashboard Governance Decisions #1–#8 under `docs/governance/dashboard/`, and Human Review Governance Decisions #1–#8 under `docs/governance/human-review/`.
 
