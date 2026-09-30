@@ -109,7 +109,7 @@ See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 
 ### Sprint 12 — AI Decision Engine Foundation
 
-Status: Planning APPROVED. Architecture APPROVED. Governance Decisions #1–#6
+Status: Planning APPROVED. Architecture APPROVED. Governance Decisions #1–#7
 RESOLVED. Governance IN PROGRESS. Sprint 12 is **not** complete.
 
 Theme: AI Decision Engine Foundation.
@@ -121,6 +121,7 @@ Governance Decision #3 ID: `ai-decision-engine.governance.03-ai-decision-authori
 Governance Decision #4 ID: `ai-decision-engine.governance.04-identity`.
 Governance Decision #5 ID: `ai-decision-engine.governance.05-provenance`.
 Governance Decision #6 ID: `ai-decision-engine.governance.06-replay-pit`.
+Governance Decision #7 ID: `ai-decision-engine.governance.07-output-abstention`.
 
 | Field | Value |
 | --- | --- |
@@ -134,23 +135,24 @@ Governance Decision #6 ID: `ai-decision-engine.governance.06-replay-pit`.
 | Governance Decision #4 | RESOLVED |
 | Governance Decision #5 | RESOLVED |
 | Governance Decision #6 | RESOLVED |
-| Governance Decisions #7–#8 | NOT STARTED |
+| Governance Decision #7 | RESOLVED |
+| Governance Decision #8 | NOT STARTED |
 | Policy Freeze | DENIED |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
 | Broker Execution | DENIED / DEFERRED |
 
 Architecture approval does **not** authorize AI Decision Engine implementation.
-Governance Decisions #1–#6 are RESOLVED. The Governance set is not complete.
+Governance Decisions #1–#7 are RESOLVED. The Governance set is not complete.
 Policy Freeze remains DENIED.
 
 See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md).
 
 ### Next action
 
-Human review of Governance Decision #6 — Replay / PIT.
+Human review of Governance Decision #7 — Output / Abstention.
 
-Decision #6 is not authorized merely because Decision #5 exists.
+Decision #7 is not authorized merely because Decision #6 exists.
 Governance is not COMPLETE. Policy Freeze remains DENIED. Implementation
 remains DENIED. Broker Execution remains DENIED / DEFERRED.
 
