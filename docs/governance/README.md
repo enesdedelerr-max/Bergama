@@ -60,7 +60,7 @@ Governance set is **not** complete.
 | 4 | [Identity](ai-decision-engine/04-identity.md) | RESOLVED |
 | 5 | [Provenance](ai-decision-engine/05-provenance.md) | RESOLVED |
 | 6 | [Replay / PIT](ai-decision-engine/06-replay-pit.md) | RESOLVED |
-| 7 | Output / Abstention | NOT STARTED / PLANNED |
+| 7 | [Output / Abstention](ai-decision-engine/07-output-abstention.md) | RESOLVED |
 | 8 | Human Authority over AI Decision Engine Outputs | NOT STARTED / PLANNED |
 
 See [ai-decision-engine/README.md](ai-decision-engine/README.md) for the AI
