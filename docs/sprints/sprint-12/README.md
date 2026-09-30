@@ -2,9 +2,9 @@
 
 ## Status
 
-Planning is APPROVED. Architecture v1 is APPROVED. Governance Decisions #1–#5
+Planning is APPROVED. Architecture v1 is APPROVED. Governance Decisions #1–#6
 are RESOLVED. Governance overall is IN PROGRESS — documentation-only and is
-**not** complete. Decisions #6–#8 are NOT STARTED. Architecture
+**not** complete. Decisions #7–#8 are NOT STARTED. Architecture
 approval does not authorize Policy Freeze, Implementation Authorization,
 Implementation, or Broker Execution.
 
@@ -22,7 +22,8 @@ Implementation, or Broker Execution.
 | Governance Decision #3 | RESOLVED (`ai-decision-engine.governance.03-ai-decision-authority`) |
 | Governance Decision #4 | RESOLVED (`ai-decision-engine.governance.04-identity`) |
 | Governance Decision #5 | RESOLVED (`ai-decision-engine.governance.05-provenance`) |
-| Governance Decisions #6–#8 | NOT STARTED |
+| Governance Decision #6 | RESOLVED (`ai-decision-engine.governance.06-replay-pit`) |
+| Governance Decisions #7–#8 | NOT STARTED |
 | Policy Freeze | DENIED |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
@@ -40,6 +41,7 @@ generated Planning Gate formerly identified as `ai-decision-engine.planning-gate
 - Governance Decision #3: [`../../governance/ai-decision-engine/03-ai-decision-authority.md`](../../governance/ai-decision-engine/03-ai-decision-authority.md) — RESOLVED
 - Governance Decision #4: [`../../governance/ai-decision-engine/04-identity.md`](../../governance/ai-decision-engine/04-identity.md) — RESOLVED
 - Governance Decision #5: [`../../governance/ai-decision-engine/05-provenance.md`](../../governance/ai-decision-engine/05-provenance.md) — RESOLVED
+- Governance Decision #6: [`../../governance/ai-decision-engine/06-replay-pit.md`](../../governance/ai-decision-engine/06-replay-pit.md) — RESOLVED
 - Governance index: [`../../governance/ai-decision-engine/README.md`](../../governance/ai-decision-engine/README.md) — IN PROGRESS
 
 Policy Freeze, Implementation Authorization, implementation, GitHub issues,
