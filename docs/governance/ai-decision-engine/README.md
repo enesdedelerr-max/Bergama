@@ -1,6 +1,9 @@
 # AI Decision Engine Governance Decisions
 
-Status: **IN PROGRESS** — documentation-only. Governance set is **not** complete.
+Status: **COMPLETE** — documentation-only. Planned Governance decision set
+(#1–#8) is RESOLVED. Governance COMPLETE does **not** authorize Policy Freeze,
+Implementation Authorization, Implementation, or Broker Execution. Sprint 12
+remains **not** complete.
 
 | Decision | Document | Status |
 |----------|----------|--------|
@@ -11,11 +14,12 @@ Status: **IN PROGRESS** — documentation-only. Governance set is **not** comple
 | #5 Provenance | [05-provenance.md](05-provenance.md) | RESOLVED |
 | #6 Replay / PIT | [06-replay-pit.md](06-replay-pit.md) | RESOLVED |
 | #7 Output / Abstention | [07-output-abstention.md](07-output-abstention.md) | RESOLVED |
-| #8 Human Authority over AI Decision Engine Outputs | — | NOT STARTED / PLANNED |
+| #8 Human Authority over AI Decision Engine Outputs | [08-human-authority.md](08-human-authority.md) | RESOLVED |
 
-Decisions #1–#7 are materialized and RESOLVED. Decision #8 is a planned sequence entry only and is not RESOLVED.
+Decisions #1–#8 are materialized and RESOLVED. The planned AI Decision Engine
+Governance set is COMPLETE for documentation-only Governance.
 
 These decisions are distinct from Premarket Scoring Governance Decisions #1–#12 under `docs/governance/`, Morning Briefing Governance Decisions #1–#8 under `docs/governance/morning-briefing/`, Dashboard Governance Decisions #1–#8 under `docs/governance/dashboard/`, and Human Review Governance Decisions #1–#8 under `docs/governance/human-review/`.
 
-Policy Freeze remains DENIED until Governance completion.  
+Policy Freeze remains DENIED.
 Implementation Authorization, Implementation, and Broker Execution remain DENIED / DEFERRED as applicable.
