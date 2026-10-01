@@ -49,8 +49,10 @@ Governance set.
 
 ## AI Decision Engine
 
-AI Decision Engine Governance is **IN PROGRESS** — documentation-only.
-Governance set is **not** complete.
+AI Decision Engine Governance is **COMPLETE** — documentation-only. Planned
+Governance decision set (#1–#8) is RESOLVED. Governance COMPLETE does **not**
+authorize Policy Freeze, Implementation Authorization, Implementation, or
+Broker Execution.
 
 | # | Document | Status |
 |---|----------|--------|
@@ -61,7 +63,7 @@ Governance set is **not** complete.
 | 5 | [Provenance](ai-decision-engine/05-provenance.md) | RESOLVED |
 | 6 | [Replay / PIT](ai-decision-engine/06-replay-pit.md) | RESOLVED |
 | 7 | [Output / Abstention](ai-decision-engine/07-output-abstention.md) | RESOLVED |
-| 8 | Human Authority over AI Decision Engine Outputs | NOT STARTED / PLANNED |
+| 8 | [Human Authority over AI Decision Engine Outputs](ai-decision-engine/08-human-authority.md) | RESOLVED |
 
 See [ai-decision-engine/README.md](ai-decision-engine/README.md) for the AI
 Decision Engine Governance set.

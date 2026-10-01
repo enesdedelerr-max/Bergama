@@ -2,11 +2,11 @@
 
 ## Status
 
-Planning is APPROVED. Architecture v1 is APPROVED. Governance Decisions #1–#7
-are RESOLVED. Governance overall is IN PROGRESS — documentation-only and is
-**not** complete. Decision #8 is NOT STARTED. Architecture
-approval does not authorize Policy Freeze, Implementation Authorization,
-Implementation, or Broker Execution.
+Planning is APPROVED. Architecture v1 is APPROVED. Governance Decisions #1–#8
+are RESOLVED. Governance is COMPLETE — documentation-only for the planned
+decision set. Governance COMPLETE does **not** authorize Policy Freeze,
+Implementation Authorization, Implementation, or Broker Execution. Sprint 12
+remains **not** complete.
 
 | Field | Value |
 | --- | --- |
@@ -16,7 +16,7 @@ Implementation, or Broker Execution.
 | Planning | APPROVED |
 | Architecture | APPROVED (`ai-decision-engine.architecture.v1`) |
 | Architecture approved | Yes |
-| Governance | AUTHORIZED — documentation-only / IN PROGRESS |
+| Governance | COMPLETE — documentation-only |
 | Governance Decision #1 | RESOLVED (`ai-decision-engine.governance.01-semantic-boundary`) |
 | Governance Decision #2 | RESOLVED (`ai-decision-engine.governance.02-authorized-inputs`) |
 | Governance Decision #3 | RESOLVED (`ai-decision-engine.governance.03-ai-decision-authority`) |
@@ -24,7 +24,7 @@ Implementation, or Broker Execution.
 | Governance Decision #5 | RESOLVED (`ai-decision-engine.governance.05-provenance`) |
 | Governance Decision #6 | RESOLVED (`ai-decision-engine.governance.06-replay-pit`) |
 | Governance Decision #7 | RESOLVED (`ai-decision-engine.governance.07-output-abstention`) |
-| Governance Decision #8 | NOT STARTED |
+| Governance Decision #8 | RESOLVED (`ai-decision-engine.governance.08-human-authority`) |
 | Policy Freeze | DENIED |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
@@ -44,7 +44,8 @@ generated Planning Gate formerly identified as `ai-decision-engine.planning-gate
 - Governance Decision #5: [`../../governance/ai-decision-engine/05-provenance.md`](../../governance/ai-decision-engine/05-provenance.md) — RESOLVED
 - Governance Decision #6: [`../../governance/ai-decision-engine/06-replay-pit.md`](../../governance/ai-decision-engine/06-replay-pit.md) — RESOLVED
 - Governance Decision #7: [`../../governance/ai-decision-engine/07-output-abstention.md`](../../governance/ai-decision-engine/07-output-abstention.md) — RESOLVED
-- Governance index: [`../../governance/ai-decision-engine/README.md`](../../governance/ai-decision-engine/README.md) — IN PROGRESS
+- Governance Decision #8: [`../../governance/ai-decision-engine/08-human-authority.md`](../../governance/ai-decision-engine/08-human-authority.md) — RESOLVED
+- Governance index: [`../../governance/ai-decision-engine/README.md`](../../governance/ai-decision-engine/README.md) — COMPLETE
 
 Policy Freeze, Implementation Authorization, implementation, GitHub issues,
 and implementation pull requests remain not started.
