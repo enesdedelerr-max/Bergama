@@ -111,7 +111,10 @@ See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 
 Status: Planning APPROVED. Architecture APPROVED. Governance Decisions #1–#8
 RESOLVED. Governance COMPLETE — documentation-only. Policy Version
-`ai-decision-engine.policy.v1` APPROVED. Sprint 12 is **not** complete.
+`ai-decision-engine.policy.v1` APPROVED. Implementation Authorization
+`ai-decision-engine.implementation-authorization.v1` MATERIALIZED — awaiting
+human review. Sprint 12 is **not** complete. MODEL PARTICIPATION remains
+UNAUTHORIZED.
 
 Theme: AI Decision Engine Foundation.
 Planning Gate ID: `sprint-12.planning-gate`.
@@ -125,6 +128,7 @@ Governance Decision #6 ID: `ai-decision-engine.governance.06-replay-pit`.
 Governance Decision #7 ID: `ai-decision-engine.governance.07-output-abstention`.
 Governance Decision #8 ID: `ai-decision-engine.governance.08-human-authority`.
 Policy Version ID: `ai-decision-engine.policy.v1`.
+Implementation Authorization ID: `ai-decision-engine.implementation-authorization.v1`.
 
 | Field | Value |
 | --- | --- |
@@ -141,24 +145,27 @@ Policy Version ID: `ai-decision-engine.policy.v1`.
 | Governance Decision #7 | RESOLVED |
 | Governance Decision #8 | RESOLVED |
 | Policy Freeze | APPROVED |
-| Implementation Authorization | DENIED |
+| Implementation Authorization | MATERIALIZED — awaiting human review |
 | Implementation | DENIED |
 | Broker Execution | DENIED / DEFERRED |
 
 Architecture approval does **not** authorize AI Decision Engine implementation.
 Governance Decisions #1–#8 are RESOLVED. Governance is COMPLETE for the planned
 decision set. Policy Version `ai-decision-engine.policy.v1` is APPROVED.
-Implementation Authorization remains DENIED.
+Implementation Authorization is MATERIALIZED — awaiting human review and is
+not workflow-approved. Implementation remains DENIED. MODEL PARTICIPATION
+remains UNAUTHORIZED.
 
 See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md).
 
 ### Next action
 
-Implementation Authorization scope analysis
-(`ai-decision-engine.policy.v1` APPROVED).
+Human review of AI Decision Engine Implementation Authorization
+(`ai-decision-engine.implementation-authorization.v1`).
 
-Policy approval does not authorize Implementation Authorization.
-Implementation remains DENIED. Broker Execution remains DENIED / DEFERRED.
+Implementation Authorization materialization does not authorize
+Implementation. Implementation remains DENIED. Broker Execution remains
+DENIED / DEFERRED. MODEL PARTICIPATION remains UNAUTHORIZED.
 
 ## Sprint sequence
 
