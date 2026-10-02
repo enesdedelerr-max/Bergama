@@ -2,9 +2,9 @@
 
 Status: **COMPLETE** — documentation-only. Planned Governance decision set
 (#1–#8) is RESOLVED. Policy Version `ai-decision-engine.policy.v1` is
-**MATERIALIZED — awaiting human review**. Governance COMPLETE and Policy
-materialization do **not** authorize Implementation Authorization,
-Implementation, or Broker Execution. Sprint 12 remains **not** complete.
+**APPROVED**. Governance COMPLETE and Policy approval do **not** authorize
+Implementation Authorization, Implementation, or Broker Execution. Sprint 12
+remains **not** complete.
 
 | Decision | Document | Status |
 |----------|----------|--------|
@@ -19,11 +19,11 @@ Implementation, or Broker Execution. Sprint 12 remains **not** complete.
 
 | Policy | Document | Status |
 |--------|----------|--------|
-| Policy Version v1 | [`../../policy/ai-decision-engine-policy-v1.md`](../../policy/ai-decision-engine-policy-v1.md) | MATERIALIZED — awaiting human review (`ai-decision-engine.policy.v1`) |
+| Policy Version v1 | [`../../policy/ai-decision-engine-policy-v1.md`](../../policy/ai-decision-engine-policy-v1.md) | APPROVED (`ai-decision-engine.policy.v1`) |
 
 Decisions #1–#8 are materialized and RESOLVED. The planned AI Decision Engine
 Governance set is COMPLETE for documentation-only Governance. Policy Freeze is
-materialized for human review and is not workflow-closed.
+APPROVED / workflow-complete.
 
 These decisions are distinct from Premarket Scoring Governance Decisions #1–#12 under `docs/governance/`, Morning Briefing Governance Decisions #1–#8 under `docs/governance/morning-briefing/`, Dashboard Governance Decisions #1–#8 under `docs/governance/dashboard/`, and Human Review Governance Decisions #1–#8 under `docs/governance/human-review/`.
 
