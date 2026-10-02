@@ -6,7 +6,7 @@
 |-------|-------|
 | Policy Version ID | `ai-decision-engine.policy.v1` |
 | Policy Version Label | AI Decision Engine Policy Version v1 |
-| Status | MATERIALIZED — awaiting human review |
+| Status | APPROVED |
 | Document class | Policy Version / Policy Freeze only |
 | Bounded context | AI Decision Engine |
 | Governance Dependency | AI Decision Engine Governance Decisions #1–#8 (immutable) |
@@ -17,9 +17,13 @@
 | Implementation Authorization | DENIED |
 | Broker Execution | DENIED / DEFERRED |
 
-This document materializes Policy Freeze semantics for human review. It is not
-workflow-approved, merged, or closed until separate commit, PR, CI, external
-approval, merge, and post-merge verification complete.
+This document freezes Policy Freeze semantics under Policy Version
+`ai-decision-engine.policy.v1`. Workflow approval prerequisites — commit, PR,
+CI, external approval, merge, and post-merge verification — are complete.
+Policy workflow status is APPROVED. Sprint 12 remains not complete.
+Implementation Authorization remains DENIED. Implementation remains DENIED.
+Broker Execution remains DENIED / DEFERRED. Model participation remains
+UNAUTHORIZED under this Policy Version.
 
 ---
 
@@ -627,7 +631,7 @@ remain deferred as stated and confer no authority.
 
 ## Resolution
 
-**Status:** MATERIALIZED — awaiting human review
+**Status:** APPROVED
 
 **Policy effect:** AI Decision Engine Policy Version `ai-decision-engine.policy.v1`
 freezes semantics-only governed evaluation behavior subordinate to Planning,
@@ -639,5 +643,5 @@ production and never creates Decision #3, trading, Order Intent, OMS, or Broker
 authority. Trading-action taxonomies remain unauthorized. Implementation
 Authorization, Implementation, and Broker Execution remain DENIED / DEFERRED.
 
-This materialization does not complete Sprint 12, does not approve workflow
-closure of Policy Freeze, and does not authorize Implementation.
+Policy Freeze workflow is APPROVED / complete. This does not complete Sprint 12
+and does not authorize Implementation Authorization or Implementation.

@@ -51,9 +51,9 @@ Governance set.
 
 AI Decision Engine Governance is **COMPLETE** — documentation-only. Planned
 Governance decision set (#1–#8) is RESOLVED. Policy Version
-`ai-decision-engine.policy.v1` is **MATERIALIZED — awaiting human review**.
-Governance COMPLETE and Policy materialization do **not** authorize
-Implementation Authorization, Implementation, or Broker Execution.
+`ai-decision-engine.policy.v1` is **APPROVED**. Governance COMPLETE and Policy
+approval do **not** authorize Implementation Authorization, Implementation, or
+Broker Execution.
 
 | # | Document | Status |
 |---|----------|--------|
@@ -67,7 +67,7 @@ Implementation Authorization, Implementation, or Broker Execution.
 | 8 | [Human Authority over AI Decision Engine Outputs](ai-decision-engine/08-human-authority.md) | RESOLVED |
 
 Policy: [`../policy/ai-decision-engine-policy-v1.md`](../policy/ai-decision-engine-policy-v1.md) —
-`ai-decision-engine.policy.v1` — MATERIALIZED — awaiting human review.
+`ai-decision-engine.policy.v1` — APPROVED.
 
 See [ai-decision-engine/README.md](ai-decision-engine/README.md) for the AI
 Decision Engine Governance set.
