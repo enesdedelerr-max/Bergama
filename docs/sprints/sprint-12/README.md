@@ -4,7 +4,8 @@
 
 Planning is APPROVED. Architecture v1 is APPROVED. Governance Decisions #1–#8
 are RESOLVED. Governance is COMPLETE — documentation-only for the planned
-decision set. Governance COMPLETE does **not** authorize Policy Freeze,
+decision set. Policy Version `ai-decision-engine.policy.v1` is MATERIALIZED —
+awaiting human review. Policy materialization does **not** authorize
 Implementation Authorization, Implementation, or Broker Execution. Sprint 12
 remains **not** complete.
 
@@ -25,7 +26,7 @@ remains **not** complete.
 | Governance Decision #6 | RESOLVED (`ai-decision-engine.governance.06-replay-pit`) |
 | Governance Decision #7 | RESOLVED (`ai-decision-engine.governance.07-output-abstention`) |
 | Governance Decision #8 | RESOLVED (`ai-decision-engine.governance.08-human-authority`) |
-| Policy Freeze | DENIED |
+| Policy Freeze | MATERIALIZED — awaiting human review (`ai-decision-engine.policy.v1`) |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
 | Broker Execution | DENIED / DEFERRED |
@@ -46,9 +47,10 @@ generated Planning Gate formerly identified as `ai-decision-engine.planning-gate
 - Governance Decision #7: [`../../governance/ai-decision-engine/07-output-abstention.md`](../../governance/ai-decision-engine/07-output-abstention.md) — RESOLVED
 - Governance Decision #8: [`../../governance/ai-decision-engine/08-human-authority.md`](../../governance/ai-decision-engine/08-human-authority.md) — RESOLVED
 - Governance index: [`../../governance/ai-decision-engine/README.md`](../../governance/ai-decision-engine/README.md) — COMPLETE
+- Policy Version v1: [`../../policy/ai-decision-engine-policy-v1.md`](../../policy/ai-decision-engine-policy-v1.md) — MATERIALIZED — awaiting human review (`ai-decision-engine.policy.v1`)
 
-Policy Freeze, Implementation Authorization, implementation, GitHub issues,
-and implementation pull requests remain not started.
+Implementation Authorization, implementation, GitHub issues, and
+implementation pull requests remain not started.
 
 Broker Execution remains deferred and unauthorized.
 
