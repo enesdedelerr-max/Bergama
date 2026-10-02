@@ -110,8 +110,9 @@ See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 ### Sprint 12 — AI Decision Engine Foundation
 
 Status: Planning APPROVED. Architecture APPROVED. Governance Decisions #1–#8
-RESOLVED. Governance COMPLETE — documentation-only. Sprint 12 is **not**
-complete.
+RESOLVED. Governance COMPLETE — documentation-only. Policy Version
+`ai-decision-engine.policy.v1` MATERIALIZED — awaiting human review. Sprint 12
+is **not** complete.
 
 Theme: AI Decision Engine Foundation.
 Planning Gate ID: `sprint-12.planning-gate`.
@@ -124,6 +125,7 @@ Governance Decision #5 ID: `ai-decision-engine.governance.05-provenance`.
 Governance Decision #6 ID: `ai-decision-engine.governance.06-replay-pit`.
 Governance Decision #7 ID: `ai-decision-engine.governance.07-output-abstention`.
 Governance Decision #8 ID: `ai-decision-engine.governance.08-human-authority`.
+Policy Version ID: `ai-decision-engine.policy.v1`.
 
 | Field | Value |
 | --- | --- |
@@ -139,25 +141,26 @@ Governance Decision #8 ID: `ai-decision-engine.governance.08-human-authority`.
 | Governance Decision #6 | RESOLVED |
 | Governance Decision #7 | RESOLVED |
 | Governance Decision #8 | RESOLVED |
-| Policy Freeze | DENIED |
+| Policy Freeze | MATERIALIZED — awaiting human review |
 | Implementation Authorization | DENIED |
 | Implementation | DENIED |
 | Broker Execution | DENIED / DEFERRED |
 
 Architecture approval does **not** authorize AI Decision Engine implementation.
 Governance Decisions #1–#8 are RESOLVED. Governance is COMPLETE for the planned
-decision set. Governance COMPLETE does **not** authorize Policy Freeze.
-Policy Freeze remains DENIED.
+decision set. Policy Version `ai-decision-engine.policy.v1` is materialized for
+human review and is not workflow-closed. Implementation Authorization remains
+DENIED.
 
 See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md).
 
 ### Next action
 
-Human review of Governance Decision #8 — Human Authority over ADE Outputs.
+Human review of AI Decision Engine Policy Freeze
+(`ai-decision-engine.policy.v1`).
 
-Decision #8 is not authorized merely because Decision #7 exists.
-Governance COMPLETE does not authorize Policy Freeze. Implementation remains
-DENIED. Broker Execution remains DENIED / DEFERRED.
+Policy materialization does not authorize Implementation Authorization.
+Implementation remains DENIED. Broker Execution remains DENIED / DEFERRED.
 
 ## Sprint sequence
 
