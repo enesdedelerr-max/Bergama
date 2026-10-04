@@ -112,9 +112,9 @@ See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 Status: Planning APPROVED. Architecture APPROVED. Governance Decisions #1–#8
 RESOLVED. Governance COMPLETE — documentation-only. Policy Version
 `ai-decision-engine.policy.v1` APPROVED. Implementation Authorization
-`ai-decision-engine.implementation-authorization.v1` MATERIALIZED — awaiting
-human review. Sprint 12 is **not** complete. MODEL PARTICIPATION remains
-UNAUTHORIZED.
+`ai-decision-engine.implementation-authorization.v1` APPROVED. Implementation
+is AUTHORIZED within the approved bounded scope. Sprint 12 is **not**
+complete. MODEL PARTICIPATION remains UNAUTHORIZED.
 
 Theme: AI Decision Engine Foundation.
 Planning Gate ID: `sprint-12.planning-gate`.
@@ -145,27 +145,29 @@ Implementation Authorization ID: `ai-decision-engine.implementation-authorizatio
 | Governance Decision #7 | RESOLVED |
 | Governance Decision #8 | RESOLVED |
 | Policy Freeze | APPROVED |
-| Implementation Authorization | MATERIALIZED — awaiting human review |
-| Implementation | DENIED |
+| Implementation Authorization | APPROVED |
+| Implementation | AUTHORIZED — bounded by approved Implementation Authorization |
 | Broker Execution | DENIED / DEFERRED |
 
-Architecture approval does **not** authorize AI Decision Engine implementation.
-Governance Decisions #1–#8 are RESOLVED. Governance is COMPLETE for the planned
-decision set. Policy Version `ai-decision-engine.policy.v1` is APPROVED.
-Implementation Authorization is MATERIALIZED — awaiting human review and is
-not workflow-approved. Implementation remains DENIED. MODEL PARTICIPATION
-remains UNAUTHORIZED.
+Architecture approval does **not** authorize unbounded AI Decision Engine
+implementation. Governance Decisions #1–#8 are RESOLVED. Governance is COMPLETE
+for the planned decision set. Policy Version `ai-decision-engine.policy.v1` is
+APPROVED. Implementation Authorization is APPROVED. Implementation is AUTHORIZED
+strictly within `ai-decision-engine.implementation-authorization.v1`. MODEL
+PARTICIPATION remains UNAUTHORIZED.
 
 See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md).
 
 ### Next action
 
-Human review of AI Decision Engine Implementation Authorization
+Create the first separately numbered ADE foundation implementation issue(s)
+within Approved Scope under approved Implementation Authorization
 (`ai-decision-engine.implementation-authorization.v1`).
 
-Implementation Authorization materialization does not authorize
-Implementation. Implementation remains DENIED. Broker Execution remains
-DENIED / DEFERRED. MODEL PARTICIPATION remains UNAUTHORIZED.
+Implementation Authorization approval does not complete Sprint 12 and does not
+authorize model participation, Broker Execution, trading authority, Order
+Intent, or OMS. Broker Execution remains DENIED / DEFERRED. MODEL PARTICIPATION
+remains UNAUTHORIZED.
 
 ## Sprint sequence
 
@@ -190,12 +192,13 @@ Sprint 8  Premarket Scoring       COMPLETE / RELEASED
   → Sprint 9  Morning Briefing        COMPLETE / RELEASED
   → Sprint 10 Dashboard               COMPLETE / RELEASED
   → Sprint 11 Human Review            COMPLETE / RELEASED
-  → Sprint 12 AI Decision Engine      PLANNING APPROVED
+  → Sprint 12 AI Decision Engine      IMPL AUTH APPROVED
   → Broker Execution                  future / unauthorized
 ```
 
 Human Review Foundation is implemented. Sprint 12 Planning is APPROVED.
-AI Decision Engine implementation is **not** authorized. Broker Execution
+Implementation Authorization is APPROVED. AI Decision Engine implementation is
+AUTHORIZED within approved bounded scope and has not started. Broker Execution
 remains deferred future work and is **not** authorized.
 
 ### Notes on later themes
@@ -213,8 +216,9 @@ not delivered by Sprint 8.
 Earlier roadmap drafts listed Sprint 9 as “Dashboard”. Sprint 9 delivered
 **Morning Briefing Foundation** instead. Dashboard Foundation was delivered by
 Sprint 10. Human Review Foundation was delivered by Sprint 11. Sprint 12
-Planning for AI Decision Engine Foundation is APPROVED. Implementation remains
-DENIED. Broker Execution remains unauthorized.
+Planning for AI Decision Engine Foundation is APPROVED. Implementation
+Authorization is APPROVED. Implementation is AUTHORIZED within approved bounded
+scope. Broker Execution remains unauthorized.
 
 ## Planning principles
 

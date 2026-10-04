@@ -2,9 +2,11 @@
 
 Status: **COMPLETE** — documentation-only. Planned Governance decision set
 (#1–#8) is RESOLVED. Policy Version `ai-decision-engine.policy.v1` is
-**APPROVED**. Governance COMPLETE and Policy approval do **not** authorize
-Implementation Authorization, Implementation, or Broker Execution. Sprint 12
-remains **not** complete.
+**APPROVED**. Implementation Authorization
+`ai-decision-engine.implementation-authorization.v1` is **APPROVED**.
+Implementation is AUTHORIZED only within that approved bounded scope. Sprint 12
+remains **not** complete. MODEL PARTICIPATION remains UNAUTHORIZED. Broker
+Execution remains DENIED / DEFERRED.
 
 | Decision | Document | Status |
 |----------|----------|--------|
@@ -27,4 +29,6 @@ APPROVED / workflow-complete.
 
 These decisions are distinct from Premarket Scoring Governance Decisions #1–#12 under `docs/governance/`, Morning Briefing Governance Decisions #1–#8 under `docs/governance/morning-briefing/`, Dashboard Governance Decisions #1–#8 under `docs/governance/dashboard/`, and Human Review Governance Decisions #1–#8 under `docs/governance/human-review/`.
 
-Implementation Authorization, Implementation, and Broker Execution remain DENIED / DEFERRED as applicable.
+Implementation Authorization is APPROVED. Implementation is AUTHORIZED only
+within `ai-decision-engine.implementation-authorization.v1`. Broker Execution
+remains DENIED / DEFERRED.

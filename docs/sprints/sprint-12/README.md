@@ -6,11 +6,11 @@ Planning is APPROVED. Architecture v1 is APPROVED. Governance Decisions #1–#8
 are RESOLVED. Governance is COMPLETE — documentation-only for the planned
 decision set. Policy Version `ai-decision-engine.policy.v1` is APPROVED.
 Implementation Authorization Version
-`ai-decision-engine.implementation-authorization.v1` is MATERIALIZED —
-awaiting human review. Implementation Authorization materialization does
-**not** authorize Implementation or Broker Execution. Implementation remains
-DENIED. Sprint 12 remains **not** complete. MODEL PARTICIPATION remains
-UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED.
+`ai-decision-engine.implementation-authorization.v1` is APPROVED.
+Implementation is AUTHORIZED strictly within the boundaries frozen by
+`ai-decision-engine.implementation-authorization.v1`. Sprint 12 remains
+**not** complete. MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution
+remains DENIED / DEFERRED.
 
 | Field | Value |
 | --- | --- |
@@ -30,8 +30,8 @@ UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED.
 | Governance Decision #7 | RESOLVED (`ai-decision-engine.governance.07-output-abstention`) |
 | Governance Decision #8 | RESOLVED (`ai-decision-engine.governance.08-human-authority`) |
 | Policy Freeze | APPROVED (`ai-decision-engine.policy.v1`) |
-| Implementation Authorization | MATERIALIZED — awaiting human review (`ai-decision-engine.implementation-authorization.v1`) |
-| Implementation | DENIED |
+| Implementation Authorization | APPROVED (`ai-decision-engine.implementation-authorization.v1`) |
+| Implementation | AUTHORIZED — bounded by approved Implementation Authorization |
 | Broker Execution | DENIED / DEFERRED |
 | MODEL PARTICIPATION | UNAUTHORIZED |
 
@@ -52,11 +52,12 @@ generated Planning Gate formerly identified as `ai-decision-engine.planning-gate
 - Governance Decision #8: [`../../governance/ai-decision-engine/08-human-authority.md`](../../governance/ai-decision-engine/08-human-authority.md) — RESOLVED
 - Governance index: [`../../governance/ai-decision-engine/README.md`](../../governance/ai-decision-engine/README.md) — COMPLETE
 - Policy Version v1: [`../../policy/ai-decision-engine-policy-v1.md`](../../policy/ai-decision-engine-policy-v1.md) — APPROVED (`ai-decision-engine.policy.v1`)
-- Implementation Authorization v1: [`implementation-authorization-v1.md`](implementation-authorization-v1.md) — MATERIALIZED — awaiting human review (`ai-decision-engine.implementation-authorization.v1`)
+- Implementation Authorization v1: [`implementation-authorization-v1.md`](implementation-authorization-v1.md) — APPROVED (`ai-decision-engine.implementation-authorization.v1`)
 
-Implementation, GitHub issues, and implementation pull requests remain not
-started until Implementation Authorization is APPROVED through its separate
-workflow.
+Next workflow: create the first separately numbered ADE foundation
+implementation issue(s) within Approved Scope under
+`ai-decision-engine.implementation-authorization.v1`. Implementation has not
+started. Speculative issue-number reservation remains forbidden.
 
 Broker Execution remains deferred and unauthorized.
 MODEL PARTICIPATION remains UNAUTHORIZED.

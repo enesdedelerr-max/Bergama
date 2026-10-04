@@ -51,9 +51,11 @@ Governance set.
 
 AI Decision Engine Governance is **COMPLETE** — documentation-only. Planned
 Governance decision set (#1–#8) is RESOLVED. Policy Version
-`ai-decision-engine.policy.v1` is **APPROVED**. Governance COMPLETE and Policy
-approval do **not** authorize Implementation Authorization, Implementation, or
-Broker Execution.
+`ai-decision-engine.policy.v1` is **APPROVED**. Implementation Authorization
+`ai-decision-engine.implementation-authorization.v1` is **APPROVED**.
+Implementation is AUTHORIZED only within that approved bounded scope. Sprint 12
+remains **not** complete. MODEL PARTICIPATION remains UNAUTHORIZED. Broker
+Execution remains DENIED / DEFERRED.
 
 | # | Document | Status |
 |---|----------|--------|
