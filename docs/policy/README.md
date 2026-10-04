@@ -7,6 +7,7 @@
 | [dashboard-policy-v1.md](dashboard-policy-v1.md) | `dashboard.policy.v1` | APPROVED | Dashboard Policy Version v1 |
 | [human-review-policy-v1.md](human-review-policy-v1.md) | `human-review.policy.v1` | APPROVED | Human Review Policy Version v1 |
 | [ai-decision-engine-policy-v1.md](ai-decision-engine-policy-v1.md) | `ai-decision-engine.policy.v1` | APPROVED | AI Decision Engine Policy Version v1 |
+| [intelligence-pipeline-policy-v1.md](intelligence-pipeline-policy-v1.md) | `intelligence-pipeline.policy.v1` | DRAFT / NOT YET APPROVED | Intelligence Pipeline Policy Version v1 |
 
 Policy Version content must not be edited in place once frozen for an implementation generation.
 Behavioral change requires a new Policy Version ID and/or new subordinate specification IDs.
