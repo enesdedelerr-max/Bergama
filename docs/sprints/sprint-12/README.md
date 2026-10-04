@@ -7,8 +7,10 @@ are RESOLVED. Governance is COMPLETE — documentation-only for the planned
 decision set. Policy Version `ai-decision-engine.policy.v1` is APPROVED.
 Implementation Authorization Version
 `ai-decision-engine.implementation-authorization.v1` is APPROVED.
-Implementation is AUTHORIZED strictly within the boundaries frozen by
-`ai-decision-engine.implementation-authorization.v1`. Sprint 12 remains
+ADE Foundation implementation is COMPLETE within the boundaries frozen by
+`ai-decision-engine.implementation-authorization.v1` (Issue #110 CLOSED;
+PR #111 MERGED; authoritative main
+`51b3afffb5804f2de307c8b4e582447e92b77c9d`). Sprint 12 remains
 **not** complete. MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution
 remains DENIED / DEFERRED.
 
@@ -31,7 +33,7 @@ remains DENIED / DEFERRED.
 | Governance Decision #8 | RESOLVED (`ai-decision-engine.governance.08-human-authority`) |
 | Policy Freeze | APPROVED (`ai-decision-engine.policy.v1`) |
 | Implementation Authorization | APPROVED (`ai-decision-engine.implementation-authorization.v1`) |
-| Implementation | AUTHORIZED — bounded by approved Implementation Authorization |
+| Implementation | FOUNDATION COMPLETE — Issue #110 CLOSED; PR #111 MERGED @ `51b3afffb5804f2de307c8b4e582447e92b77c9d`; Sprint 12 not complete |
 | Broker Execution | DENIED / DEFERRED |
 | MODEL PARTICIPATION | UNAUTHORIZED |
 
@@ -54,10 +56,11 @@ generated Planning Gate formerly identified as `ai-decision-engine.planning-gate
 - Policy Version v1: [`../../policy/ai-decision-engine-policy-v1.md`](../../policy/ai-decision-engine-policy-v1.md) — APPROVED (`ai-decision-engine.policy.v1`)
 - Implementation Authorization v1: [`implementation-authorization-v1.md`](implementation-authorization-v1.md) — APPROVED (`ai-decision-engine.implementation-authorization.v1`)
 
-Next workflow: create the first separately numbered ADE foundation
-implementation issue(s) within Approved Scope under
-`ai-decision-engine.implementation-authorization.v1`. Implementation has not
-started. Speculative issue-number reservation remains forbidden.
+Foundation implementation status: Issue #110 (AI Decision Engine Foundation)
+is CLOSED. PR #111 is MERGED onto authoritative main at
+`51b3afffb5804f2de307c8b4e582447e92b77c9d`. Implementation-status
+synchronization is authorized through Issue #112. Sprint closeout remains
+unauthorized. Speculative issue-number reservation remains forbidden.
 
 Broker Execution remains deferred and unauthorized.
 MODEL PARTICIPATION remains UNAUTHORIZED.
