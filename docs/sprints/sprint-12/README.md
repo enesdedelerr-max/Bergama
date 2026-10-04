@@ -2,6 +2,8 @@
 
 ## Status
 
+**COMPLETE.**
+
 Planning is APPROVED. Architecture v1 is APPROVED. Governance Decisions #1–#8
 are RESOLVED. Governance is COMPLETE — documentation-only for the planned
 decision set. Policy Version `ai-decision-engine.policy.v1` is APPROVED.
@@ -9,15 +11,25 @@ Implementation Authorization Version
 `ai-decision-engine.implementation-authorization.v1` is APPROVED.
 ADE Foundation implementation is COMPLETE within the boundaries frozen by
 `ai-decision-engine.implementation-authorization.v1` (Issue #110 CLOSED;
-PR #111 MERGED; authoritative main
-`51b3afffb5804f2de307c8b4e582447e92b77c9d`). Sprint 12 remains
-**not** complete. MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution
-remains DENIED / DEFERRED.
+PR #111 MERGED @ `51b3afffb5804f2de307c8b4e582447e92b77c9d`).
+Implementation-status synchronization is COMPLETE (Issue #112 CLOSED;
+PR #113 MERGED @ `f1dfd0853a49b49c5b2b75dc6c5a96230ef23a19`).
+Governance closeout is COMPLETE under Issue #114
+([`CLOSEOUT.md`](CLOSEOUT.md)).
+
+`SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`
+
+MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution remains
+DENIED / DEFERRED. Human Disposition remains
+`OPTIONAL — NOT IMPLEMENTED — NOT REQUIRED FOR CLOSEOUT`.
+Tag / release remain unauthorized and not performed
+(`TAG_RELEASE_AUTHORIZED = NO`).
 
 | Field | Value |
 | --- | --- |
 | Sprint | Sprint 12 |
 | Theme | AI Decision Engine Foundation |
+| Status | COMPLETE |
 | Planning Gate ID | `sprint-12.planning-gate` |
 | Planning | APPROVED |
 | Architecture | APPROVED (`ai-decision-engine.architecture.v1`) |
@@ -33,9 +45,13 @@ remains DENIED / DEFERRED.
 | Governance Decision #8 | RESOLVED (`ai-decision-engine.governance.08-human-authority`) |
 | Policy Freeze | APPROVED (`ai-decision-engine.policy.v1`) |
 | Implementation Authorization | APPROVED (`ai-decision-engine.implementation-authorization.v1`) |
-| Implementation | FOUNDATION COMPLETE — Issue #110 CLOSED; PR #111 MERGED @ `51b3afffb5804f2de307c8b4e582447e92b77c9d`; Sprint 12 not complete |
+| Implementation | FOUNDATION COMPLETE — Issue #110 CLOSED; PR #111 MERGED @ `51b3afffb5804f2de307c8b4e582447e92b77c9d` |
+| Status sync | COMPLETE — Issue #112 CLOSED; PR #113 MERGED @ `f1dfd0853a49b49c5b2b75dc6c5a96230ef23a19` |
+| Closeout | COMPLETE — Issue #114 ([`CLOSEOUT.md`](CLOSEOUT.md)) |
+| Human Disposition | OPTIONAL — NOT IMPLEMENTED — NOT REQUIRED FOR CLOSEOUT |
 | Broker Execution | DENIED / DEFERRED |
 | MODEL PARTICIPATION | UNAUTHORIZED |
+| Tag / release | NOT AUTHORIZED / NOT PERFORMED |
 
 This Sprint 12 identity is the repository-materialized form of the approved
 generated Planning Gate formerly identified as `ai-decision-engine.planning-gate`.
@@ -55,12 +71,17 @@ generated Planning Gate formerly identified as `ai-decision-engine.planning-gate
 - Governance index: [`../../governance/ai-decision-engine/README.md`](../../governance/ai-decision-engine/README.md) — COMPLETE
 - Policy Version v1: [`../../policy/ai-decision-engine-policy-v1.md`](../../policy/ai-decision-engine-policy-v1.md) — APPROVED (`ai-decision-engine.policy.v1`)
 - Implementation Authorization v1: [`implementation-authorization-v1.md`](implementation-authorization-v1.md) — APPROVED (`ai-decision-engine.implementation-authorization.v1`)
+- Closeout: [`CLOSEOUT.md`](CLOSEOUT.md) — COMPLETE (Issue #114)
 
-Foundation implementation status: Issue #110 (AI Decision Engine Foundation)
-is CLOSED. PR #111 is MERGED onto authoritative main at
-`51b3afffb5804f2de307c8b4e582447e92b77c9d`. Implementation-status
-synchronization is authorized through Issue #112. Sprint closeout remains
-unauthorized. Speculative issue-number reservation remains forbidden.
+## Lifecycle evidence
+
+- Foundation: Issue #110 CLOSED; PR #111 MERGED @
+  `51b3afffb5804f2de307c8b4e582447e92b77c9d`
+- Status sync: Issue #112 CLOSED; PR #113 MERGED @
+  `f1dfd0853a49b49c5b2b75dc6c5a96230ef23a19`
+- Closeout authority: Issue #114
+- Authoritative baseline containing Foundation + status sync:
+  `f1dfd0853a49b49c5b2b75dc6c5a96230ef23a19`
 
 Broker Execution remains deferred and unauthorized.
 MODEL PARTICIPATION remains UNAUTHORIZED.
