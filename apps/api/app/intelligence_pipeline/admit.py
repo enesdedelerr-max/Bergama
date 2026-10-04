@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pydantic import ValidationError
 
+from app.ai_decision_engine.models import AdeConfig
+from app.human_review.models import HumanReviewConfig
 from app.intelligence_pipeline.errors import PipelineAdmissionError
 from app.intelligence_pipeline.models import PipelineBindings, PipelineRequest
 from app.intelligence_pipeline.policy import POLICY_VERSION_V1
@@ -46,11 +48,37 @@ def admit_pipeline_request(request: PipelineRequest | object) -> PipelineRequest
         require_utc_aware(admitted.as_of, field_name="as_of")
     except ValueError as exc:
         raise PipelineAdmissionError(detail=f"invalid_as_of:{exc}") from exc
+
+    if admitted.ade_requested and not admitted.hr_requested:
+        raise PipelineAdmissionError(detail="ade_requires_human_review")
+    if admitted.hr_requested and admitted.hr_attestation is None:
+        raise PipelineAdmissionError(detail="human_review_attestation_required")
+
     return admitted
+
+
+def resolve_hr_config(request: PipelineRequest) -> HumanReviewConfig:
+    """Return admitted Human Review config without mutating the request."""
+    if request.hr_config is not None:
+        return request.hr_config
+    return HumanReviewConfig()
+
+
+def resolve_ade_config(request: PipelineRequest) -> AdeConfig:
+    """Return admitted ADE config without mutating the request."""
+    if request.ade_config is not None:
+        return request.ade_config
+    return AdeConfig()
 
 
 def pin_bindings(request: PipelineRequest) -> PipelineBindings:
     """Pin governed stage Policy/config bindings at admission (stable for the run)."""
+    human_review_policy_version_id: str | None = None
+    ade_policy_version_id: str | None = None
+    if request.hr_requested:
+        human_review_policy_version_id = resolve_hr_config(request).policy_version_id
+    if request.ade_requested:
+        ade_policy_version_id = resolve_ade_config(request).policy_version_id
     return PipelineBindings(
         policy_version_id=POLICY_VERSION_V1,
         watchlist_ordering_policy_id=request.watchlist_config.ordering_policy_id,
@@ -61,4 +89,6 @@ def pin_bindings(request: PipelineRequest) -> PipelineBindings:
         score_weight_profile_id=request.score_config.weight_profile_id,
         briefing_policy_version_id=request.briefing_config.policy_version_id,
         dashboard_policy_version_id=request.dashboard_config.policy_version_id,
+        human_review_policy_version_id=human_review_policy_version_id,
+        ade_policy_version_id=ade_policy_version_id,
     )
