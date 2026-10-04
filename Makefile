@@ -23,7 +23,7 @@ API_DIR := $(ROOT)/apps/api
 	test-api-replay-engine smoke-api-replay-engine \
 	test-api-backfill smoke-api-backfill \
 	test-api-data-quality smoke-api-data-quality \
-	test-api-strategy-engine test-api-strategy-sdk test-api-feature-platform test-api-premarket test-api-premarket-catalyst test-api-premarket-gap test-api-premarket-scoring test-api-premarket-morning-briefing test-api-dashboard test-api-human-review test-api-portfolio-service test-api-risk-engine \
+	test-api-strategy-engine test-api-strategy-sdk test-api-feature-platform test-api-premarket test-api-premarket-catalyst test-api-premarket-gap test-api-premarket-scoring test-api-premarket-morning-briefing test-api-dashboard test-api-human-review test-api-ai-decision-engine test-api-portfolio-service test-api-risk-engine \
 	test-api-order-management \
 	test-api-broker \
 	smoke-api-polygon smoke-api-polygon-realtime smoke-api-finnhub smoke-api-fred \
@@ -41,6 +41,7 @@ help:
 	@echo "Sprint 9 targets: test-api-premarket-morning-briefing"
 	@echo "Sprint 10 targets: test-api-dashboard"
 	@echo "Sprint 11 targets: test-api-human-review"
+	@echo "Sprint 12 targets: test-api-ai-decision-engine"
 
 kind-bootstrap:
 	@bash "$(ROOT)/infra/bootstrap/kind-bootstrap.sh"
@@ -373,6 +374,12 @@ test-api-human-review:
 		tests/unit/test_human_review_engine.py \
 		tests/contract/test_human_review_contract.py \
 		tests/integration/test_human_review_boundary.py
+
+test-api-ai-decision-engine:
+	@cd "$(API_DIR)" && uv run pytest -q \
+		tests/unit/test_ai_decision_engine_engine.py \
+		tests/contract/test_ai_decision_engine_contract.py \
+		tests/integration/test_ai_decision_engine_boundary.py
 
 test-api-portfolio-service:
 	@cd "$(API_DIR)" && uv run pytest -q \
