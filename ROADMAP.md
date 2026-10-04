@@ -109,13 +109,23 @@ See [`docs/sprints/sprint-11/README.md`](docs/sprints/sprint-11/README.md).
 
 ### Sprint 12 — AI Decision Engine Foundation
 
-Status: Planning APPROVED. Architecture APPROVED. Governance Decisions #1–#8
-RESOLVED. Governance COMPLETE — documentation-only. Policy Version
-`ai-decision-engine.policy.v1` APPROVED. Implementation Authorization
+Status: **COMPLETE**. Planning APPROVED. Architecture APPROVED. Governance
+Decisions #1–#8 RESOLVED. Governance COMPLETE — documentation-only. Policy
+Version `ai-decision-engine.policy.v1` APPROVED. Implementation Authorization
 `ai-decision-engine.implementation-authorization.v1` APPROVED. ADE Foundation
-implementation COMPLETE (Issue #110 CLOSED; PR #111 MERGED; authoritative main
-`51b3afffb5804f2de307c8b4e582447e92b77c9d`). Sprint 12 is **not**
-complete. MODEL PARTICIPATION remains UNAUTHORIZED.
+implementation COMPLETE (Issue #110 CLOSED; PR #111 MERGED @
+`51b3afffb5804f2de307c8b4e582447e92b77c9d`). Implementation-status
+synchronization COMPLETE (Issue #112 CLOSED; PR #113 MERGED @
+`f1dfd0853a49b49c5b2b75dc6c5a96230ef23a19`). Governance closeout COMPLETE
+under Issue #114
+([`docs/sprints/sprint-12/CLOSEOUT.md`](docs/sprints/sprint-12/CLOSEOUT.md)).
+
+`SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`
+
+MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution remains
+DENIED / DEFERRED. Human Disposition remains
+`OPTIONAL — NOT IMPLEMENTED — NOT REQUIRED FOR CLOSEOUT`. Tag / release remain
+unauthorized and not performed.
 
 Theme: AI Decision Engine Foundation.
 Planning Gate ID: `sprint-12.planning-gate`.
@@ -147,30 +157,32 @@ Implementation Authorization ID: `ai-decision-engine.implementation-authorizatio
 | Governance Decision #8 | RESOLVED |
 | Policy Freeze | APPROVED |
 | Implementation Authorization | APPROVED |
-| Implementation | FOUNDATION COMPLETE — Issue #110 CLOSED; PR #111 MERGED @ `51b3afffb5804f2de307c8b4e582447e92b77c9d`; Sprint 12 not complete |
+| Implementation | FOUNDATION COMPLETE — Issue #110 CLOSED; PR #111 MERGED @ `51b3afffb5804f2de307c8b4e582447e92b77c9d` |
+| Status sync | COMPLETE — Issue #112 CLOSED; PR #113 MERGED @ `f1dfd0853a49b49c5b2b75dc6c5a96230ef23a19` |
+| Closeout | COMPLETE — Issue #114 |
+| Human Disposition | OPTIONAL — NOT IMPLEMENTED — NOT REQUIRED FOR CLOSEOUT |
 | Broker Execution | DENIED / DEFERRED |
+| MODEL PARTICIPATION | UNAUTHORIZED |
+| Tag / release | NOT AUTHORIZED / NOT PERFORMED |
 
 Architecture approval does **not** authorize unbounded AI Decision Engine
 implementation. Governance Decisions #1–#8 are RESOLVED. Governance is COMPLETE
 for the planned decision set. Policy Version `ai-decision-engine.policy.v1` is
 APPROVED. Implementation Authorization is APPROVED. ADE Foundation
 implementation is COMPLETE strictly within
-`ai-decision-engine.implementation-authorization.v1`. MODEL
-PARTICIPATION remains UNAUTHORIZED.
+`ai-decision-engine.implementation-authorization.v1`. Sprint 12 governance
+closeout is COMPLETE under Issue #114. MODEL PARTICIPATION remains
+UNAUTHORIZED.
 
-See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md).
+See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md) and
+[`docs/sprints/sprint-12/CLOSEOUT.md`](docs/sprints/sprint-12/CLOSEOUT.md).
 
 ### Next action
 
-ADE Foundation implementation is complete on authoritative main
-(`51b3afffb5804f2de307c8b4e582447e92b77c9d` via PR #111 / Issue #110).
-Implementation-status documentation synchronization is occurring through
-Issue #112. Sprint 12 closeout remains unauthorized.
-
-Foundation completion does not complete Sprint 12 and does not authorize model
-participation, Broker Execution, trading authority, Order Intent, or OMS.
+Sprint 12 is COMPLETE under Issue #114. Tag / release remain unauthorized.
 Broker Execution remains DENIED / DEFERRED. MODEL PARTICIPATION remains
-UNAUTHORIZED.
+UNAUTHORIZED. Any next theme requires a separately approved Planning Gate and
+is **not** authorized by Sprint 12 closeout.
 
 ## Sprint sequence
 
@@ -186,7 +198,7 @@ UNAUTHORIZED.
 10. Sprint 9 — Morning Briefing Foundation — Complete
 11. Sprint 10 — Dashboard Foundation — Complete
 12. Sprint 11 — Human Review Foundation — Complete
-13. Sprint 12 — AI Decision Engine Foundation — Foundation COMPLETE; Sprint not closed
+13. Sprint 12 — AI Decision Engine Foundation — Complete
 
 ### Downstream sequencing
 
@@ -195,15 +207,15 @@ Sprint 8  Premarket Scoring       COMPLETE / RELEASED
   → Sprint 9  Morning Briefing        COMPLETE / RELEASED
   → Sprint 10 Dashboard               COMPLETE / RELEASED
   → Sprint 11 Human Review            COMPLETE / RELEASED
-  → Sprint 12 AI Decision Engine      FOUNDATION COMPLETE / SPRINT OPEN
+  → Sprint 12 AI Decision Engine      COMPLETE
   → Broker Execution                  future / unauthorized
 ```
 
 Human Review Foundation is implemented. Sprint 12 Planning is APPROVED.
 Implementation Authorization is APPROVED. ADE Foundation implementation is
-COMPLETE within approved bounded scope (Issue #110 / PR #111). Sprint 12 is
-**not** complete. Broker Execution remains deferred future work and is **not**
-authorized.
+COMPLETE within approved bounded scope (Issue #110 / PR #111). Status sync is
+COMPLETE (#112 / #113). Sprint 12 governance closeout is COMPLETE (Issue #114).
+Broker Execution remains deferred future work and is **not** authorized.
 
 ### Notes on later themes
 
@@ -222,8 +234,8 @@ Earlier roadmap drafts listed Sprint 9 as “Dashboard”. Sprint 9 delivered
 Sprint 10. Human Review Foundation was delivered by Sprint 11. Sprint 12
 Planning for AI Decision Engine Foundation is APPROVED. Implementation
 Authorization is APPROVED. ADE Foundation implementation is COMPLETE within
-approved bounded scope. Sprint 12 is **not** complete. Broker Execution remains
-unauthorized.
+approved bounded scope. Sprint 12 governance closeout is COMPLETE under
+Issue #114. Broker Execution remains unauthorized.
 
 ## Planning principles
 

@@ -5,8 +5,10 @@ Status: **COMPLETE** — documentation-only. Planned Governance decision set
 **APPROVED**. Implementation Authorization
 `ai-decision-engine.implementation-authorization.v1` is **APPROVED**.
 Implementation is AUTHORIZED only within that approved bounded scope. Sprint 12
-remains **not** complete. MODEL PARTICIPATION remains UNAUTHORIZED. Broker
-Execution remains DENIED / DEFERRED.
+is **COMPLETE** under Issue #114
+([`../../sprints/sprint-12/CLOSEOUT.md`](../../sprints/sprint-12/CLOSEOUT.md)).
+`SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`. MODEL PARTICIPATION remains
+UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED.
 
 | Decision | Document | Status |
 |----------|----------|--------|
