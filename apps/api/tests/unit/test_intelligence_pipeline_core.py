@@ -9,7 +9,21 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+from app.ai_decision_engine.models import AdeConfig, AdeOutcomeKind, AdeProvenance, AdeResult
+from app.ai_decision_engine.policy import (
+    ACCEPTANCE_SPECIFICATION_V1,
+    DERIVATION_ATTRIBUTION_V1,
+    DIGEST_METHOD_V1,
+    IDENTITY_SPECIFICATION_V1,
+    PROVENANCE_SPECIFICATION_V1,
+)
+from app.ai_decision_engine.policy import (
+    POLICY_VERSION_V1 as ADE_POLICY_VERSION_V1,
+)
+from app.ai_decision_engine.reasons import AdeReasonFamily
 from app.dashboard.models import DashboardConfig, DashboardPresentationOutput, DashboardRequest
+from app.human_review.models import HumanReviewConfig, HumanReviewRecordedAttestation
+from app.human_review.policy import POLICY_VERSION_V1 as HR_POLICY_VERSION_V1
 from app.intelligence_pipeline import (
     GLOBAL_OUTCOME_FAMILIES,
     ISSUE_1_REACHABLE_OUTCOMES,
@@ -17,8 +31,11 @@ from app.intelligence_pipeline import (
     STAGE_ORDER,
     PipelineOutcome,
     PipelineRequest,
+    PipelineResult,
     run_intelligence_pipeline,
 )
+from app.intelligence_pipeline.admit import admit_pipeline_request, pin_bindings
+from app.intelligence_pipeline.errors import PipelineAdmissionError
 from app.intelligence_pipeline.policy import (
     OUTCOME_ADMISSION_REJECTED,
     OUTCOME_COMPLETED_ADE_ABSTAIN,
@@ -751,3 +768,316 @@ def test_o24_o25_o26_public_entrypoints_typed_requests(monkeypatch: pytest.Monke
 
 def test_model_participation_unauthorized() -> None:
     assert MODEL_PARTICIPATION == "UNAUTHORIZED"
+
+
+# --- Issue #128 optional HR / ADE terminals ---
+
+VALID_ATTESTATION = HumanReviewRecordedAttestation(
+    recorded_payload="human-recorded-attestation-payload-v1"
+)
+
+
+def test_u128_01_default_request_hr_ade_off() -> None:
+    request = _valid_request()
+    assert request.hr_requested is False
+    assert request.ade_requested is False
+    assert request.hr_attestation is None
+    assert request.hr_config is None
+    assert request.ade_config is None
+
+
+def test_u128_02_default_path_still_completes_dashboard() -> None:
+    result = run_intelligence_pipeline(_valid_request())
+    assert result.outcome == PipelineOutcome.COMPLETED_DASHBOARD
+    assert result.human_review is None
+    assert result.ade is None
+
+
+def test_u128_03_hr_requested_without_attestation_rejected() -> None:
+    result = run_intelligence_pipeline(_valid_request(hr_requested=True, hr_attestation=None))
+    assert result.outcome == PipelineOutcome.ADMISSION_REJECTED
+    assert result.failure_detail == "human_review_attestation_required"
+    assert result.human_review is None
+    assert result.ade is None
+
+
+def test_u128_04_ade_requested_without_hr_rejected() -> None:
+    result = run_intelligence_pipeline(
+        _valid_request(hr_requested=False, ade_requested=True, hr_attestation=VALID_ATTESTATION)
+    )
+    assert result.outcome == PipelineOutcome.ADMISSION_REJECTED
+    assert result.failure_detail == "ade_requires_human_review"
+    assert result.ade is None
+
+
+def test_u128_05_typed_hr_attestation_accepted_at_admission() -> None:
+    admitted = admit_pipeline_request(
+        _valid_request(hr_requested=True, hr_attestation=VALID_ATTESTATION)
+    )
+    assert admitted.hr_requested is True
+    assert admitted.hr_attestation == VALID_ATTESTATION
+
+
+def test_u128_06_default_human_review_config_pinned() -> None:
+    request = _valid_request(hr_requested=True, hr_attestation=VALID_ATTESTATION)
+    bindings = pin_bindings(request)
+    assert bindings.human_review_policy_version_id == HR_POLICY_VERSION_V1
+    assert bindings.ade_policy_version_id is None
+
+
+def test_u128_07_caller_hr_config_pinned_without_mutation() -> None:
+    config = HumanReviewConfig()
+    request = _valid_request(
+        hr_requested=True,
+        hr_attestation=VALID_ATTESTATION,
+        hr_config=config,
+    )
+    bindings = pin_bindings(request)
+    assert bindings.human_review_policy_version_id == config.policy_version_id
+    assert request.hr_config is config
+
+
+def test_u128_08_default_ade_config_pinned() -> None:
+    request = _valid_request(
+        hr_requested=True,
+        ade_requested=True,
+        hr_attestation=VALID_ATTESTATION,
+    )
+    bindings = pin_bindings(request)
+    assert bindings.ade_policy_version_id == ADE_POLICY_VERSION_V1
+    assert bindings.human_review_policy_version_id == HR_POLICY_VERSION_V1
+
+
+def test_u128_09_caller_ade_config_pinned_without_mutation() -> None:
+    config = AdeConfig()
+    request = _valid_request(
+        hr_requested=True,
+        ade_requested=True,
+        hr_attestation=VALID_ATTESTATION,
+        ade_config=config,
+    )
+    bindings = pin_bindings(request)
+    assert bindings.ade_policy_version_id == config.policy_version_id
+    assert request.ade_config is config
+
+
+def test_u128_10_pipeline_result_hr_ade_defaults_none() -> None:
+    result = run_intelligence_pipeline(_valid_request())
+    assert isinstance(result, PipelineResult)
+    assert result.human_review is None
+    assert result.ade is None
+
+
+def test_u128_11_completed_human_review_contains_hr_only() -> None:
+    result = run_intelligence_pipeline(
+        _valid_request(hr_requested=True, hr_attestation=VALID_ATTESTATION)
+    )
+    assert result.outcome == PipelineOutcome.COMPLETED_HUMAN_REVIEW
+    assert result.human_review is not None
+    assert result.ade is None
+    assert result.provenance.human_review_output_id == result.human_review.human_review_output_id
+    assert result.bindings is not None
+    assert result.bindings.human_review_policy_version_id == HR_POLICY_VERSION_V1
+
+
+def test_u128_12_completed_ade_accept_contains_hr_and_ade() -> None:
+    result = run_intelligence_pipeline(
+        _valid_request(
+            hr_requested=True,
+            ade_requested=True,
+            hr_attestation=VALID_ATTESTATION,
+        )
+    )
+    assert result.outcome == PipelineOutcome.COMPLETED_ADE_ACCEPT
+    assert result.human_review is not None
+    assert result.ade is not None
+    assert result.ade.outcome_kind is AdeOutcomeKind.AUTHORITATIVE_DECISION
+    assert result.provenance.ade_decision_id == result.ade.decision_id
+    assert result.provenance.ade_outcome_kind is AdeOutcomeKind.AUTHORITATIVE_DECISION
+
+
+def test_u128_13_completed_ade_abstain_contains_hr_and_ade(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def abstain(request: object) -> AdeResult:
+        from app.ai_decision_engine.models import AdeEvaluationRequest
+
+        assert isinstance(request, AdeEvaluationRequest)
+        assert request.human_review is not None
+        return AdeResult(
+            outcome_kind=AdeOutcomeKind.EXPLICIT_ABSTENTION,
+            policy_version_id=ADE_POLICY_VERSION_V1,
+            as_of=request.as_of,
+            reason_family=AdeReasonFamily.DETERMINISTIC_ACCEPTANCE_NOT_ESTABLISHED,
+            decision_id=None,
+            human_review_output_id=request.human_review.human_review_output_id,
+            provenance=AdeProvenance(
+                policy_version_id=ADE_POLICY_VERSION_V1,
+                identity_specification_id=IDENTITY_SPECIFICATION_V1,
+                provenance_specification_id=PROVENANCE_SPECIFICATION_V1,
+                acceptance_specification_id=ACCEPTANCE_SPECIFICATION_V1,
+                digest_method_id=DIGEST_METHOD_V1,
+                derivation_attribution_id=DERIVATION_ATTRIBUTION_V1,
+                as_of=request.as_of,
+                human_review_output_id=request.human_review.human_review_output_id,
+                human_review_policy_version_id=request.human_review.policy_version_id,
+                human_review_identity_specification_id=(
+                    request.human_review.identity_specification_id
+                ),
+                human_review_provenance_specification_id=(
+                    request.human_review.provenance_specification_id
+                ),
+                human_review_config_fingerprint=(
+                    request.human_review.provenance.config_fingerprint
+                ),
+                human_review_input_fingerprint=request.human_review.provenance.input_fingerprint,
+                recorded_attestation_fingerprint=(
+                    request.human_review.provenance.recorded_attestation_fingerprint
+                ),
+                recorded_attestation_payload=(request.human_review.attestation.recorded_payload),
+                config_fingerprint="c" * 64,
+                evidence_fingerprint="d" * 64,
+            ),
+            detail="explicit_abstention_fixture",
+        )
+
+    monkeypatch.setattr("app.intelligence_pipeline.orchestrator.evaluate_ade", abstain)
+    result = run_intelligence_pipeline(
+        _valid_request(
+            hr_requested=True,
+            ade_requested=True,
+            hr_attestation=VALID_ATTESTATION,
+        )
+    )
+    assert result.outcome == PipelineOutcome.COMPLETED_ADE_ABSTAIN
+    assert result.human_review is not None
+    assert result.ade is not None
+    assert result.ade.outcome_kind is AdeOutcomeKind.EXPLICIT_ABSTENTION
+
+
+def test_u128_14_generic_human_review_bag_denied() -> None:
+    result = run_intelligence_pipeline(
+        {
+            **_valid_request().model_dump(mode="python"),
+            "human_review": {"approved": True},
+        }
+    )
+    assert result.outcome == PipelineOutcome.ADMISSION_REJECTED
+    assert result.failure_detail == "unsupported_unauthorized_input"
+
+
+def test_u128_15_generic_ade_bag_denied() -> None:
+    result = run_intelligence_pipeline(
+        {
+            **_valid_request().model_dump(mode="python"),
+            "ade": {"accept": True},
+        }
+    )
+    assert result.outcome == PipelineOutcome.ADMISSION_REJECTED
+    assert result.failure_detail == "unsupported_unauthorized_input"
+
+
+def test_u128_16_issue_1_request_behavior_unchanged() -> None:
+    result = run_intelligence_pipeline(_valid_request())
+    assert result.outcome == PipelineOutcome.COMPLETED_DASHBOARD
+    assert result.provenance.executed_stages == STAGE_ORDER
+    assert result.human_review is None
+    assert result.ade is None
+
+
+def test_u128_17_invalid_attestation_fails_as_stage_not_admission() -> None:
+    # Present typed attestation that HR rejects as dashboard-derived after Dashboard runs.
+    first = run_intelligence_pipeline(_valid_request())
+    assert first.dashboard is not None
+    bad = HumanReviewRecordedAttestation(recorded_payload=first.dashboard.dashboard_output_id)
+    result = run_intelligence_pipeline(_valid_request(hr_requested=True, hr_attestation=bad))
+    assert result.outcome == PipelineOutcome.REQUIRED_STAGE_FAILED
+    assert result.failed_stage == "human_review"
+    assert result.ade is None
+    assert result.human_review is None
+
+
+def test_u128_18_hr_exception_blocks_ade(monkeypatch: pytest.MonkeyPatch) -> None:
+    ade = MagicMock()
+    monkeypatch.setattr(
+        "app.intelligence_pipeline.orchestrator.assemble_human_review",
+        MagicMock(side_effect=RuntimeError("hr_boom")),
+    )
+    monkeypatch.setattr("app.intelligence_pipeline.orchestrator.evaluate_ade", ade)
+    result = run_intelligence_pipeline(
+        _valid_request(
+            hr_requested=True,
+            ade_requested=True,
+            hr_attestation=VALID_ATTESTATION,
+        )
+    )
+    assert result.outcome == PipelineOutcome.REQUIRED_STAGE_FAILED
+    assert result.failed_stage == "human_review"
+    assert ade.call_count == 0
+
+
+def test_u128_19_ade_exception_required_stage_failed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "app.intelligence_pipeline.orchestrator.evaluate_ade",
+        MagicMock(side_effect=RuntimeError("ade_boom")),
+    )
+    result = run_intelligence_pipeline(
+        _valid_request(
+            hr_requested=True,
+            ade_requested=True,
+            hr_attestation=VALID_ATTESTATION,
+        )
+    )
+    assert result.outcome == PipelineOutcome.REQUIRED_STAGE_FAILED
+    assert result.failed_stage == "ade"
+    assert result.human_review is not None
+    assert result.ade is None
+
+
+def test_u128_20_same_as_of_to_hr_and_ade(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[datetime] = []
+
+    real_hr = __import__(
+        "app.human_review.engine", fromlist=["assemble_human_review"]
+    ).assemble_human_review
+    real_ade = __import__("app.ai_decision_engine.engine", fromlist=["evaluate_ade"]).evaluate_ade
+
+    def capture_hr(request: object) -> object:
+        seen.append(request.as_of)
+        return real_hr(request)
+
+    def capture_ade(request: object) -> object:
+        seen.append(request.as_of)
+        return real_ade(request)
+
+    monkeypatch.setattr("app.intelligence_pipeline.orchestrator.assemble_human_review", capture_hr)
+    monkeypatch.setattr("app.intelligence_pipeline.orchestrator.evaluate_ade", capture_ade)
+    result = run_intelligence_pipeline(
+        _valid_request(
+            hr_requested=True,
+            ade_requested=True,
+            hr_attestation=VALID_ATTESTATION,
+        )
+    )
+    assert result.outcome == PipelineOutcome.COMPLETED_ADE_ACCEPT
+    assert seen == [AS_OF, AS_OF]
+
+
+def test_u128_21_no_hr_call_when_not_requested(monkeypatch: pytest.MonkeyPatch) -> None:
+    hr = MagicMock()
+    ade = MagicMock()
+    monkeypatch.setattr("app.intelligence_pipeline.orchestrator.assemble_human_review", hr)
+    monkeypatch.setattr("app.intelligence_pipeline.orchestrator.evaluate_ade", ade)
+    result = run_intelligence_pipeline(_valid_request())
+    assert result.outcome == PipelineOutcome.COMPLETED_DASHBOARD
+    assert hr.call_count == 0
+    assert ade.call_count == 0
+
+
+def test_u128_22_admit_raises_for_illegal_combos() -> None:
+    with pytest.raises(PipelineAdmissionError) as ade_exc:
+        admit_pipeline_request(_valid_request(ade_requested=True))
+    assert ade_exc.value.detail == "ade_requires_human_review"
+    with pytest.raises(PipelineAdmissionError) as hr_exc:
+        admit_pipeline_request(_valid_request(hr_requested=True))
+    assert hr_exc.value.detail == "human_review_attestation_required"

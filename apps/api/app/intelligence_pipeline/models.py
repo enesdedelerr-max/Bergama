@@ -1,4 +1,4 @@
-"""Immutable Intelligence Pipeline Issue #126 contracts."""
+"""Immutable Intelligence Pipeline Issue #126/#128 contracts."""
 
 from __future__ import annotations
 
@@ -7,8 +7,14 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.ai_decision_engine.models import AdeConfig, AdeOutcomeKind, AdeResult
 from app.core.premarket_settings import PremarketSettings
 from app.dashboard.models import DashboardConfig, DashboardPresentationOutput
+from app.human_review.models import (
+    HumanReviewConfig,
+    HumanReviewOutput,
+    HumanReviewRecordedAttestation,
+)
 from app.intelligence_pipeline.policy import (
     GLOBAL_OUTCOME_FAMILIES,
     ISSUE_1_REACHABLE_OUTCOMES,
@@ -67,10 +73,12 @@ class PipelineBindings(BaseModel):
     score_weight_profile_id: str = Field(min_length=1, max_length=128)
     briefing_policy_version_id: str = Field(min_length=1, max_length=128)
     dashboard_policy_version_id: str = Field(min_length=1, max_length=128)
+    human_review_policy_version_id: str | None = Field(default=None, min_length=1, max_length=128)
+    ade_policy_version_id: str | None = Field(default=None, min_length=1, max_length=128)
 
 
 class PipelineProvenance(BaseModel):
-    """Thin composition provenance for Issue #126 (no stage provenance rewrite)."""
+    """Thin composition provenance (no stage provenance rewrite; no replay identity)."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -89,6 +97,13 @@ class PipelineProvenance(BaseModel):
     briefing_input_fingerprint: str | None = None
     dashboard_config_fingerprint: str | None = None
     dashboard_input_fingerprint: str | None = None
+    human_review_output_id: str | None = None
+    human_review_config_fingerprint: str | None = None
+    human_review_input_fingerprint: str | None = None
+    recorded_attestation_fingerprint: str | None = None
+    ade_decision_id: str | None = None
+    ade_outcome_kind: AdeOutcomeKind | None = None
+    ade_evidence_fingerprint: str | None = None
     outcome: PipelineOutcome | None = None
     failed_stage: str | None = None
 
@@ -101,7 +116,7 @@ class PipelineProvenance(BaseModel):
 
 
 class PipelineRequest(BaseModel):
-    """Bounded typed Pipeline admission request for Issue #126 core path."""
+    """Bounded typed Pipeline admission request for Issue #126/#128 composition."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -116,6 +131,11 @@ class PipelineRequest(BaseModel):
     briefing_config: BriefingConfig = Field(default_factory=BriefingConfig)
     dashboard_config: DashboardConfig = Field(default_factory=DashboardConfig)
     settings: PremarketSettings | None = None
+    hr_requested: bool = False
+    hr_attestation: HumanReviewRecordedAttestation | None = None
+    hr_config: HumanReviewConfig | None = None
+    ade_requested: bool = False
+    ade_config: AdeConfig | None = None
 
     @field_validator("as_of")
     @classmethod
@@ -124,7 +144,7 @@ class PipelineRequest(BaseModel):
 
 
 class PipelineResult(BaseModel):
-    """Bounded typed Pipeline composition result for Issue #126."""
+    """Bounded typed Pipeline composition result for Issue #126/#128."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -138,6 +158,8 @@ class PipelineResult(BaseModel):
     scores: ScoreCollection | None = None
     briefing: BriefingCollection | None = None
     dashboard: DashboardPresentationOutput | None = None
+    human_review: HumanReviewOutput | None = None
+    ade: AdeResult | None = None
     failed_stage: str | None = None
     failure_detail: str | None = None
     failure_error_type: str | None = None

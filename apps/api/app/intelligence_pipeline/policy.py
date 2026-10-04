@@ -35,7 +35,10 @@ STAGE_CATALYST = "catalyst"
 STAGE_SCORE = "score"
 STAGE_BRIEFING = "briefing"
 STAGE_DASHBOARD = "dashboard"
+STAGE_HUMAN_REVIEW = "human_review"
+STAGE_ADE = "ade"
 
+# Required core composition order (Issue #126). Optional HR/ADE append to executed_stages.
 STAGE_ORDER: tuple[str, ...] = (
     STAGE_WATCHLIST,
     STAGE_GAP,

@@ -1,4 +1,4 @@
-"""Contract / firewall tests for Intelligence Pipeline Core (Issue #126)."""
+"""Contract / firewall tests for Intelligence Pipeline Core (Issue #126/#128)."""
 
 from __future__ import annotations
 
@@ -27,8 +27,6 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[2] / "app" / "intelligence_pipel
 REPO_ROOT = Path(__file__).resolve().parents[4]
 
 FORBIDDEN_IMPORT_PREFIXES = (
-    "app.human_review",
-    "app.ai_decision_engine",
     "app.broker",
     "app.orders",
     "app.risk",
@@ -50,6 +48,7 @@ FORBIDDEN_IMPORT_PREFIXES = (
     "starlette",
 )
 
+# Public Pipeline package surface must not re-export HR/ADE entrypoints.
 FORBIDDEN_TOKENS_IN_PUBLIC = (
     "llm",
     "prompt",
@@ -60,6 +59,19 @@ FORBIDDEN_TOKENS_IN_PUBLIC = (
     "evaluate_ade",
     "assemble_human_review",
     "from_parts",
+)
+
+ALLOWED_HR_MODULES = frozenset(
+    {
+        "app.human_review.engine",
+        "app.human_review.models",
+    }
+)
+ALLOWED_ADE_MODULES = frozenset(
+    {
+        "app.ai_decision_engine.engine",
+        "app.ai_decision_engine.models",
+    }
 )
 
 
@@ -107,6 +119,7 @@ def test_c01_models_frozen_forbid_extra() -> None:
 
 def test_c01_outcome_enum_preserves_global_six() -> None:
     assert tuple(member.value for member in PipelineOutcome) == GLOBAL_OUTCOME_FAMILIES
+    assert len(tuple(member.value for member in PipelineOutcome)) == 6
 
 
 def _imported_modules(path: Path) -> list[str]:
@@ -120,6 +133,16 @@ def _imported_modules(path: Path) -> list[str]:
     return modules
 
 
+def _imported_names(path: Path) -> set[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                names.add(alias.name)
+    return names
+
+
 def test_c02_c09_no_forbidden_authority_imports() -> None:
     for path in PACKAGE_ROOT.rglob("*.py"):
         for module in _imported_modules(path):
@@ -127,16 +150,44 @@ def test_c02_c09_no_forbidden_authority_imports() -> None:
                 assert not module.startswith(prefix), f"{path} imports {module}"
 
 
-def test_c02_c03_no_human_review_or_ade_import_or_invocation() -> None:
+def test_c01_human_review_public_api_only() -> None:
+    hr_modules: set[str] = set()
     for path in PACKAGE_ROOT.rglob("*.py"):
+        for module in _imported_modules(path):
+            if module.startswith("app.human_review"):
+                hr_modules.add(module)
+    assert hr_modules
+    assert hr_modules <= ALLOWED_HR_MODULES
+    for path in PACKAGE_ROOT.rglob("*.py"):
+        names = _imported_names(path)
         text = path.read_text(encoding="utf-8")
-        modules = _imported_modules(path)
-        assert all(not module.startswith("app.human_review") for module in modules)
-        assert all(not module.startswith("app.ai_decision_engine") for module in modules)
-        assert "assemble_human_review" not in text
-        assert "evaluate_ade" not in text
-        assert "from app.human_review" not in text
-        assert "from app.ai_decision_engine" not in text
+        assert "assemble_human_review_from_parts" not in names
+        assert "assemble_human_review_from_parts" not in text
+
+
+def test_c02_ade_public_api_only() -> None:
+    ade_modules: set[str] = set()
+    for path in PACKAGE_ROOT.rglob("*.py"):
+        for module in _imported_modules(path):
+            if module.startswith("app.ai_decision_engine"):
+                ade_modules.add(module)
+    assert ade_modules
+    assert ade_modules <= ALLOWED_ADE_MODULES
+    for path in PACKAGE_ROOT.rglob("*.py"):
+        names = _imported_names(path)
+        text = path.read_text(encoding="utf-8")
+        assert "evaluate_ade_from_parts" not in names
+        assert "evaluate_ade_from_parts" not in text
+        assert "classify_admission" not in names
+        assert "from_parts" not in text
+
+
+def test_c03_public_entrypoints_used() -> None:
+    orch = (PACKAGE_ROOT / "orchestrator.py").read_text(encoding="utf-8")
+    assert "assemble_human_review(" in orch
+    assert "evaluate_ade(" in orch
+    assert "HumanReviewRequest(" in orch
+    assert "AdeEvaluationRequest(" in orch
 
 
 def test_c04_no_model_sdk_import() -> None:
@@ -184,7 +235,6 @@ def test_c09_no_provider_client() -> None:
 
 def test_c10_no_new_dependency() -> None:
     pyproject = (REPO_ROOT / "apps" / "api" / "pyproject.toml").read_text(encoding="utf-8")
-    # Package must not require new declared dependencies beyond repository baseline.
     assert "openai" not in pyproject
     assert "anthropic" not in pyproject
     assert "langchain" not in pyproject
@@ -201,7 +251,6 @@ def test_c11_no_forbidden_stage_package_modification() -> None:
         "apps/api/app/human_review",
         "apps/api/app/ai_decision_engine",
     ]
-    # Contract: package source does not rewrite stage packages; path inventory is structural.
     for relative in frozen:
         assert (REPO_ROOT / relative).is_dir()
 
@@ -213,6 +262,31 @@ def test_c12_no_replay_implementation_for_issue_3() -> None:
         assert "assert_replay_equal" not in text
         assert "def reevaluate" not in text
         assert "def replay" not in text
+        assert "run_id" not in text
+        assert "pipeline_fingerprint" not in text
+
+
+def test_c13_c14_bag_denylist_preserves_human_review_and_ade() -> None:
+    admit = (PACKAGE_ROOT / "admit.py").read_text(encoding="utf-8")
+    assert '"human_review"' in admit
+    assert '"ade"' in admit
+
+
+def test_c15_c16_frozen_six_outcome_taxonomy_unchanged() -> None:
+    assert GLOBAL_OUTCOME_FAMILIES == (
+        "admission_rejected",
+        "required_stage_failed",
+        "completed_dashboard",
+        "completed_human_review",
+        "completed_ade_accept",
+        "completed_ade_abstain",
+    )
+    assert len(GLOBAL_OUTCOME_FAMILIES) == 6
+
+
+def test_c17_same_public_pipeline_entrypoint_retained() -> None:
+    assert callable(run_intelligence_pipeline)
+    assert "run_intelligence_pipeline" in pipeline_all
 
 
 def test_public_surface_excludes_forbidden_tokens() -> None:
