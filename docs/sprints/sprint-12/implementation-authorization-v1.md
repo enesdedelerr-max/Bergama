@@ -2,7 +2,7 @@
 
 **Authorization ID:** `ai-decision-engine.implementation-authorization.v1`
 **Title:** AI Decision Engine Implementation Authorization v1
-**Status:** MATERIALIZED — awaiting human review
+**Status:** APPROVED
 **Document class:** Implementation Authorization only
 **Sprint:** 12
 **Bounded context:** AI Decision Engine Foundation
@@ -47,23 +47,26 @@ classes, packages, services, modules, DTO fields, endpoints, schemas,
 events, or notification providers beyond deliverable categories required
 for authorized foundation implementation.
 
-This document is **MATERIALIZED — awaiting human review**.
-It is **not** APPROVED.
-No AI Decision Engine implementation issue, branch, or pull request may
-claim implementation authority until this artifact completes its own
-review/approval workflow and becomes APPROVED.
+This document is **APPROVED**.
+Workflow approval prerequisites — commit, PR, CI, external approval, merge,
+and post-merge verification — are complete.
+Separately numbered AI Decision Engine implementation issues may claim
+implementation authority only within Authorized Scope and under Issue and
+Branch Authority. This status synchronization does not create an issue,
+branch, pull request, commit, or implementation.
 
 ---
 
 ## Purpose
 
-Freeze exactly what foundation implementation is permitted to do after later
-human approval of this artifact.
+Freeze exactly what foundation implementation is permitted to do under this
+APPROVED artifact.
 Freeze exactly what foundation implementation is prohibited from doing.
 
 This document defines implementation boundaries only.
-Implementation remains **DENIED** until this Implementation Authorization is
-APPROVED through its separate workflow.
+Implementation is **AUTHORIZED** strictly within the boundaries frozen by
+this APPROVED Implementation Authorization. Numbered implementation issues
+may proceed only under Issue and Branch Authority.
 
 ---
 
@@ -130,14 +133,14 @@ Approved Governance
 Approved Policy Freeze
       │
       ▼
-Implementation Authorization   ← THIS ARTIFACT (MATERIALIZED — awaiting human review)
+Implementation Authorization   ← THIS ARTIFACT (APPROVED)
       │
       ▼
 Implementation
 ```
 
 No AI Decision Engine implementation issue, branch, or pull request may claim
-authority without this Implementation Authorization becoming **APPROVED**.
+authority outside this **APPROVED** Implementation Authorization.
 
 ### Implementation Authority
 
@@ -720,7 +723,7 @@ Implementation SHALL NOT implement under this Authorization:
 
 ## Implementation Documentation
 
-After this Implementation Authorization is later **APPROVED**,
+After this Implementation Authorization is **APPROVED**,
 implementation MAY update narrowly required:
 
 - domain / package README;
@@ -729,7 +732,9 @@ implementation MAY update narrowly required:
 - Sprint 12 implementation status;
 - ROADMAP implementation status.
 
-This materialization does **not** authorize those implementation edits now.
+This status synchronization does **not** perform those implementation
+documentation edits; they remain reserved for authorized implementation
+issues.
 
 This Authorization does **not** authorize release notes, tag, release, or
 Sprint closeout.
@@ -779,34 +784,39 @@ Rollback SHALL NOT redesign approved repository artifacts.
 
 ## Status Effect
 
-Materializing this artifact changes workflow state ONLY to:
+Approving this artifact changes workflow state ONLY to:
 
 | Field | Value |
 | --- | --- |
-| Implementation Authorization | MATERIALIZED — awaiting human review |
-| Implementation | DENIED |
+| Implementation Authorization | APPROVED |
+| Implementation | AUTHORIZED — bounded by this Implementation Authorization |
 | Sprint 12 | NOT COMPLETE |
 | MODEL PARTICIPATION | UNAUTHORIZED |
 | Broker Execution | DENIED / DEFERRED |
 | Policy | APPROVED |
 | Governance #1–#8 | COMPLETE |
 
-This materialization does **not** claim Implementation Authorization is
-APPROVED.
-This materialization does **not** authorize implementation.
+This approval does **not** complete Sprint 12.
+This approval does **not** authorize model participation, Broker Execution,
+trading authority, Order Intent, OMS, or any surface outside Authorized Scope.
+This approval does **not** create an issue, branch, pull request, commit, or
+implementation.
 
 ---
 
 ## Resolution
 
-**Status:** MATERIALIZED — awaiting human review
+**Status:** APPROVED
 
 **Authorization ID:** `ai-decision-engine.implementation-authorization.v1`
 
-**Effect:** This document freezes the minimum AI Decision Engine foundation
-implementation surface permitted under `ai-decision-engine.policy.v1` and
-subordinate frozen Planning, Architecture, and Governance. It awaits human
-review, CI, external approval, merge, and post-merge verification before it
-may become APPROVED. Until APPROVED, Implementation remains DENIED. MODEL
-PARTICIPATION remains UNAUTHORIZED. Broker Execution remains DENIED /
-DEFERRED. Sprint 12 remains NOT COMPLETE.
+**Effect:** Deterministic implementation of AI Decision Engine foundation
+under `ai-decision-engine.policy.v1` is authorized within the boundaries
+frozen by this document and remains fully subordinate to Sprint 12 Planning
+Gate, AI Decision Engine Architecture v1, AI Decision Engine Governance
+Decisions #1–#8, and Policy Version `ai-decision-engine.policy.v1`. Separately
+numbered implementation issues may proceed only within Authorized Scope and
+Explicitly Forbidden Scope. This Implementation Authorization does not create
+an issue, branch, pull request, commit, or implementation. MODEL PARTICIPATION
+remains UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED. Sprint 12
+remains NOT COMPLETE.
