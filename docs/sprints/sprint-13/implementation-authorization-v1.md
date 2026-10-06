@@ -3,24 +3,30 @@
 **Authorization ID:** `intelligence-pipeline.implementation-authorization.v1`
 **Title:** Intelligence Pipeline Implementation Authorization v1
 **Version:** v1
-**Status:** DRAFT / NOT YET APPROVED
+**Status:** APPROVED / EFFECTIVE
 **Document class:** Implementation Authorization
 **Sprint:** 13
 **Theme:** Intelligence Pipeline Integration
 **Bounded context:** Intelligence Pipeline (application-layer composer)
-**Authorized package (future, not created by this document):** `apps/api/app/intelligence_pipeline/`
+**Authorized package:** `apps/api/app/intelligence_pipeline/`
 **Implementation Authorization issue:** [#124](https://github.com/enesdedelerr-max/Bergama/issues/124)
 
 ```text
-THIS DOCUMENT DOES NOT AUTHORIZE IMPLEMENTATION WHILE DRAFT.
-IMPLEMENTATION_AUTHORIZATION = DENIED
-IMPLEMENTATION_WORK_STARTED = NO
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED
+IMPLEMENTATION_WORK_STARTED = YES
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
+ISSUE_126 = COMPLETE
+ISSUE_128 = COMPLETE
+ISSUE_130 = COMPLETE
+SPRINT_13 = NOT COMPLETE
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED / DEFERRED
 ```
 
-Implementation may begin only after this Authorization becomes
-**APPROVED / EFFECTIVE** through repository process.
+This document is **APPROVED / EFFECTIVE** (#124 / PR #125). Implementation is
+**AUTHORIZED** strictly within the boundaries frozen by this artifact. The
+authorized three-issue implementation sequence is COMPLETE. Sprint 13 governance
+closeout remains separate and NOT COMPLETE.
 
 ---
 
@@ -38,10 +44,12 @@ It does **not**:
 - authorize model participation
 - authorize trading or execution
 - authorize persistence, HTTP product APIs, or UI
-- create implementation issues, runtime code, or `apps/api/app/intelligence_pipeline/`
-- mark Sprint 13 complete
+- expand scope beyond the frozen minimum surface
+- mark Sprint 13 complete (governance closeout is separate)
 
-While **DRAFT / NOT YET APPROVED**, implementation remains **DENIED**.
+Implementation is **AUTHORIZED** within Authorized Scope. The authorized
+implementation sequence is COMPLETE (Issues #126 / #128 / #130). This status
+synchronization does not expand authorization or create new deliverables.
 
 ---
 
@@ -725,20 +733,29 @@ unless separately authorized by a future governance change.
 
 ## Issue and Branch Authority
 
-After this Implementation Authorization is **APPROVED / EFFECTIVE**:
+After this Implementation Authorization became **APPROVED / EFFECTIVE**:
 
-- the three future implementation issues described above may be created
-- branches may be created only after real issue numbers exist
-- each issue SHALL reference this Authorization and
+- the three bounded implementation issues were created and completed
+- branches were created only after real issue numbers existed
+- each issue referenced this Authorization and
   `intelligence-pipeline.policy.v1`
-- each issue SHALL state measurable acceptance criteria and explicit
-  non-goals
-- each issue SHALL remain within Authorized Scope and Forbidden Paths
+- each issue stated measurable acceptance criteria and explicit non-goals
+- each issue remained within Authorized Scope and Forbidden Paths
 
-This Implementation Authorization (while DRAFT) does not create those
-implementation issues, runtime packages, or tests.
+| Issue | Scope | State |
+| --- | --- | --- |
+| [#126](https://github.com/enesdedelerr-max/Bergama/issues/126) | Core admission + orchestration through Dashboard | COMPLETE (PR #127) |
+| [#128](https://github.com/enesdedelerr-max/Bergama/issues/128) | Optional Human Review + ADE terminals | COMPLETE (PR #129) |
+| [#130](https://github.com/enesdedelerr-max/Bergama/issues/130) | Replay / determinism / authority-firewall hardening | COMPLETE (PR #131) |
 
-Speculative issue-number reservation is forbidden.
+```text
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
+AUTHORITATIVE_IMPLEMENTATION_BASELINE = 195c1c9eae1a8b3258b04e9a37dca562a051a371
+POST_MERGE_CI_RUN_ID = 37396084619
+```
+
+This Implementation Authorization does not authorize additional implementation
+beyond the exhausted three-issue sequence.
 
 ---
 
@@ -762,25 +779,31 @@ Examples requiring stop:
 
 ## Status Effect
 
-While DRAFT:
-
 | Field | Value |
 | --- | --- |
-| Implementation Authorization | DRAFT / NOT YET APPROVED |
-| Implementation | DENIED |
-| Implementation work | NOT STARTED |
+| Implementation Authorization | APPROVED / EFFECTIVE |
+| Implementation | AUTHORIZED — bounded by this Implementation Authorization |
+| Implementation work | STARTED = YES; SEQUENCE = 3/3 COMPLETE |
+| Issue #126 | COMPLETE |
+| Issue #128 | COMPLETE |
+| Issue #130 | COMPLETE |
+| Sprint 13 | NOT COMPLETE (governance closeout separate) |
+| Status sync | Issue #132 (docs-only) |
 | MODEL PARTICIPATION | UNAUTHORIZED |
 | Broker Execution | DENIED / DEFERRED |
 
-If and only if this Authorization becomes APPROVED / EFFECTIVE:
+Effects under this APPROVED / EFFECTIVE Authorization:
 
-1. Bounded implementation within this document is authorized.
-2. The three future implementation issues may be created.
+1. Bounded implementation within this document was authorized.
+2. The three authorized implementation issues were created and completed.
 3. Model participation remains UNAUTHORIZED.
 4. Broker / execution remains DENIED / DEFERRED.
 5. Sprint 13 product persistence / HTTP / UI remain not authorized.
-6. Sprint 13 remains not complete until authorized implementation issues are
-   completed under repository process.
+6. Sprint 13 remains NOT COMPLETE until separate governance closeout.
+7. No fourth implementation issue and no authorization expansion are granted.
 
-Approval alone does not create runtime code and does not create
-`apps/api/app/intelligence_pipeline/`.
+```text
+IMPLEMENTATION_COMPLETE = YES
+SPRINT_COMPLETE = NO
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+```

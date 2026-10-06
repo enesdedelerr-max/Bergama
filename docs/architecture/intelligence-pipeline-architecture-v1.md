@@ -3,7 +3,7 @@
 **Architecture ID:** `intelligence-pipeline.architecture.v1`
 **Version:** v1
 **Bounded context:** Intelligence Pipeline
-**Status:** DRAFT / NOT YET APPROVED
+**Status:** APPROVED / EFFECTIVE
 **Document class:** Architecture only
 **Sprint:** 13
 **Theme:** Intelligence Pipeline Integration
@@ -47,7 +47,7 @@ ARCHITECTURE APPROVAL ≠ IMPLEMENTATION
 | --- | --- |
 | MODEL_PARTICIPATION | UNAUTHORIZED |
 | BROKER_EXECUTION | DENIED / DEFERRED |
-| IMPLEMENTATION_AUTHORIZATION | DENIED |
+| IMPLEMENTATION_AUTHORIZATION | AUTHORIZED by separate Implementation Authorization (not by Architecture) |
 | UI_AUTHORIZED | NO |
 | SPRINT_13_PRODUCT_PERSISTENCE | NOT AUTHORIZED |
 | SPRINT_13_HTTP_PRODUCT_API | NOT AUTHORIZED |
@@ -71,18 +71,20 @@ redesigned by this Architecture:
 
 | Field | Value |
 | --- | --- |
-| Architecture status | DRAFT / NOT YET APPROVED |
-| Architecture approved | No |
+| Architecture status | APPROVED / EFFECTIVE |
+| Architecture approved | Yes |
 | Approves Governance Decisions | No |
 | Approves Policy Freeze | No |
 | Approves Implementation Authorization | No |
 | Approves Implementation | No |
-| Next mandatory gate after Architecture approval | Governance Gate |
+| Subsequent gates | Governance / Policy / Implementation Authorization completed under separate issues |
+| Implementation sequence | 3/3 COMPLETE (#126 / #128 / #130) |
+| Sprint 13 governance closeout | NOT COMPLETE |
+| Next mandatory process step | Separate Sprint 13 governance closeout |
 
-Until this Architecture is APPROVED through repository process, Governance
-remains blocked. Until Implementation Authorization is APPROVED, no Sprint 13
-implementation issue, branch, or pull request may claim implementation
-authority.
+This Architecture is **APPROVED / EFFECTIVE** (#118 / PR #119). Architecture
+approval alone does not authorize Implementation; Implementation proceeded only
+under separately approved Implementation Authorization.
 
 ---
 
@@ -807,7 +809,7 @@ This Architecture document, even when APPROVED, does **not** authorize:
 
 ```text
 ARCHITECTURE APPROVAL ≠ GOVERNANCE / POLICY / IMPLEMENTATION AUTHORIZATION
-IMPLEMENTATION_AUTHORIZATION = DENIED
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate Implementation Authorization; not by Architecture)
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED / DEFERRED
 UI_AUTHORIZED = NO
@@ -825,5 +827,6 @@ at explicit Human Review and HR-gated ADE accept / abstain, and remains
 non-executable, in-process, and free of Feature Platform / HTTP / UI /
 persistence productization.
 
-This document remains **DRAFT / NOT YET APPROVED** until repository Architecture
-approval process completes.
+This document is **APPROVED / EFFECTIVE**.
+`IMPLEMENTATION_COMPLETE = YES`. `SPRINT_COMPLETE = NO`.
+`MODEL_PARTICIPATION = UNAUTHORIZED`. `BROKER_EXECUTION = DENIED / DEFERRED`.

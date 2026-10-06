@@ -1,7 +1,7 @@
 # Intelligence Pipeline Governance Decisions
 
 **Governance ID:** `intelligence-pipeline.governance`
-**Status:** DRAFT / NOT YET APPROVED
+**Status:** APPROVED / EFFECTIVE
 **Document class:** Governance index only
 **Sprint:** 13
 **Theme:** Intelligence Pipeline Integration
@@ -14,7 +14,7 @@ It points to the single consolidated Governance decision set:
 
 | Decision set | Document | Status |
 | --- | --- | --- |
-| Governance v1 | [`intelligence-pipeline-governance-v1.md`](intelligence-pipeline-governance-v1.md) | DRAFT / NOT YET APPROVED |
+| Governance v1 | [`intelligence-pipeline-governance-v1.md`](intelligence-pipeline-governance-v1.md) | APPROVED / EFFECTIVE |
 
 **Authoritative decision body:** `intelligence-pipeline.governance.v1`
 
@@ -27,13 +27,16 @@ This package governs **composition only**.
 
 - Stage bounded contexts retain semantic ownership.
 - Existing stage governance remains authoritative.
-- Governance does not authorize Policy or implementation.
+- Governance does not authorize Policy or implementation by itself.
 - Governance does not authorize model participation.
 - Governance does not authorize trading / execution.
 
 ```text
 GOVERNANCE APPROVAL ≠ POLICY / IMPLEMENTATION AUTHORIZATION
 GOVERNANCE APPROVAL ≠ IMPLEMENTATION
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate Implementation Authorization)
+IMPLEMENTATION_WORK_STARTED = YES
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED / DEFERRED
 ```
@@ -59,9 +62,10 @@ BROKER_EXECUTION = DENIED / DEFERRED
 
 | Control | Value |
 | --- | --- |
-| Policy authorization | DENIED |
-| Implementation authorization | DENIED |
-| Implementation work | NOT STARTED |
+| Policy authorization | APPROVED / FROZEN (separate Policy Freeze; not by this index) |
+| Implementation authorization | AUTHORIZED (separate Implementation Authorization; not by this index) |
+| Implementation work | COMPLETE (Issues #126 / #128 / #130) |
+| Sprint 13 governance closeout | NOT COMPLETE |
 | MODEL_PARTICIPATION | UNAUTHORIZED |
 | BROKER_EXECUTION | DENIED / DEFERRED |
 | SPRINT_13_PRODUCT_PERSISTENCE | NOT AUTHORIZED |

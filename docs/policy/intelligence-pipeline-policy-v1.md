@@ -3,7 +3,7 @@
 **Policy ID:** `intelligence-pipeline.policy.v1`
 **Version:** v1
 **Title:** Intelligence Pipeline Policy Version v1
-**Status:** DRAFT / NOT YET APPROVED
+**Status:** APPROVED / FROZEN
 **Document class:** Composition Policy Freeze
 **Sprint:** 13
 **Theme:** Intelligence Pipeline Integration
@@ -14,8 +14,9 @@
 ```text
 POLICY APPROVAL ≠ IMPLEMENTATION AUTHORIZATION
 POLICY APPROVAL ≠ IMPLEMENTATION
-IMPLEMENTATION_AUTHORIZATION = DENIED
-IMPLEMENTATION_WORK_STARTED = NO
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate Implementation Authorization; not by this Policy)
+IMPLEMENTATION_WORK_STARTED = YES
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED / DEFERRED
 ```
@@ -50,16 +51,17 @@ This Policy does not modify those artifacts.
 
 | Field | Value |
 | --- | --- |
-| Policy status | DRAFT / NOT YET APPROVED |
-| Policy approved | No |
+| Policy status | APPROVED / FROZEN |
+| Policy approved | Yes |
 | Approves Implementation Authorization | No |
 | Approves Implementation | No |
-| Implementation authorization | DENIED |
-| Implementation work | NOT STARTED |
-| Next mandatory gate after Policy approval | Implementation Authorization (separate gate) |
+| Implementation authorization | AUTHORIZED (separate Implementation Authorization #124 / PR #125) |
+| Implementation work | COMPLETE (Issues #126 / #128 / #130) |
+| Sprint 13 governance closeout | NOT COMPLETE |
+| Next mandatory process step | Separate Sprint 13 governance closeout |
 
-Until this Policy Version is APPROVED through repository process, Implementation
-Authorization remains blocked for Sprint 13 pipeline composition.
+This Policy Version is **APPROVED / FROZEN** (#122 / PR #123). Policy approval
+alone does not authorize Implementation.
 
 ---
 
@@ -412,26 +414,32 @@ FEATURE_PLATFORM_CHANGE_REQUIRED = NO
 UI_AUTHORIZED = NO
 SPRINT_14_AUTHORIZED = NO
 SPRINT_15_UI_AUTHORIZED = NO
-IMPLEMENTATION_AUTHORIZATION = DENIED
-IMPLEMENTATION_WORK_STARTED = NO
-INTELLIGENCE_PIPELINE_RUNTIME_PACKAGE_CREATED = NO
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate Implementation Authorization; not by this Policy)
+IMPLEMENTATION_WORK_STARTED = YES
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
+INTELLIGENCE_PIPELINE_RUNTIME_PACKAGE_CREATED = YES (under Implementation Authorization)
 ```
 
 ---
 
 ## Approval Effect
 
-This document remains **DRAFT / NOT YET APPROVED** until repository Policy
-approval through controlled review and merge.
+This document is **APPROVED / FROZEN** through repository Policy approval
+(#122 / PR #123).
 
-If and only if this Policy Version becomes APPROVED / EFFECTIVE:
+Effects of Policy approval:
 
-1. The minimum composition Policy Freeze defined here becomes normative.
-2. Implementation Authorization may be considered as a separate gate.
-3. Implementation remains DENIED until Implementation Authorization is APPROVED.
+1. The minimum composition Policy Freeze defined here is normative.
+2. Implementation Authorization was considered as a separate gate and later
+   APPROVED / EFFECTIVE.
+3. Implementation proceeded only under Implementation Authorization and is
+   COMPLETE (Issues #126 / #128 / #130).
 4. Model participation remains UNAUTHORIZED.
 5. Broker / execution remains DENIED / DEFERRED.
 6. Sprint 13 product persistence / HTTP product API / UI remain not authorized.
+7. Sprint 13 governance closeout remains NOT COMPLETE.
 
-Policy approval alone does not create runtime code, does not create
-`apps/api/app/intelligence_pipeline/`, and does not authorize Implementation.
+Policy approval alone does not create runtime code and does not authorize
+Implementation by itself.
+`IMPLEMENTATION_COMPLETE = YES`. `SPRINT_COMPLETE = NO`.
+`MODEL_PARTICIPATION = UNAUTHORIZED`. `BROKER_EXECUTION = DENIED / DEFERRED`.
