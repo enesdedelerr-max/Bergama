@@ -179,11 +179,11 @@ See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md) and
 
 ### Sprint 13 — Intelligence Pipeline Integration
 
-Status: **IMPLEMENTATION COMPLETE / SPRINT_COMPLETE = NO**. Planning Gate
-`sprint-13.planning-gate` APPROVED / EFFECTIVE. Architecture
-`intelligence-pipeline.architecture.v1` APPROVED / EFFECTIVE. Governance
-`intelligence-pipeline.governance.v1` APPROVED / EFFECTIVE. Policy Version
-`intelligence-pipeline.policy.v1` APPROVED / FROZEN. Implementation Authorization
+Status: **COMPLETE**. Planning Gate `sprint-13.planning-gate` APPROVED /
+EFFECTIVE. Architecture `intelligence-pipeline.architecture.v1` APPROVED /
+EFFECTIVE. Governance `intelligence-pipeline.governance.v1` APPROVED /
+EFFECTIVE. Policy Version `intelligence-pipeline.policy.v1` APPROVED / FROZEN.
+Implementation Authorization
 `intelligence-pipeline.implementation-authorization.v1` APPROVED / EFFECTIVE.
 Implementation sequence 3/3 COMPLETE:
 
@@ -192,15 +192,20 @@ Implementation sequence 3/3 COMPLETE:
 - Issue **#130** / PR **#131** — Replay, determinism, and authority-firewall hardening
 
 Authoritative implementation baseline:
-`195c1c9eae1a8b3258b04e9a37dca562a051a371`. Post-merge quality gate
-`37396084619` completed / success. Implementation-status synchronization is
-Issue **#132** (docs-only). Governance closeout is **PENDING**.
+`195c1c9eae1a8b3258b04e9a37dca562a051a371`. Implementation-status
+synchronization COMPLETE (Issue **#132** CLOSED; PR **#133** MERGED @
+`810be70e80acfe6f172910faf15505832eece3aa`; post-merge quality gate
+`37398770759` completed / success). Governance closeout COMPLETE under
+Issue **#134**
+([`docs/sprints/sprint-13/CLOSEOUT.md`](docs/sprints/sprint-13/CLOSEOUT.md)).
 
 ```text
 IMPLEMENTATION_COMPLETE = YES
-SPRINT_COMPLETE = NO
-GOVERNANCE_CLOSEOUT = PENDING
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_COMPLETE = YES
 SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+SPRINT_14_AUTHORIZED = NO
+TAG_RELEASE_AUTHORIZED = NO
 ```
 
 MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution remains
@@ -222,21 +227,27 @@ Implementation Authorization ID: `intelligence-pipeline.implementation-authoriza
 | Policy Freeze | APPROVED / FROZEN |
 | Implementation Authorization | APPROVED / EFFECTIVE |
 | Implementation | 3/3 COMPLETE — #126 / #128 / #130 |
-| Status sync | Issue #132 |
-| Closeout | PENDING |
+| Status sync | COMPLETE — Issue #132 / PR #133 |
+| Closeout | COMPLETE — Issue #134 |
 | Broker Execution | DENIED / DEFERRED |
 | MODEL PARTICIPATION | UNAUTHORIZED |
 | Tag / release | NOT AUTHORIZED / NOT PERFORMED |
 
-See [`docs/sprints/sprint-13/README.md`](docs/sprints/sprint-13/README.md).
+See [`docs/sprints/sprint-13/README.md`](docs/sprints/sprint-13/README.md) and
+[`docs/sprints/sprint-13/CLOSEOUT.md`](docs/sprints/sprint-13/CLOSEOUT.md).
 
 ### Next action
 
-Complete and verify Sprint 13 implementation-status synchronization (Issue #132),
-then perform a separate Sprint 13 governance closeout. Do **not** declare
-Sprint 13 COMPLETE until that closeout. Do **not** start Sprint 14, UI work,
-tag, release, or deployment from this status. Broker Execution remains
-DENIED / DEFERRED. MODEL PARTICIPATION remains UNAUTHORIZED.
+```text
+POST_CLOSEOUT_NEXT_ACTION_CLASS = SEPARATE_SPRINT_14_PLANNING_GATE_DISCOVERY
+SPRINT_14_AUTHORIZED = NO
+```
+
+This is a workflow eligibility statement only. Sprint 14 remains unauthorized
+until its own governance / planning process grants authority. Do **not** start
+Sprint 14 implementation, UI work, tag, release, or deployment from this
+status. Broker Execution remains DENIED / DEFERRED. MODEL PARTICIPATION remains
+UNAUTHORIZED.
 
 ## Sprint sequence
 
@@ -253,7 +264,7 @@ DENIED / DEFERRED. MODEL PARTICIPATION remains UNAUTHORIZED.
 11. Sprint 10 — Dashboard Foundation — Complete
 12. Sprint 11 — Human Review Foundation — Complete
 13. Sprint 12 — AI Decision Engine Foundation — Complete
-14. Sprint 13 — Intelligence Pipeline Integration — Implementation complete / closeout pending
+14. Sprint 13 — Intelligence Pipeline Integration — Complete
 
 ### Downstream sequencing
 
@@ -263,14 +274,14 @@ Sprint 8  Premarket Scoring       COMPLETE / RELEASED
   → Sprint 10 Dashboard               COMPLETE / RELEASED
   → Sprint 11 Human Review            COMPLETE / RELEASED
   → Sprint 12 AI Decision Engine      COMPLETE
-  → Sprint 13 Intelligence Pipeline   IMPLEMENTATION COMPLETE / CLOSEOUT PENDING
+  → Sprint 13 Intelligence Pipeline   COMPLETE
   → Broker Execution                  future / unauthorized
 ```
 
-Sprint 12 is COMPLETE under Issue #114. Sprint 13 authorized implementation is
-COMPLETE (Issues #126 / #128 / #130). Status sync is Issue #132. Sprint 13
-governance closeout remains PENDING. Broker Execution remains deferred future
-work and is **not** authorized.
+Sprint 12 is COMPLETE under Issue #114. Sprint 13 is COMPLETE under Issue #134
+(authorized implementation Issues #126 / #128 / #130; status sync Issue #132 /
+PR #133; governance closeout Issue #134). Sprint 14 remains unauthorized.
+Broker Execution remains deferred future work and is **not** authorized.
 
 ### Notes on later themes
 
