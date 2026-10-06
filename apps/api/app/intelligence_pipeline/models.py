@@ -78,13 +78,14 @@ class PipelineBindings(BaseModel):
 
 
 class PipelineProvenance(BaseModel):
-    """Thin composition provenance (no stage provenance rewrite; no replay identity)."""
+    """Thin composition provenance with deterministic pipeline fingerprint identity."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     as_of: datetime | None = None
     stage_order: tuple[str, ...] = ()
     executed_stages: tuple[str, ...] = ()
+    pipeline_fingerprint: str | None = None
     watchlist_config_fingerprint: str | None = None
     watchlist_input_fingerprint: str | None = None
     gap_config_fingerprint: str | None = None

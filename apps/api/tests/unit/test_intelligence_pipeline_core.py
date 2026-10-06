@@ -374,7 +374,8 @@ def test_u06_required_stage_failed_semantics(monkeypatch: pytest.MonkeyPatch) ->
     assert result.outcome.value == OUTCOME_REQUIRED_STAGE_FAILED
     assert result.failed_stage == "watchlist"
     assert result.failure_error_type == "RuntimeError"
-    assert result.failure_detail == "watchlist_boom"
+    # F-03: public detail prefers type name when `.detail` is absent.
+    assert result.failure_detail == "RuntimeError"
     assert result.dashboard is None
 
 
@@ -416,7 +417,7 @@ def test_u10_bounded_failure_metadata(monkeypatch: pytest.MonkeyPatch) -> None:
     result = run_intelligence_pipeline(_valid_request())
     assert result.outcome == PipelineOutcome.REQUIRED_STAGE_FAILED
     assert result.failed_stage == "gap"
-    assert result.failure_detail == "gap_fail"
+    assert result.failure_detail == "ValueError"
     assert result.failure_error_type == "ValueError"
     assert result.provenance.failed_stage == "gap"
 

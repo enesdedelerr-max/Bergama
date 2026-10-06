@@ -1,10 +1,11 @@
-"""Intelligence Pipeline Core — Issue #126 public exports."""
+"""Intelligence Pipeline Core — Issue #126/#128/#130 public exports."""
 
 from __future__ import annotations
 
 from app.intelligence_pipeline.errors import (
     PipelineAdmissionError,
     PipelineError,
+    PipelineReplayInequalityError,
     PipelineStageExecutionError,
 )
 from app.intelligence_pipeline.models import (
@@ -30,6 +31,10 @@ from app.intelligence_pipeline.policy import (
     POLICY_VERSION_V1,
     STAGE_ORDER,
 )
+from app.intelligence_pipeline.replay import (
+    assert_replay_equal,
+    replay_intelligence_pipeline,
+)
 
 __all__ = [
     "BROKER_EXECUTION",
@@ -50,8 +55,11 @@ __all__ = [
     "PipelineError",
     "PipelineOutcome",
     "PipelineProvenance",
+    "PipelineReplayInequalityError",
     "PipelineRequest",
     "PipelineResult",
     "PipelineStageExecutionError",
+    "assert_replay_equal",
+    "replay_intelligence_pipeline",
     "run_intelligence_pipeline",
 ]
