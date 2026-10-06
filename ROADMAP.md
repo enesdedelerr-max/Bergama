@@ -177,12 +177,66 @@ UNAUTHORIZED.
 See [`docs/sprints/sprint-12/README.md`](docs/sprints/sprint-12/README.md) and
 [`docs/sprints/sprint-12/CLOSEOUT.md`](docs/sprints/sprint-12/CLOSEOUT.md).
 
+### Sprint 13 — Intelligence Pipeline Integration
+
+Status: **IMPLEMENTATION COMPLETE / SPRINT_COMPLETE = NO**. Planning Gate
+`sprint-13.planning-gate` APPROVED / EFFECTIVE. Architecture
+`intelligence-pipeline.architecture.v1` APPROVED / EFFECTIVE. Governance
+`intelligence-pipeline.governance.v1` APPROVED / EFFECTIVE. Policy Version
+`intelligence-pipeline.policy.v1` APPROVED / FROZEN. Implementation Authorization
+`intelligence-pipeline.implementation-authorization.v1` APPROVED / EFFECTIVE.
+Implementation sequence 3/3 COMPLETE:
+
+- Issue **#126** / PR **#127** — Core admission and orchestration through Dashboard
+- Issue **#128** / PR **#129** — Optional Human Review and ADE terminals
+- Issue **#130** / PR **#131** — Replay, determinism, and authority-firewall hardening
+
+Authoritative implementation baseline:
+`195c1c9eae1a8b3258b04e9a37dca562a051a371`. Post-merge quality gate
+`37396084619` completed / success. Implementation-status synchronization is
+Issue **#132** (docs-only). Governance closeout is **PENDING**.
+
+```text
+IMPLEMENTATION_COMPLETE = YES
+SPRINT_COMPLETE = NO
+GOVERNANCE_CLOSEOUT = PENDING
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+```
+
+MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution remains
+DENIED / DEFERRED. Sprint 14, UI, persistence, HTTP productization, Feature
+Platform mutation, tag, release, and deployment remain unauthorized.
+
+Theme: Intelligence Pipeline Integration.
+Planning Gate ID: `sprint-13.planning-gate`.
+Architecture ID: `intelligence-pipeline.architecture.v1`.
+Governance ID: `intelligence-pipeline.governance.v1`.
+Policy Version ID: `intelligence-pipeline.policy.v1`.
+Implementation Authorization ID: `intelligence-pipeline.implementation-authorization.v1`.
+
+| Field | Value |
+| --- | --- |
+| Planning | APPROVED / EFFECTIVE |
+| Architecture | APPROVED / EFFECTIVE |
+| Governance | APPROVED / EFFECTIVE |
+| Policy Freeze | APPROVED / FROZEN |
+| Implementation Authorization | APPROVED / EFFECTIVE |
+| Implementation | 3/3 COMPLETE — #126 / #128 / #130 |
+| Status sync | Issue #132 |
+| Closeout | PENDING |
+| Broker Execution | DENIED / DEFERRED |
+| MODEL PARTICIPATION | UNAUTHORIZED |
+| Tag / release | NOT AUTHORIZED / NOT PERFORMED |
+
+See [`docs/sprints/sprint-13/README.md`](docs/sprints/sprint-13/README.md).
+
 ### Next action
 
-Sprint 12 is COMPLETE under Issue #114. Tag / release remain unauthorized.
-Broker Execution remains DENIED / DEFERRED. MODEL PARTICIPATION remains
-UNAUTHORIZED. Any next theme requires a separately approved Planning Gate and
-is **not** authorized by Sprint 12 closeout.
+Complete and verify Sprint 13 implementation-status synchronization (Issue #132),
+then perform a separate Sprint 13 governance closeout. Do **not** declare
+Sprint 13 COMPLETE until that closeout. Do **not** start Sprint 14, UI work,
+tag, release, or deployment from this status. Broker Execution remains
+DENIED / DEFERRED. MODEL PARTICIPATION remains UNAUTHORIZED.
 
 ## Sprint sequence
 
@@ -199,6 +253,7 @@ is **not** authorized by Sprint 12 closeout.
 11. Sprint 10 — Dashboard Foundation — Complete
 12. Sprint 11 — Human Review Foundation — Complete
 13. Sprint 12 — AI Decision Engine Foundation — Complete
+14. Sprint 13 — Intelligence Pipeline Integration — Implementation complete / closeout pending
 
 ### Downstream sequencing
 
@@ -208,14 +263,14 @@ Sprint 8  Premarket Scoring       COMPLETE / RELEASED
   → Sprint 10 Dashboard               COMPLETE / RELEASED
   → Sprint 11 Human Review            COMPLETE / RELEASED
   → Sprint 12 AI Decision Engine      COMPLETE
+  → Sprint 13 Intelligence Pipeline   IMPLEMENTATION COMPLETE / CLOSEOUT PENDING
   → Broker Execution                  future / unauthorized
 ```
 
-Human Review Foundation is implemented. Sprint 12 Planning is APPROVED.
-Implementation Authorization is APPROVED. ADE Foundation implementation is
-COMPLETE within approved bounded scope (Issue #110 / PR #111). Status sync is
-COMPLETE (#112 / #113). Sprint 12 governance closeout is COMPLETE (Issue #114).
-Broker Execution remains deferred future work and is **not** authorized.
+Sprint 12 is COMPLETE under Issue #114. Sprint 13 authorized implementation is
+COMPLETE (Issues #126 / #128 / #130). Status sync is Issue #132. Sprint 13
+governance closeout remains PENDING. Broker Execution remains deferred future
+work and is **not** authorized.
 
 ### Notes on later themes
 

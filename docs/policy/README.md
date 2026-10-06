@@ -7,13 +7,16 @@
 | [dashboard-policy-v1.md](dashboard-policy-v1.md) | `dashboard.policy.v1` | APPROVED | Dashboard Policy Version v1 |
 | [human-review-policy-v1.md](human-review-policy-v1.md) | `human-review.policy.v1` | APPROVED | Human Review Policy Version v1 |
 | [ai-decision-engine-policy-v1.md](ai-decision-engine-policy-v1.md) | `ai-decision-engine.policy.v1` | APPROVED | AI Decision Engine Policy Version v1 |
-| [intelligence-pipeline-policy-v1.md](intelligence-pipeline-policy-v1.md) | `intelligence-pipeline.policy.v1` | DRAFT / NOT YET APPROVED | Intelligence Pipeline Policy Version v1 |
+| [intelligence-pipeline-policy-v1.md](intelligence-pipeline-policy-v1.md) | `intelligence-pipeline.policy.v1` | APPROVED / FROZEN | Intelligence Pipeline Policy Version v1 |
 
 Policy Version content must not be edited in place once frozen for an implementation generation.
 Behavioral change requires a new Policy Version ID and/or new subordinate specification IDs.
 
 `ai-decision-engine.policy.v1` is APPROVED and must not be edited in place.
 Implementation Authorization `ai-decision-engine.implementation-authorization.v1`
-is APPROVED. Implementation is AUTHORIZED only within that frozen
-Implementation Authorization scope. Sprint 12 remains not complete. MODEL
-PARTICIPATION remains UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED.
+is APPROVED. Sprint 12 is COMPLETE under Issue #114.
+`intelligence-pipeline.policy.v1` is APPROVED / FROZEN. Implementation
+Authorization `intelligence-pipeline.implementation-authorization.v1` is
+APPROVED / EFFECTIVE. Sprint 13 implementation sequence is COMPLETE (3/3);
+Sprint 13 governance closeout is NOT COMPLETE. MODEL PARTICIPATION remains
+UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED.

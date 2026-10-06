@@ -3,7 +3,7 @@
 **Governance ID:** `intelligence-pipeline.governance.v1`
 **Version:** v1
 **Title:** Intelligence Pipeline Governance v1
-**Status:** DRAFT / NOT YET APPROVED
+**Status:** APPROVED / EFFECTIVE
 **Document class:** Composition Governance
 **Sprint:** 13
 **Theme:** Intelligence Pipeline Integration
@@ -16,8 +16,9 @@
 ```text
 GOVERNANCE APPROVAL ≠ POLICY / IMPLEMENTATION AUTHORIZATION
 GOVERNANCE APPROVAL ≠ IMPLEMENTATION
-IMPLEMENTATION_AUTHORIZATION = DENIED
-IMPLEMENTATION_WORK_STARTED = NO
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate Implementation Authorization; not by this Governance Decision)
+IMPLEMENTATION_WORK_STARTED = YES
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED / DEFERRED
 ```
@@ -40,19 +41,19 @@ modify Planning or Architecture bodies.
 
 | Field | Value |
 | --- | --- |
-| Governance status | DRAFT / NOT YET APPROVED |
-| Governance approved | No |
+| Governance status | APPROVED / EFFECTIVE |
+| Governance approved | Yes |
 | Approves Policy Freeze | No |
 | Approves Implementation Authorization | No |
 | Approves Implementation | No |
-| Policy authorization | DENIED |
-| Implementation authorization | DENIED |
-| Implementation work | NOT STARTED |
-| Next mandatory gate after Governance approval | Policy Freeze (where required) |
+| Policy authorization | APPROVED / FROZEN (separate Policy Freeze #122 / PR #123) |
+| Implementation authorization | AUTHORIZED (separate Implementation Authorization #124 / PR #125) |
+| Implementation work | COMPLETE (Issues #126 / #128 / #130) |
+| Sprint 13 governance closeout | NOT COMPLETE |
+| Next mandatory process step | Separate Sprint 13 governance closeout |
 
-Until this Governance Decision is APPROVED through repository process, Policy
-Freeze and Implementation Authorization remain blocked for Sprint 13 pipeline
-composition.
+This Governance Decision is **APPROVED / EFFECTIVE** (#120 / PR #121).
+Governance approval alone does not authorize Implementation.
 
 ---
 
@@ -548,7 +549,7 @@ Intelligence Pipeline Policy Freeze where necessary:
 
 | Control | Value |
 | --- | --- |
-| POLICY_AUTHORIZATION | DENIED |
+| POLICY_AUTHORIZATION | APPROVED / FROZEN (by separate Policy Freeze; not created by this Decision) |
 
 Policy is not created by this Decision.
 
@@ -573,11 +574,12 @@ Implementation Authorization requires later prerequisites including:
 
 | Control | Value |
 | --- | --- |
-| IMPLEMENTATION_AUTHORIZATION | DENIED |
-| IMPLEMENTATION_WORK_STARTED | NO |
+| IMPLEMENTATION_AUTHORIZATION | AUTHORIZED (by separate Implementation Authorization; not by this Decision) |
+| IMPLEMENTATION_WORK_STARTED | YES |
+| IMPLEMENTATION_SEQUENCE | 3/3 COMPLETE |
 
 No runtime package, tests, schemas, migrations, HTTP routes, UI, or
-dependencies are authorized by this Decision.
+dependencies are authorized by this Decision alone.
 
 ---
 
@@ -625,7 +627,7 @@ Even when APPROVED, this Governance Decision does **not** authorize:
 
 ```text
 GOVERNANCE APPROVAL ≠ POLICY / IMPLEMENTATION AUTHORIZATION
-IMPLEMENTATION_AUTHORIZATION = DENIED
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate Implementation Authorization; not by this Governance Decision)
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED / DEFERRED
 UI_AUTHORIZED = NO
@@ -645,8 +647,11 @@ existing stage governance, and model / trading / productization / Feature
 Platform / provider firewalls.
 
 Stage bounded contexts retain semantic ownership.
-Policy decisions listed above remain intentionally deferred.
-Implementation remains DENIED.
+Policy decisions listed above were deferred to Policy Freeze and were later
+frozen under `intelligence-pipeline.policy.v1`.
+Implementation was not authorized by this Decision; it proceeded under separate
+Implementation Authorization and is now COMPLETE (3/3).
 
-This document remains **DRAFT / NOT YET APPROVED** until repository Governance
-approval process completes.
+This document is **APPROVED / EFFECTIVE**.
+`IMPLEMENTATION_COMPLETE = YES`. `SPRINT_COMPLETE = NO`.
+`MODEL_PARTICIPATION = UNAUTHORIZED`. `BROKER_EXECUTION = DENIED / DEFERRED`.

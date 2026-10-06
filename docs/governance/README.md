@@ -75,3 +75,25 @@ Policy: [`../policy/ai-decision-engine-policy-v1.md`](../policy/ai-decision-engi
 
 See [ai-decision-engine/README.md](ai-decision-engine/README.md) for the AI
 Decision Engine Governance set.
+
+## Intelligence Pipeline
+
+Intelligence Pipeline Governance v1 is **APPROVED / EFFECTIVE**
+(`intelligence-pipeline.governance.v1`). Policy Version
+`intelligence-pipeline.policy.v1` is **APPROVED / FROZEN**. Implementation
+Authorization `intelligence-pipeline.implementation-authorization.v1` is
+**APPROVED / EFFECTIVE**. Authorized implementation sequence is **3/3 COMPLETE**
+(Issues #126 / #128 / #130). Status synchronization is reflected under
+Issue #132. Sprint 13 governance closeout is **NOT COMPLETE**.
+`SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`. MODEL PARTICIPATION remains
+UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED.
+
+| # | Document | Status |
+|---|----------|--------|
+| 1 | [Intelligence Pipeline Governance v1](intelligence-pipeline/intelligence-pipeline-governance-v1.md) | APPROVED / EFFECTIVE |
+
+Policy: [`../policy/intelligence-pipeline-policy-v1.md`](../policy/intelligence-pipeline-policy-v1.md) —
+`intelligence-pipeline.policy.v1` — APPROVED / FROZEN.
+
+See [intelligence-pipeline/README.md](intelligence-pipeline/README.md) for the
+Intelligence Pipeline Governance index.

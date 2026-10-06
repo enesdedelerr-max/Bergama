@@ -2,7 +2,7 @@
 
 **Planning Gate ID:** `sprint-13.planning-gate`
 **Proposed theme:** Intelligence Pipeline Integration
-**Status:** DRAFT / NOT YET APPROVED
+**Status:** APPROVED / EFFECTIVE
 **Sprint number:** 13
 **Prerequisite:** Sprint 12 complete — AI Decision Engine Foundation
 **Authoritative main at draft time:** `ab7ddcf7a78ed68ee1c9dd3c49b791a7e454d2be`
@@ -60,25 +60,26 @@ excluded from Sprint 13 remediation.
 
 | Field | Value |
 | --- | --- |
-| Planning Gate status | DRAFT / NOT YET APPROVED |
+| Planning Gate status | APPROVED / EFFECTIVE |
 | Approves Architecture | No |
 | Approves Governance Decisions | No |
 | Approves Policy Freeze | No |
 | Approves Implementation Authorization | No |
 | Approves Implementation | No |
-| Architecture authorization | DENIED until Planning approval; then documentation-only Architecture may begin |
-| Governance authorization | DENIED |
-| Policy authorization | DENIED |
-| Implementation Authorization | DENIED |
-| Implementation work | NOT AUTHORIZED |
+| Architecture authorization | UNLOCKED by Planning; Architecture later APPROVED / EFFECTIVE |
+| Governance authorization | UNLOCKED after Architecture; Governance later APPROVED / EFFECTIVE |
+| Policy authorization | UNLOCKED after Governance; Policy later APPROVED / FROZEN |
+| Implementation Authorization | UNLOCKED after Policy; later APPROVED / EFFECTIVE |
+| Implementation work | COMPLETE (Issues #126 / #128 / #130) under Implementation Authorization |
+| Sprint 13 governance closeout | NOT COMPLETE |
 | UI authorized | NO |
 | MODEL PARTICIPATION | UNAUTHORIZED |
 | Broker Execution | DENIED / DEFERRED |
-| Next mandatory gate after Planning approval | Architecture Gate (documentation-only) |
+| Next mandatory process step | Separate Sprint 13 governance closeout (not authorized by Planning alone) |
 
-Until this Planning Gate is APPROVED, Sprint 13 Architecture remains blocked.
-Until Implementation Authorization is APPROVED, no Sprint 13 implementation
-issue, branch, or pull request may claim implementation authority.
+This Planning Gate is **APPROVED / EFFECTIVE**. Planning approval alone still does
+not authorize Implementation; Implementation proceeded only under separately
+approved Implementation Authorization `intelligence-pipeline.implementation-authorization.v1`.
 
 ---
 
@@ -121,7 +122,7 @@ Planning approval does **not** authorize:
 | Sprint 12 status sync | COMPLETE (Issue #112 / PR #113) |
 | Sprint 12 governance closeout | COMPLETE (Issue #114 / PR #115) |
 | Sprint 12 tag / release | NOT AUTHORIZED / NOT PERFORMED |
-| Sprint 13 state | NOT STARTED |
+| Sprint 13 state | IMPLEMENTATION COMPLETE / SPRINT_COMPLETE = NO |
 | MODEL PARTICIPATION | UNAUTHORIZED |
 | Broker Execution | DENIED / DEFERRED |
 
@@ -926,33 +927,40 @@ This section does **not** create issues and does **not** authorize implementatio
 
 ## Planning Gate Decision
 
-**DRAFT / NOT YET APPROVED.**
+**APPROVED / EFFECTIVE.**
 
-When this Planning Gate is APPROVED by repository process:
+This Planning Gate was APPROVED by repository process (#116 / PR #117):
 
 - Sprint 13 theme = Intelligence Pipeline Integration
-- Scope classifications in this document become binding
-- Documentation-only Architecture Gate may begin
-- Implementation remains DENIED until Implementation Authorization is APPROVED
+- Scope classifications in this document are binding
+- Documentation-only Architecture Gate was unlocked and later completed
+- Implementation remained DENIED until Implementation Authorization was APPROVED
+  (later completed under Issues #126 / #128 / #130)
 
 ---
 
 ## Next Authorized Step
 
-If and only if this Planning Gate becomes APPROVED:
+Planning approval unlocked:
 
 ```text
-Next authorized step = Architecture Gate (documentation-only)
+Architecture Gate (documentation-only) — COMPLETE
 ```
 
-Not authorized by Planning approval alone:
+Subsequent process (not granted by Planning alone) completed through
+Implementation Authorization and the three authorized implementation issues.
 
-- Governance Decisions
-- Policy Freeze
-- Implementation Authorization
-- Implementation
+Current next repository process step (separate issue):
+
+```text
+Sprint 13 governance closeout — NOT COMPLETE
+```
+
+Still not authorized by Planning approval alone:
+
 - UI
 - tag / release / deploy
+- Sprint 14
 
 ---
 
@@ -991,4 +999,6 @@ orchestration of existing fail-closed intelligence libraries under a single UTC
 `as_of`, without productizing persistence, APIs, UI, Feature Store, models, or
 trading.
 
-This document remains **DRAFT / NOT YET APPROVED** until repository approval.
+This document is **APPROVED / EFFECTIVE**.
+`IMPLEMENTATION_COMPLETE = YES`. `SPRINT_COMPLETE = NO`.
+`MODEL_PARTICIPATION = UNAUTHORIZED`. `BROKER_EXECUTION = DENIED / DEFERRED`.
