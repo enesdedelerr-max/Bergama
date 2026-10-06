@@ -50,3 +50,7 @@ STAGE_ORDER: tuple[str, ...] = (
 
 MODEL_PARTICIPATION = "UNAUTHORIZED"
 BROKER_EXECUTION = "DENIED / DEFERRED"
+
+# Deterministic composition identity schema (not a new Policy version).
+FINGERPRINT_SCHEMA_ID = "intelligence-pipeline.fingerprint.v1"
+FAILURE_DETAIL_MAX_LENGTH = 256

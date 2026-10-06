@@ -5,11 +5,17 @@ from __future__ import annotations
 from pydantic import ValidationError
 
 from app.ai_decision_engine.models import AdeConfig
+from app.core.premarket_settings import PremarketSettings
 from app.human_review.models import HumanReviewConfig
 from app.intelligence_pipeline.errors import PipelineAdmissionError
 from app.intelligence_pipeline.models import PipelineBindings, PipelineRequest
-from app.intelligence_pipeline.policy import POLICY_VERSION_V1
+from app.intelligence_pipeline.policy import (
+    FINGERPRINT_SCHEMA_ID,
+    IMPLEMENTATION_AUTHORIZATION_ID,
+    POLICY_VERSION_V1,
+)
 from app.market_data.timing import require_utc_aware
+from app.strategy.keys import strategy_sha256
 
 
 def coerce_pipeline_request(request: PipelineRequest | object) -> PipelineRequest:
@@ -54,6 +60,13 @@ def admit_pipeline_request(request: PipelineRequest | object) -> PipelineRequest
     if admitted.hr_requested and admitted.hr_attestation is None:
         raise PipelineAdmissionError(detail="human_review_attestation_required")
 
+    if admitted.settings is not None:
+        # Isolate mutable PremarketSettings from caller-owned references (F-02).
+        admitted = admitted.model_copy(
+            update={
+                "settings": PremarketSettings.model_validate(admitted.settings.model_dump()),
+            }
+        )
     return admitted
 
 
@@ -91,4 +104,20 @@ def pin_bindings(request: PipelineRequest) -> PipelineBindings:
         dashboard_policy_version_id=request.dashboard_config.policy_version_id,
         human_review_policy_version_id=human_review_policy_version_id,
         ade_policy_version_id=ade_policy_version_id,
+    )
+
+
+def compute_pipeline_fingerprint(
+    request: PipelineRequest,
+    bindings: PipelineBindings,
+) -> str:
+    """Deterministic input/composition identity (SHA-256 hex). Tooling-only hash reuse."""
+    return strategy_sha256(
+        {
+            "fingerprint_schema_id": FINGERPRINT_SCHEMA_ID,
+            "policy_version_id": POLICY_VERSION_V1,
+            "implementation_authorization_id": IMPLEMENTATION_AUTHORIZATION_ID,
+            "request": request.model_dump(mode="python"),
+            "bindings": bindings.model_dump(mode="python"),
+        }
     )

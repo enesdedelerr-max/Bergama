@@ -22,6 +22,7 @@ def build_provenance(
     executed_stages: tuple[str, ...],
     outcome: PipelineOutcome,
     failed_stage: str | None = None,
+    pipeline_fingerprint: str | None = None,
     watchlist: Watchlist | None = None,
     gaps: GapCollection | None = None,
     catalysts: CatalystCollection | None = None,
@@ -36,6 +37,7 @@ def build_provenance(
         as_of=as_of,
         stage_order=STAGE_ORDER,
         executed_stages=executed_stages,
+        pipeline_fingerprint=pipeline_fingerprint,
         watchlist_config_fingerprint=(
             watchlist.provenance.config_fingerprint if watchlist is not None else None
         ),

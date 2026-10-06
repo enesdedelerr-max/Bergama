@@ -12,11 +12,16 @@ from app.human_review.engine import assemble_human_review
 from app.human_review.models import HumanReviewOutput, HumanReviewRequest
 from app.intelligence_pipeline.admit import (
     admit_pipeline_request,
+    compute_pipeline_fingerprint,
     pin_bindings,
     resolve_ade_config,
     resolve_hr_config,
 )
-from app.intelligence_pipeline.errors import PipelineAdmissionError
+from app.intelligence_pipeline.errors import (
+    PipelineAdmissionError,
+    PipelineStageExecutionError,
+    sanitize_failure_detail,
+)
 from app.intelligence_pipeline.models import (
     PipelineBindings,
     PipelineOutcome,
@@ -59,6 +64,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
 
     as_of = admitted.as_of
     bindings = pin_bindings(admitted)
+    pipeline_fingerprint = compute_pipeline_fingerprint(admitted, bindings)
     settings = admitted.settings
     executed: list[str] = []
 
@@ -76,6 +82,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
         return _stage_failed(
             as_of=as_of,
             bindings=bindings,
+            pipeline_fingerprint=pipeline_fingerprint,
             executed_stages=tuple(executed),
             stage=STAGE_WATCHLIST,
             exc=exc,
@@ -96,6 +103,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
         return _stage_failed(
             as_of=as_of,
             bindings=bindings,
+            pipeline_fingerprint=pipeline_fingerprint,
             executed_stages=tuple(executed),
             stage=STAGE_GAP,
             exc=exc,
@@ -116,6 +124,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
         return _stage_failed(
             as_of=as_of,
             bindings=bindings,
+            pipeline_fingerprint=pipeline_fingerprint,
             executed_stages=tuple(executed),
             stage=STAGE_CATALYST,
             exc=exc,
@@ -140,6 +149,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
         return _stage_failed(
             as_of=as_of,
             bindings=bindings,
+            pipeline_fingerprint=pipeline_fingerprint,
             executed_stages=tuple(executed),
             stage=STAGE_SCORE,
             exc=exc,
@@ -162,6 +172,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
         return _stage_failed(
             as_of=as_of,
             bindings=bindings,
+            pipeline_fingerprint=pipeline_fingerprint,
             executed_stages=tuple(executed),
             stage=STAGE_BRIEFING,
             exc=exc,
@@ -184,6 +195,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
         return _stage_failed(
             as_of=as_of,
             bindings=bindings,
+            pipeline_fingerprint=pipeline_fingerprint,
             executed_stages=tuple(executed),
             stage=STAGE_DASHBOARD,
             exc=exc,
@@ -204,6 +216,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
                 as_of=as_of,
                 executed_stages=tuple(executed),
                 outcome=outcome,
+                pipeline_fingerprint=pipeline_fingerprint,
                 watchlist=watchlist,
                 gaps=gaps,
                 catalysts=catalysts,
@@ -238,6 +251,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
         return _stage_failed(
             as_of=as_of,
             bindings=bindings,
+            pipeline_fingerprint=pipeline_fingerprint,
             executed_stages=tuple(executed),
             stage=STAGE_HUMAN_REVIEW,
             exc=exc,
@@ -259,6 +273,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
                 as_of=as_of,
                 executed_stages=tuple(executed),
                 outcome=outcome,
+                pipeline_fingerprint=pipeline_fingerprint,
                 watchlist=watchlist,
                 gaps=gaps,
                 catalysts=catalysts,
@@ -290,6 +305,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
         return _stage_failed(
             as_of=as_of,
             bindings=bindings,
+            pipeline_fingerprint=pipeline_fingerprint,
             executed_stages=tuple(executed),
             stage=STAGE_ADE,
             exc=exc,
@@ -310,6 +326,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
         return _stage_failed(
             as_of=as_of,
             bindings=bindings,
+            pipeline_fingerprint=pipeline_fingerprint,
             executed_stages=tuple(executed),
             stage=STAGE_ADE,
             exc=RuntimeError(f"unexpected_ade_outcome_kind:{ade.outcome_kind!r}"),
@@ -330,6 +347,7 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
             as_of=as_of,
             executed_stages=tuple(executed),
             outcome=outcome,
+            pipeline_fingerprint=pipeline_fingerprint,
             watchlist=watchlist,
             gaps=gaps,
             catalysts=catalysts,
@@ -350,6 +368,27 @@ def run_intelligence_pipeline(request: PipelineRequest | object) -> PipelineResu
     )
 
 
+def _normalize_stage_failure(stage: str, exc: BaseException) -> PipelineStageExecutionError:
+    """Wrap stage failures with bounded public detail while preserving fail-closed semantics."""
+    if isinstance(exc, PipelineStageExecutionError):
+        upstream = exc.upstream_error_type or type(exc).__name__
+        raw_detail = exc.detail if isinstance(exc.detail, str) and exc.detail else upstream
+        return PipelineStageExecutionError(
+            detail=sanitize_failure_detail(raw_detail),
+            stage=exc.stage or stage,
+            upstream_error_type=upstream,
+        )
+
+    detail_attr = getattr(exc, "detail", None)
+    # Prefer `.detail`, else type name over unbounded str(exc) for public output (F-03).
+    raw_detail = detail_attr if isinstance(detail_attr, str) and detail_attr else type(exc).__name__
+    return PipelineStageExecutionError(
+        detail=sanitize_failure_detail(raw_detail),
+        stage=stage,
+        upstream_error_type=type(exc).__name__,
+    )
+
+
 def _admission_rejected(*, detail: str | None) -> PipelineResult:
     outcome = PipelineOutcome.ADMISSION_REJECTED
     return PipelineResult(
@@ -361,7 +400,7 @@ def _admission_rejected(*, detail: str | None) -> PipelineResult:
             executed_stages=(),
             outcome=outcome,
         ),
-        failure_detail=detail,
+        failure_detail=sanitize_failure_detail(detail),
         failure_error_type=PipelineAdmissionError.__name__,
     )
 
@@ -370,6 +409,7 @@ def _stage_failed(
     *,
     as_of: datetime,
     bindings: PipelineBindings,
+    pipeline_fingerprint: str,
     executed_stages: tuple[str, ...],
     stage: str,
     exc: BaseException,
@@ -382,9 +422,7 @@ def _stage_failed(
     human_review: HumanReviewOutput | None = None,
 ) -> PipelineResult:
     outcome = PipelineOutcome.REQUIRED_STAGE_FAILED
-    detail = getattr(exc, "detail", None)
-    if detail is None:
-        detail = str(exc) or type(exc).__name__
+    normalized = _normalize_stage_failure(stage, exc)
     return PipelineResult(
         outcome=outcome,
         as_of=as_of,
@@ -393,7 +431,8 @@ def _stage_failed(
             as_of=as_of,
             executed_stages=executed_stages,
             outcome=outcome,
-            failed_stage=stage,
+            failed_stage=normalized.stage or stage,
+            pipeline_fingerprint=pipeline_fingerprint,
             watchlist=watchlist,
             gaps=gaps,
             catalysts=catalysts,
@@ -409,7 +448,7 @@ def _stage_failed(
         briefing=briefing,
         dashboard=dashboard,
         human_review=human_review,
-        failed_stage=stage,
-        failure_detail=str(detail),
-        failure_error_type=type(exc).__name__,
+        failed_stage=normalized.stage or stage,
+        failure_detail=normalized.detail,
+        failure_error_type=normalized.upstream_error_type or type(exc).__name__,
     )

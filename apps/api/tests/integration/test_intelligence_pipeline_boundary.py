@@ -28,6 +28,7 @@ from app.intelligence_pipeline import (
     STAGE_ORDER,
     PipelineOutcome,
     PipelineRequest,
+    replay_intelligence_pipeline,
     run_intelligence_pipeline,
 )
 from app.premarket.catalyst.models import CatalystClassificationRule, CatalystConfig
@@ -684,3 +685,15 @@ def test_i128_21_empty_catalyst_semantics_unchanged() -> None:
     assert result.outcome == PipelineOutcome.COMPLETED_HUMAN_REVIEW
     assert result.catalysts is not None
     assert result.catalysts.records == ()
+
+
+def test_i130_01_public_boundary_replay() -> None:
+    """I-R1: replay through public run_intelligence_pipeline boundary."""
+    request = _request()
+    expected = run_intelligence_pipeline(request)
+    assert expected.provenance.pipeline_fingerprint is not None
+    actual = replay_intelligence_pipeline(request, expected=expected)
+    assert actual.outcome == expected.outcome
+    assert actual.provenance.pipeline_fingerprint == expected.provenance.pipeline_fingerprint
+    assert actual.as_of == AS_OF
+    assert actual.bindings == expected.bindings
