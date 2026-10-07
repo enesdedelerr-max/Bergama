@@ -1,6 +1,7 @@
-"""Internal Intelligence Run persistence errors (WS1).
+"""Internal Intelligence Run persistence / materialization errors (WS1/WS2).
 
-These are repository/storage failures only. Public HTTP mapping belongs to WS3.
+These are repository/storage/materialization failures only.
+Public HTTP mapping belongs to WS3.
 """
 
 from __future__ import annotations
@@ -17,7 +18,7 @@ class IntelligenceRunPersistenceError(Exception):
 
 
 class IntelligenceRunIdentityConflictError(IntelligenceRunPersistenceError):
-    """Logical identity uniqueness / integrity conflict."""
+    """Logical identity uniqueness / materialization identity conflict."""
 
     code = "intelligence_runs.identity_conflict"
 
@@ -32,3 +33,9 @@ class IntelligenceRunInvalidPersistedRepresentationError(IntelligenceRunPersiste
     """Caller supplied an invalid persistence record or lookup key."""
 
     code = "intelligence_runs.invalid_persisted_representation"
+
+
+class IntelligenceRunInvalidMaterializationError(IntelligenceRunPersistenceError):
+    """Completed PipelineResult is invalid, incomplete, or contract-violating."""
+
+    code = "intelligence_runs.invalid_materialization"

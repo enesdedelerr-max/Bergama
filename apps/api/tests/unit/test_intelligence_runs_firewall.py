@@ -1,4 +1,4 @@
-"""Firewall tests for Intelligence Run WS1 package boundaries."""
+"""Firewall tests for Intelligence Run WS1/WS2 package boundaries."""
 
 from __future__ import annotations
 
@@ -26,6 +26,9 @@ FORBIDDEN_DIRECT_DEPS = {
     "databases",
 }
 
+# WS2 may import PipelineResult into materializer/snapshot modules only.
+_WS2_PIPELINE_IMPORT_ALLOWLIST = frozenset({"materializer.py", "snapshot.py"})
+
 
 def _top_level_requirement(raw: str) -> str:
     text = raw.strip().lower()
@@ -40,7 +43,6 @@ def test_dependency_firewall_no_unauthorized_direct_deps() -> None:
     deps = [_top_level_requirement(item) for item in pyproject["project"]["dependencies"]]
     for forbidden in FORBIDDEN_DIRECT_DEPS:
         assert forbidden not in deps
-    # Exactly three authorized WS1 families present.
     assert "sqlalchemy" in deps
     assert "alembic" in deps
     assert "psycopg" in deps
@@ -63,20 +65,21 @@ def test_pipeline_remains_db_free() -> None:
                 assert not node.module.startswith(forbidden_prefixes)
 
 
-def test_ws1_package_has_no_materializer_or_http_surface() -> None:
+def test_ws2_package_has_materializer_without_http_or_query_surface() -> None:
     names = {path.name for path in PACKAGE_ROOT.glob("*.py")}
-    assert "materializer.py" not in names
+    assert "materializer.py" in names
+    assert "snapshot.py" in names
     assert "query_service.py" not in names
     assert "router.py" not in names
     for path in PACKAGE_ROOT.rglob("*.py"):
         text = path.read_text(encoding="utf-8")
         assert "APIRouter" not in text
-        # Docstrings may mention PipelineResult as an explicit non-goal; forbid imports.
         tree = ast.parse(text, filename=str(path))
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module:
-                assert "PipelineResult" not in {alias.name for alias in node.names}
-                assert not (
+                imports_pipeline_result = (
                     node.module.startswith("app.intelligence_pipeline")
                     and any(alias.name == "PipelineResult" for alias in node.names)
-                )
+                ) or any(alias.name == "PipelineResult" for alias in node.names)
+                if imports_pipeline_result:
+                    assert path.name in _WS2_PIPELINE_IMPORT_ALLOWLIST
