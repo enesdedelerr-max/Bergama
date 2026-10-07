@@ -16,6 +16,9 @@ dependencies = [
     "websockets==16.1",
     "pyiceberg[pyarrow,sql-sqlite]==0.11.1",
     "bergama-strategy-sdk",
+    "sqlalchemy>=2.0.51,<2.1",
+    "alembic>=1.14.0,<2",
+    "psycopg[binary]>=3.2.0,<4",
 ]
 
 [tool.uv.sources]
@@ -49,6 +52,7 @@ markers = [
     "iceberg_writer_smoke: optional live Kafka+Iceberg+MinIO smoke (requires BERGAMA_ICEBERG_WRITER_SMOKE=1)",
     "replay_engine_smoke: optional local Iceberg replay smoke (requires BERGAMA_REPLAY_ENGINE_SMOKE=1)",
     "backfill_smoke: optional live provider backfill smoke (requires BERGAMA_BACKFILL_SMOKE=1)",
+    "postgres_integration: PostgreSQL integration/migration tests (requires BERGAMA_DATABASE__URL)",
 ]
 
 [tool.ruff]

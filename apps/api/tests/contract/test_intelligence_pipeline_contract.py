@@ -254,7 +254,16 @@ def test_c05_no_broker_oi_oms_execution_import() -> None:
 def test_c06_no_persistence_import() -> None:
     for path in PACKAGE_ROOT.rglob("*.py"):
         for module in _imported_modules(path):
-            assert not module.startswith(("sqlalchemy", "alembic", "redis", "aiokafka"))
+            assert not module.startswith(
+                (
+                    "sqlalchemy",
+                    "alembic",
+                    "psycopg",
+                    "redis",
+                    "aiokafka",
+                    "app.intelligence_runs",
+                )
+            )
 
 
 def test_c07_no_http_router_api_implementation() -> None:
