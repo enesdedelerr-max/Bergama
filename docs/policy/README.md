@@ -8,6 +8,7 @@
 | [human-review-policy-v1.md](human-review-policy-v1.md) | `human-review.policy.v1` | APPROVED | Human Review Policy Version v1 |
 | [ai-decision-engine-policy-v1.md](ai-decision-engine-policy-v1.md) | `ai-decision-engine.policy.v1` | APPROVED | AI Decision Engine Policy Version v1 |
 | [intelligence-pipeline-policy-v1.md](intelligence-pipeline-policy-v1.md) | `intelligence-pipeline.policy.v1` | APPROVED / FROZEN | Intelligence Pipeline Policy Version v1 |
+| [intelligence-run-productization-policy-v1.md](intelligence-run-productization-policy-v1.md) | `intelligence-run-productization.policy.v1` | DRAFT | Intelligence Run Productization Policy / Contract Freeze v1 |
 
 Policy Version content must not be edited in place once frozen for an implementation generation.
 Behavioral change requires a new Policy Version ID and/or new subordinate specification IDs.
