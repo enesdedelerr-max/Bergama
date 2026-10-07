@@ -19,6 +19,7 @@ from app.core.backfill_settings import BackfillSettings
 from app.core.benzinga_settings import BenzingaSettings
 from app.core.broker_settings import BrokerSettings
 from app.core.data_quality_settings import DataQualitySettings
+from app.core.database_settings import DatabaseSettings
 from app.core.environment import AppEnvironment
 from app.core.feature_platform_settings import FeaturePlatformSettings
 from app.core.finnhub_settings import FinnhubSettings
@@ -80,6 +81,7 @@ class AppSettings(BaseSettings):
     )
 
     secrets: SecretSettings = Field(default_factory=SecretSettings)
+    database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     kafka: KafkaSettings = Field(default_factory=KafkaSettings)
     registry: RegistrySettings = Field(default_factory=RegistrySettings)
     polygon: PolygonSettings = Field(default_factory=PolygonSettings)
@@ -288,6 +290,7 @@ class AppSettings(BaseSettings):
             "redis_required": self.redis_required,
             "postgres_configured": bool(self.postgres_host),
             "redis_configured": bool(self.redis_host),
+            "database": self.database.safe_summary(),
             "kafka": self.kafka.safe_summary(),
             "registry": self.registry.safe_summary(),
             "polygon": self.polygon.safe_summary(),
