@@ -1,7 +1,8 @@
-"""Unit tests for Intelligence Run query service (WS3)."""
+"""Unit tests for Intelligence Run query service (WS3 / WS4 hardening)."""
 
 from __future__ import annotations
 
+import copy
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -22,6 +23,7 @@ from app.intelligence_runs.snapshot import build_authoritative_snapshot
 from tests.unit.test_intelligence_pipeline_core import VALID_ATTESTATION, _valid_request
 
 FIXED_NOW = datetime(2026, 10, 7, 18, 0, tzinfo=UTC)
+_PRIVATE_ADE_MARKER = "WS4-PRIVATE-ATTESTATION-PAYLOAD-MUST-NOT-LEAK"
 
 
 def _record_from_pipeline(**kwargs: Any) -> IntelligenceRunRecord:
@@ -142,6 +144,83 @@ def test_ade_success_excludes_private_payload() -> None:
     body = service.get_ade(str(record.run_id))
     dumped = body.model_dump(mode="json")
     assert "recorded_attestation_payload" not in str(dumped)
+
+
+def _inject_nested_private_payload_into_run_provenance(
+    record: IntelligenceRunRecord,
+) -> None:
+    """Corrupt an otherwise-valid open ``provenance_json`` blob (bypass materializer).
+
+    ``AuthoritativeSnapshot.provenance`` / public run provenance are ``dict[str, Any]``,
+    so this shape is not rejected by ADE DTO ``extra=forbid``. The recursive forbidden-key
+    scan on reconstruct is what must fail closed.
+    """
+    provenance = copy.deepcopy(record.provenance_json)
+    assert isinstance(provenance, dict)
+    provenance["security_envelope"] = {
+        "nested": {"recorded_attestation_payload": _PRIVATE_ADE_MARKER},
+        "items": [{"recorded_attestation_payload": _PRIVATE_ADE_MARKER}],
+    }
+    record.provenance_json = provenance
+
+
+def test_adversarial_persisted_ade_private_payload_fails_closed() -> None:
+    """WS4-08: nested private key in open provenance_json fails closed on ADE read."""
+    control = _record_from_pipeline(
+        hr_requested=True,
+        ade_requested=True,
+        hr_attestation=VALID_ATTESTATION,
+    )
+    control_body = _service_with_record(control).get_ade(str(control.run_id))
+    assert control_body.ade is not None
+    assert _PRIVATE_ADE_MARKER not in control_body.model_dump_json()
+
+    adversarial = _record_from_pipeline(
+        hr_requested=True,
+        ade_requested=True,
+        hr_attestation=VALID_ATTESTATION,
+    )
+    _inject_nested_private_payload_into_run_provenance(adversarial)
+    # ADE product snapshot itself remains DTO-shaped; corruption lives only in provenance_json.
+    assert adversarial.ade_snapshot_json is not None
+    assert "recorded_attestation_payload" not in str(adversarial.ade_snapshot_json)
+
+    with pytest.raises(IntelligenceRunProductError) as exc:
+        _service_with_record(adversarial).get_ade(str(adversarial.run_id))
+    assert exc.value.code == "intelligence.runs.corrupt_persisted_snapshot"
+    assert exc.value.status_code == 500
+    serialized = str(exc.value.message) + str(exc.value.details) + str(exc.value)
+    assert _PRIVATE_ADE_MARKER not in serialized
+    assert "recorded_attestation_payload" not in serialized
+
+
+def test_recursive_private_payload_guard_is_required_for_provenance_corruption(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Mutation check: without recursive scanners, nested provenance corruption is accepted."""
+    import app.intelligence_runs.query_service as query_service_mod
+    import app.intelligence_runs.snapshot as snapshot_mod
+
+    record = _record_from_pipeline(
+        hr_requested=True,
+        ade_requested=True,
+        hr_attestation=VALID_ATTESTATION,
+    )
+    _inject_nested_private_payload_into_run_provenance(record)
+
+    monkeypatch.setattr(
+        snapshot_mod,
+        "_assert_no_forbidden_ade_payload",
+        lambda _payload: None,
+    )
+    monkeypatch.setattr(
+        query_service_mod,
+        "_contains_forbidden_ade_payload",
+        lambda _payload: False,
+    )
+
+    body = _service_with_record(record).get_ade(str(record.run_id))
+    assert body.ade is not None
 
 
 def test_age_seconds_deterministic_and_clamped() -> None:

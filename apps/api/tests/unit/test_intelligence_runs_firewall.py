@@ -1,4 +1,4 @@
-"""Firewall tests for Intelligence Run WS1/WS2/WS3 package boundaries."""
+"""Firewall tests for Intelligence Run WS1–WS4 package boundaries."""
 
 from __future__ import annotations
 
@@ -17,6 +17,26 @@ API_ROOT = REPO_ROOT / "apps" / "api"
 PACKAGE_ROOT = API_ROOT / "app" / "intelligence_runs"
 PIPELINE_ROOT = API_ROOT / "app" / "intelligence_pipeline"
 ROUTER_PATH = API_ROOT / "app" / "routers" / "intelligence_runs.py"
+REPOSITORY_PATH = PACKAGE_ROOT / "repository.py"
+AUTHZ_PATH = API_ROOT / "app" / "deps" / "authz.py"
+INTELLIGENCE_RUNS_DEPS_PATH = API_ROOT / "app" / "deps" / "intelligence_runs.py"
+SCHEMAS_PATH = API_ROOT / "app" / "schemas" / "intelligence_runs.py"
+
+# Repo-derived authority domains only (WS4 AST firewall). Prefix match, not substring.
+_FORBIDDEN_AUTHORITY_IMPORT_PREFIXES = (
+    "app.broker",
+    "app.orders",
+    "app.features",
+    "app.infrastructure.polygon",
+)
+
+_AUTHORITY_PROTECTED_PATHS: tuple[Path, ...] = (
+    *sorted(PACKAGE_ROOT.rglob("*.py")),
+    ROUTER_PATH,
+    INTELLIGENCE_RUNS_DEPS_PATH,
+    AUTHZ_PATH,
+    SCHEMAS_PATH,
+)
 
 FORBIDDEN_DIRECT_DEPS = {
     "asyncpg",
@@ -142,6 +162,77 @@ def test_no_ws4_authorization_platform_leakage() -> None:
     }
     for path in (API_ROOT / "app").rglob("*.py"):
         assert path.name not in forbidden_filenames
+
+
+def _module_matches_forbidden_prefix(module: str, prefix: str) -> bool:
+    return module == prefix or module.startswith(f"{prefix}.")
+
+
+def _imported_module_targets(node: ast.AST) -> list[str]:
+    """Resolve Import / ImportFrom targets including ``from app import broker`` → app.broker."""
+    if isinstance(node, ast.Import):
+        return [alias.name for alias in node.names]
+    if isinstance(node, ast.ImportFrom) and node.module:
+        targets = [node.module]
+        for alias in node.names:
+            if alias.name == "*":
+                continue
+            targets.append(f"{node.module}.{alias.name}")
+        return targets
+    return []
+
+
+def test_authority_import_firewall_blocks_broker_oms_features_providers() -> None:
+    """WS4-15: product read surfaces must not import broker/OMS/FP/live-provider packages."""
+    for path in _AUTHORITY_PROTECTED_PATHS:
+        assert path.is_file(), f"missing protected surface: {path}"
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            for module in _imported_module_targets(node):
+                for prefix in _FORBIDDEN_AUTHORITY_IMPORT_PREFIXES:
+                    assert not _module_matches_forbidden_prefix(module, prefix), (
+                        f"forbidden authority import {module!r} in protected file {path} "
+                        f"(prefix {prefix!r})"
+                    )
+
+
+def test_authority_import_target_resolution_covers_from_app_import_form() -> None:
+    """R2: ``from app import broker`` must resolve to the forbidden ``app.broker`` target."""
+    tree = ast.parse("from app import broker, orders\nfrom app.infrastructure import polygon\n")
+    targets: list[str] = []
+    for node in tree.body:
+        targets.extend(_imported_module_targets(node))
+    assert "app.broker" in targets
+    assert "app.orders" in targets
+    assert "app.infrastructure.polygon" in targets
+    forbidden_hits = [
+        module
+        for module in targets
+        for prefix in _FORBIDDEN_AUTHORITY_IMPORT_PREFIXES
+        if _module_matches_forbidden_prefix(module, prefix)
+    ]
+    assert set(forbidden_hits) >= {"app.broker", "app.orders", "app.infrastructure.polygon"}
+
+
+def test_latest_dashboard_candidate_has_no_jsonb_typeof_payload_health_prefilter() -> None:
+    """WS4-09 structural guard: no jsonb_typeof payload-health filter before LIMIT 1."""
+    source = REPOSITORY_PATH.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(REPOSITORY_PATH))
+    method: ast.FunctionDef | ast.AsyncFunctionDef | None = None
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef) and node.name == "SqlAlchemyIntelligenceRunRepository":
+            for child in node.body:
+                if (
+                    isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
+                    and child.name == "get_latest_dashboard_storage_candidate"
+                ):
+                    method = child
+                    break
+    assert method is not None, "get_latest_dashboard_storage_candidate missing"
+    method_source = ast.get_source_segment(source, method)
+    assert method_source is not None
+    # Ban payload-health prefiltering via jsonb_typeof before LIMIT 1 (WS3 defect).
+    assert "jsonb_typeof" not in method_source
 
 
 def test_no_new_alembic_migration_for_ws3() -> None:

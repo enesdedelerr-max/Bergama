@@ -1,7 +1,8 @@
-"""HTTP / authz tests for Intelligence Run product routes (WS3)."""
+"""HTTP / authz tests for Intelligence Run product routes (WS3 / WS4 hardening)."""
 
 from __future__ import annotations
 
+import copy
 import uuid
 from collections.abc import AsyncIterator, Iterator
 from datetime import UTC, datetime
@@ -13,6 +14,7 @@ import pytest
 from app.core.clock import FixedClock
 from app.core.config import AppSettings
 from app.core.container import build_container
+from app.core.database_settings import DatabaseSettings
 from app.core.environment import AppEnvironment
 from app.core.secrets import SecretSettings
 from app.core.security import (
@@ -43,6 +45,8 @@ from httpx import ASGITransport, AsyncClient
 from tests.conftest import VALID_PROD_JWT_SECRET
 from tests.unit.test_intelligence_pipeline_core import VALID_ATTESTATION, _valid_request
 
+_PRIVATE_ADE_MARKER = "WS4-PRIVATE-ATTESTATION-PAYLOAD-MUST-NOT-LEAK"
+
 FIXED_NOW = datetime(2026, 10, 7, 18, 0, tzinfo=UTC)
 
 PRODUCT_ROUTES = (
@@ -55,7 +59,7 @@ PRODUCT_ROUTES = (
 )
 
 
-def _settings() -> AppSettings:
+def _settings(*, database: DatabaseSettings | None = None) -> AppSettings:
     return AppSettings(
         environment=AppEnvironment.LOCAL,
         debug=True,
@@ -63,6 +67,7 @@ def _settings() -> AppSettings:
         openapi_enabled=True,
         bootstrap_auth_enabled=True,
         jwt_access_token_ttl_seconds=900,
+        database=database if database is not None else DatabaseSettings(),
         secrets=SecretSettings(bootstrap_jwt_signing_key=VALID_PROD_JWT_SECRET),
     )
 
@@ -275,6 +280,62 @@ async def test_stage_routes_and_ade_payload_exclusion(
     )
     assert absent.status_code == 404
     assert absent.json()["code"] == "intelligence.runs.stage_not_present"
+
+
+@pytest.mark.asyncio
+async def test_adversarial_persisted_ade_private_payload_http_fails_closed(
+    client: AsyncClient,
+    app_and_query: tuple[Any, MagicMock],
+) -> None:
+    """WS4-08 wire boundary: nested private key in open provenance_json must not leak."""
+    _, query = app_and_query
+    record = _record(hr_requested=True, ade_requested=True, hr_attestation=VALID_ATTESTATION)
+    provenance = copy.deepcopy(record.provenance_json)
+    provenance["security_envelope"] = {
+        "nested": {"recorded_attestation_payload": _PRIVATE_ADE_MARKER},
+        "items": [{"recorded_attestation_payload": _PRIVATE_ADE_MARKER}],
+    }
+    record.provenance_json = provenance
+    _bind_real_query(query, record)
+    token = _mint_token(scopes=[INTELLIGENCE_RUNS_READ_SCOPE])
+    headers = {"Authorization": f"Bearer {token}"}
+    resp = await client.get(
+        f"/api/v1/intelligence/runs/id/{record.run_id}/ade",
+        headers=headers,
+    )
+    assert resp.status_code == 500
+    body = resp.json()
+    assert body["code"] == "intelligence.runs.corrupt_persisted_snapshot"
+    assert _PRIVATE_ADE_MARKER not in resp.text
+    assert "recorded_attestation_payload" not in resp.text
+    assert set(body.keys()) <= {"code", "message", "request_id", "details"}
+
+
+@pytest.mark.asyncio
+async def test_missing_database_url_returns_sanitized_503() -> None:
+    """WS4-14: unconfigured database.url maps to storage_unavailable at the dependency boundary."""
+    settings = _settings(database=DatabaseSettings(url=None))
+    assert settings.database.url is None
+    container = build_container(settings, clock=FixedClock(FIXED_NOW))
+    application = create_app(settings=container.settings, container=container)
+    # Do not override query service — exercise deps.intelligence_runs session resolution.
+    token = _mint_token(scopes=[INTELLIGENCE_RUNS_READ_SCOPE])
+    headers = {"Authorization": f"Bearer {token}"}
+    transport = ASGITransport(app=application)
+    async with AsyncClient(transport=transport, base_url="http://test") as http:
+        resp = await http.get(
+            "/api/v1/intelligence/runs/latest-dashboard-capable",
+            headers=headers,
+        )
+    assert resp.status_code == 503
+    body = resp.json()
+    assert body["code"] == "intelligence.runs.storage_unavailable"
+    assert set(body.keys()) <= {"code", "message", "request_id", "details"}
+    lowered = resp.text.lower()
+    assert "traceback" not in lowered
+    assert "sqlalchemy" not in lowered
+    assert "database.url" not in lowered
+    assert "postgresql" not in lowered
 
 
 @pytest.mark.asyncio
