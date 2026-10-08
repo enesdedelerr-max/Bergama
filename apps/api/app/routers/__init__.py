@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from app.routers.auth import router as auth_router
 from app.routers.health import router as health_router
+from app.routers.intelligence_runs import router as intelligence_runs_router
 
 
 def register_routers(api_router: APIRouter, *, include_health: bool = True) -> None:
@@ -11,3 +12,4 @@ def register_routers(api_router: APIRouter, *, include_health: bool = True) -> N
     if include_health:
         api_router.include_router(health_router)
     api_router.include_router(auth_router)
+    api_router.include_router(intelligence_runs_router)
