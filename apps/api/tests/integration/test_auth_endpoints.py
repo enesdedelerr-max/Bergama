@@ -71,7 +71,7 @@ async def test_auth_me_with_valid_token(local_auth_client: AsyncClient) -> None:
     assert response.json() == {
         "subject": BOOTSTRAP_SUBJECT,
         "roles": ["developer"],
-        "scopes": ["api:read"],
+        "scopes": ["api:read", "intelligence:runs:read"],
     }
 
 

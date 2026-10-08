@@ -1,7 +1,7 @@
-"""Insert-only Intelligence Run repository primitives (WS1).
+"""Intelligence Run repository primitives (WS1 insert + WS3 read).
 
-Does not materialize ``PipelineResult``, compute canonical equality, or expose
-product query/HTTP semantics (WS2/WS3).
+Does not materialize ``PipelineResult`` or compute canonical equality.
+Product HTTP semantics remain in the query service / router (WS3).
 """
 
 from __future__ import annotations
@@ -22,6 +22,8 @@ from app.intelligence_runs.errors import (
 from app.intelligence_runs.models import IntelligenceRunRecord
 
 _FINGERPRINT_HEX_LEN = 64
+_DASHBOARD_STAGE_KEY = "dashboard"
+_DASHBOARD_PRESENT = "PRESENT"
 
 
 class IntelligenceRunRepository(Protocol):
@@ -34,6 +36,8 @@ class IntelligenceRunRepository(Protocol):
         fingerprint: str,
         snapshot_contract_version: str,
     ) -> IntelligenceRunRecord | None: ...
+
+    def get_latest_dashboard_storage_candidate(self) -> IntelligenceRunRecord | None: ...
 
 
 class SqlAlchemyIntelligenceRunRepository:
@@ -119,6 +123,38 @@ class SqlAlchemyIntelligenceRunRepository:
         except SQLAlchemyError as exc:
             raise IntelligenceRunPersistenceError(
                 detail="unexpected persistence failure during get_by_logical_identity",
+            ) from exc
+
+    def get_latest_dashboard_storage_candidate(self) -> IntelligenceRunRecord | None:
+        """Return the newest claimed-PRESENT storage candidate for latest-dashboard.
+
+        Preliminary filter is ``stage_presence.dashboard == PRESENT`` only.
+        Missing, JSON-null, non-object, or corrupt Dashboard payloads must still
+        be selected so the query service can fail closed (no silent older skip).
+        Returns at most one row under authoritative ordering.
+        """
+        try:
+            statement = (
+                select(IntelligenceRunRecord)
+                .where(
+                    IntelligenceRunRecord.stage_presence_json[_DASHBOARD_STAGE_KEY].as_string()
+                    == _DASHBOARD_PRESENT,
+                )
+                .order_by(
+                    IntelligenceRunRecord.as_of.desc().nulls_last(),
+                    IntelligenceRunRecord.persisted_at.desc(),
+                    IntelligenceRunRecord.run_id.asc(),
+                )
+                .limit(1)
+            )
+            return self._session.scalars(statement).one_or_none()
+        except OperationalError as exc:
+            raise IntelligenceRunStorageUnavailableError(
+                detail="storage unavailable during get_latest_dashboard_storage_candidate",
+            ) from exc
+        except SQLAlchemyError as exc:
+            raise IntelligenceRunPersistenceError(
+                detail="unexpected persistence failure during latest dashboard candidate",
             ) from exc
 
     @staticmethod

@@ -46,7 +46,7 @@ def test_token_creation_contains_required_claims() -> None:
     assert claims.jti == "jti-fixed-1"
     assert claims.token_type == TOKEN_TYPE_ACCESS
     assert claims.roles == ["developer"]
-    assert claims.scopes == ["api:read"]
+    assert claims.scopes == ["api:read", "intelligence:runs:read"]
     assert claims.iat == int(now.timestamp())
     assert claims.nbf == claims.iat
     assert claims.exp == claims.iat + 900
