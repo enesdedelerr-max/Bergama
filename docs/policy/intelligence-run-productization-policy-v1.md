@@ -3,15 +3,16 @@
 **Policy ID:** `intelligence-run-productization.policy.v1`  
 **Version:** v1  
 **Title:** Intelligence Run Productization Policy / Contract Freeze v1  
-**Status:** DRAFT  
+**Status:** APPROVED / FROZEN  
 **Document class:** Combined Productization Policy / Contract Freeze  
 **Sprint:** 14  
 **Gate:** Combined Productization Policy / Contract Freeze  
 **Theme:** Durable Intelligence Run Persistence and Read/Query Boundary  
 **Policy issue:** [#142](https://github.com/enesdedelerr-max/Bergama/issues/142)  
 **Predecessor Planning:** Issue [#136](https://github.com/enesdedelerr-max/Bergama/issues/136) / PR [#137](https://github.com/enesdedelerr-max/Bergama/pull/137)  
-**Predecessor Architecture:** Issue [#138](https://github.com/enesdedelerr-max/Bergama/issues/138) / PR [#139](https://github.com/enesdedelerr-max/Bergama/pull/139) — `intelligence-run-productization.architecture.v1`  
+**Predecessor Architecture:** Issue [#138](https://github.com/enesdedelerr-max/Bergama/issues/138) / PR [#139](https://github.com/enesdedelerr-max/Bergama/pull/139) — `intelligence-run-productization.architecture.v1` @ `2390e4fbe56e8026d62ab4aece7137672d3ee15f`  
 **Predecessor Governance:** Issue [#140](https://github.com/enesdedelerr-max/Bergama/issues/140) / PR [#141](https://github.com/enesdedelerr-max/Bergama/pull/141) — `intelligence-run-productization.governance.v1`  
+**Policy merge:** PR [#143](https://github.com/enesdedelerr-max/Bergama/pull/143) @ `ba4eed88c4598713f356035b28147812472c51ec`  
 **Authoritative main at draft:** `9d2882437d585d5725226e849621f20e6ad3dc4b`
 
 ```text
@@ -20,16 +21,12 @@ POLICY APPROVAL ≠ IMPLEMENTATION
 SPRINT_14_PLANNING_GATE_ESTABLISHED = YES
 SPRINT_14_ARCHITECTURE_GATE_ESTABLISHED = YES
 SPRINT_14_GOVERNANCE_GATE_ESTABLISHED = YES
-SPRINT_14_PRODUCTIZATION_POLICY_CONTRACT_FREEZE_STATUS = DRAFT
-SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO
-NEW_INFRASTRUCTURE_AUTHORIZED = NO
-NEW_DEPENDENCY_AUTHORIZED = NO
-DATABASE_MIGRATION_AUTHORIZED = NO
-DATABASE_SCHEMA_IMPLEMENTATION_AUTHORIZED = NO
-REPOSITORY_IMPLEMENTATION_AUTHORIZED = NO
-MATERIALIZER_IMPLEMENTATION_AUTHORIZED = NO
-QUERY_SERVICE_IMPLEMENTATION_AUTHORIZED = NO
-HTTP_ENDPOINT_IMPLEMENTATION_AUTHORIZED = NO
+SPRINT_14_PRODUCTIZATION_POLICY_CONTRACT_FREEZE_STATUS = APPROVED / FROZEN
+SPRINT_14_IMPLEMENTATION_AUTHORIZED = YES
+IMPLEMENTATION_SEQUENCE = 4/4 COMPLETE
+SPRINT_14_COMPLETE = NO
+STATUS_SYNC = IN_PROGRESS / ISSUE_154
+GOVERNANCE_CLOSEOUT = PENDING
 WRITE_API_AUTHORIZED = NO
 UI_AUTHORIZED = NO
 FEATURE_PLATFORM_CHANGE_AUTHORIZED = NO
@@ -910,16 +907,12 @@ No implementation acceptance criteria are defined by this document.
 SPRINT_14_PLANNING_GATE_ESTABLISHED = YES
 SPRINT_14_ARCHITECTURE_GATE_ESTABLISHED = YES
 SPRINT_14_GOVERNANCE_GATE_ESTABLISHED = YES
-SPRINT_14_PRODUCTIZATION_POLICY_CONTRACT_FREEZE_STATUS = DRAFT
-SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO
-NEW_INFRASTRUCTURE_AUTHORIZED = NO
-NEW_DEPENDENCY_AUTHORIZED = NO
-DATABASE_MIGRATION_AUTHORIZED = NO
-DATABASE_SCHEMA_IMPLEMENTATION_AUTHORIZED = NO
-REPOSITORY_IMPLEMENTATION_AUTHORIZED = NO
-MATERIALIZER_IMPLEMENTATION_AUTHORIZED = NO
-QUERY_SERVICE_IMPLEMENTATION_AUTHORIZED = NO
-HTTP_ENDPOINT_IMPLEMENTATION_AUTHORIZED = NO
+SPRINT_14_PRODUCTIZATION_POLICY_CONTRACT_FREEZE_STATUS = APPROVED / FROZEN
+SPRINT_14_IMPLEMENTATION_AUTHORIZED = YES
+IMPLEMENTATION_SEQUENCE = 4/4 COMPLETE
+SPRINT_14_COMPLETE = NO
+STATUS_SYNC = IN_PROGRESS / ISSUE_154
+GOVERNANCE_CLOSEOUT = PENDING
 WRITE_API_AUTHORIZED = NO
 UI_AUTHORIZED = NO
 FEATURE_PLATFORM_CHANGE_AUTHORIZED = NO
@@ -933,11 +926,18 @@ TAG_RELEASE_DEPLOY_AUTHORIZED = NO
 
 ## 30. Next Step
 
-Independently review this DRAFT Combined Productization Policy / Contract
-Freeze.
+This Policy Version is **APPROVED / FROZEN** (#142 / PR #143 @
+`ba4eed88c4598713f356035b28147812472c51ec`). Implementation Authorization and
+WS1–WS4 subsequently completed under separate gates. Frozen route / DTO / auth
+scope / error / identity / latest-dashboard / materialization contracts are
+unchanged by this status synchronization.
 
-Do not begin Implementation Authorization, dependency installation,
-migrations, repositories, materializers, query services, HTTP endpoints, UI,
-Feature Platform mutation, live-provider expansion, model participation,
-broker execution, tag, release, or deployment until the required governance
-sequence authorizes those later steps.
+Current next repository process step (separate issue):
+
+```text
+NEXT_PROCESS_STEP = Sprint 14 Governance Closeout / ROADMAP Reconciliation
+STATUS_SYNC = IN_PROGRESS / ISSUE_154
+```
+
+`IMPLEMENTATION_COMPLETE = YES`. `SPRINT_COMPLETE = NO`.
+`MODEL_PARTICIPATION = UNAUTHORIZED`. `BROKER_EXECUTION = DENIED/DEFERRED`.

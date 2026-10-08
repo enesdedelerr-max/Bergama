@@ -83,8 +83,8 @@ Intelligence Pipeline Governance v1 is **APPROVED / EFFECTIVE**
 `intelligence-pipeline.policy.v1` is **APPROVED / FROZEN**. Implementation
 Authorization `intelligence-pipeline.implementation-authorization.v1` is
 **APPROVED / EFFECTIVE**. Authorized implementation sequence is **3/3 COMPLETE**
-(Issues #126 / #128 / #130). Status synchronization is reflected under
-Issue #132. Sprint 13 governance closeout is **NOT COMPLETE**.
+(Issues #126 / #128 / #130). Status synchronization COMPLETE under Issue #132 /
+PR #133. Sprint 13 governance closeout is **COMPLETE** under Issue #134.
 `SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`. MODEL PARTICIPATION remains
 UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED.
 
@@ -97,3 +97,28 @@ Policy: [`../policy/intelligence-pipeline-policy-v1.md`](../policy/intelligence-
 
 See [intelligence-pipeline/README.md](intelligence-pipeline/README.md) for the
 Intelligence Pipeline Governance index.
+
+## Intelligence Run Productization
+
+Intelligence Run Productization Governance v1 is **APPROVED / EFFECTIVE**
+(`intelligence-run-productization.governance.v1`). Policy Version
+`intelligence-run-productization.policy.v1` is **APPROVED / FROZEN**.
+Implementation Authorization
+`intelligence-run-productization.implementation-authorization.v1` is
+**APPROVED / EFFECTIVE**. Authorized implementation workstreams are **4/4
+COMPLETE** (Issues #146 / #148 / #150 / #152). Status synchronization is
+reflected under Issue #154. Sprint 14 governance closeout is **NOT COMPLETE**.
+`SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`. MODEL PARTICIPATION remains
+UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED. Public write API
+remains UNAUTHORIZED / NOT IMPLEMENTED. UI implementation remains NOT
+AUTHORIZED BY SPRINT 14.
+
+| # | Document | Status |
+|---|----------|--------|
+| 1 | [Intelligence Run Productization Governance v1](intelligence-run-productization/intelligence-run-productization-governance-v1.md) | APPROVED / EFFECTIVE |
+
+Policy: [`../policy/intelligence-run-productization-policy-v1.md`](../policy/intelligence-run-productization-policy-v1.md) —
+`intelligence-run-productization.policy.v1` — APPROVED / FROZEN.
+
+See [intelligence-run-productization/README.md](intelligence-run-productization/README.md)
+for the Intelligence Run Productization Governance index.
