@@ -24,6 +24,7 @@ Sprint 13 governance closeout is COMPLETE under Issue #134.
 Implementation Authorization
 `intelligence-run-productization.implementation-authorization.v1` is
 APPROVED / EFFECTIVE. Sprint 14 implementation workstreams are COMPLETE (4/4);
-status sync is Issue #154; Sprint 14 governance closeout is NOT COMPLETE.
+status sync is COMPLETE under Issue #154; Sprint 14 governance closeout is
+COMPLETE under Issue #156; Sprint 14 documentation target is COMPLETE.
 MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution remains
-DENIED / DEFERRED.
+DENIED / DEFERRED. Sprint 15 implementation remains NOT AUTHORIZED.
