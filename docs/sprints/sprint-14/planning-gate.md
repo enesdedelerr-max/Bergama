@@ -2,7 +2,7 @@
 
 **Planning Gate ID:** `sprint-14.planning-gate`
 **Proposed theme:** Durable Intelligence Run Persistence and Read/Query Boundary
-**Status:** DRAFT
+**Status:** APPROVED / EFFECTIVE
 **Sprint number:** 14
 **Gate type:** PLANNING GATE
 **Document class:** Planning Gate only
@@ -10,25 +10,26 @@
 **Authoritative main at draft time:** `73fe75bd28ad45555ecf1e911208fbac8b45175e`
 **Planning issue:** [#136](https://github.com/enesdedelerr-max/Bergama/issues/136)
 
-This Planning Gate, when APPROVED, authorizes Sprint 14 theme selection, scope
-classification, repository sequencing, and opening of a documentation-only
-Architecture Gate.
+This Planning Gate is **APPROVED / EFFECTIVE** (#136 / PR #137). Planning
+approval authorized Sprint 14 theme selection, scope classification, repository
+sequencing, and opening of a documentation-only Architecture Gate.
 
-It does **not** approve Architecture, Governance Decisions, Policy / Contract
-Freeze, Implementation Authorization, or Implementation.
+Planning approval alone does **not** approve Architecture, Governance Decisions,
+Policy / Contract Freeze, Implementation Authorization, or Implementation.
 
-It does **not** authorize runtime code, dependency changes, migrations, HTTP
-endpoint implementation, UI, model participation, broker execution, Feature
-Platform mutation, live-provider expansion, tag, release, or deployment.
+Planning approval alone does **not** authorize runtime code, dependency changes,
+migrations, HTTP endpoint implementation, UI, model participation, broker
+execution, Feature Platform mutation, live-provider expansion, tag, release, or
+deployment. Implementation later proceeded only under separately approved
+Implementation Authorization and is now COMPLETE (WS1–WS4). Sprint 14
+governance closeout remains NOT COMPLETE.
 
 ```text
 PLANNING_GATE_APPROVAL ≠ IMPLEMENTATION_AUTHORIZATION
-SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO
-RUNTIME_CHANGE_AUTHORIZED = NO
-DEPENDENCY_CHANGE_AUTHORIZED = NO
-DATABASE_MIGRATION_AUTHORIZED = NO
-HTTP_ENDPOINT_IMPLEMENTATION_AUTHORIZED = NO
-UI_AUTHORIZED = NO
+IMPLEMENTATION_COMPLETE = YES
+SPRINT_COMPLETE = NO
+STATUS_SYNC = IN_PROGRESS / ISSUE_154
+GOVERNANCE_CLOSEOUT = PENDING
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED / DEFERRED
 TAG_RELEASE_DEPLOY_AUTHORIZED = NO
@@ -41,13 +42,13 @@ TAG_RELEASE_DEPLOY_AUTHORIZED = NO
 | Field | Value |
 | --- | --- |
 | Planning Gate ID | `sprint-14.planning-gate` |
-| Status | DRAFT |
+| Status | APPROVED / EFFECTIVE |
 | Sprint | 14 |
 | Theme | Durable Intelligence Run Persistence and Read/Query Boundary |
 | Planning issue | #136 |
-| Approves Architecture | No |
-| Approves Governance | No |
-| Approves Policy / Contract Freeze | No |
+| Approves Architecture | No (Architecture later APPROVED / EFFECTIVE separately) |
+| Approves Governance | No (Governance later APPROVED / EFFECTIVE separately) |
+| Approves Policy / Contract Freeze | No (Policy later APPROVED / FROZEN separately) |
 | Approves Implementation Authorization | No |
 | Approves Implementation | No |
 | UI authorized | NO |
@@ -628,11 +629,8 @@ HUMAN_REVIEW_WRITE_UI_READY_AFTER_SPRINT_14 = NO
 
 ```text
 PLANNING_GATE_APPROVAL ≠ IMPLEMENTATION_AUTHORIZATION
-SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO
-RUNTIME_CHANGE_AUTHORIZED = NO
-DEPENDENCY_CHANGE_AUTHORIZED = NO
-DATABASE_MIGRATION_AUTHORIZED = NO
-HTTP_ENDPOINT_IMPLEMENTATION_AUTHORIZED = NO
+IMPLEMENTATION_COMPLETE = YES
+SPRINT_COMPLETE = NO
 UI_AUTHORIZED = NO
 WRITE_API_AUTHORIZED = NO
 FEATURE_PLATFORM_CHANGE_AUTHORIZED = NO
@@ -643,20 +641,28 @@ TAG_RELEASE_DEPLOY_AUTHORIZED = NO
 ```
 
 No implementation issue, branch, dependency change, migration, or pull request
-may claim implementation authority merely because this Planning Gate is drafted
-or later APPROVED.
+may claim implementation authority merely because this Planning Gate is
+APPROVED. Implementation proceeded only under separately approved Implementation
+Authorization `intelligence-run-productization.implementation-authorization.v1`
+and is COMPLETE (Issues #146 / #148 / #150 / #152). This Planning Gate does not
+declare Sprint 14 COMPLETE.
 
 ---
 
 ## 31. Next Gate
 
+Planning unlocked Architecture Gate (documentation-only) — COMPLETE.
+Subsequent process completed through Governance, Policy / Contract Freeze,
+Implementation Authorization, and WS1–WS4.
+
+Current next repository process step (separate issue):
+
 ```text
-NEXT_GATE = SPRINT_14_ARCHITECTURE_GATE_DISCOVERY
+NEXT_PROCESS_STEP = Sprint 14 Governance Closeout / ROADMAP Reconciliation
+STATUS_SYNC = IN_PROGRESS / ISSUE_154
+GOVERNANCE_CLOSEOUT = PENDING
 ```
 
-Do not start Architecture Gate artifacts, Implementation Authorization, or
-implementation from this Planning Gate alone.
-
-Mandatory sequence remains Planning → Architecture → Governance →
-Productization Policy / Contract Freeze → Implementation Authorization →
-bounded implementation.
+This document is **APPROVED / EFFECTIVE**.
+`IMPLEMENTATION_COMPLETE = YES`. `SPRINT_COMPLETE = NO`.
+`MODEL_PARTICIPATION = UNAUTHORIZED`. `BROKER_EXECUTION = DENIED / DEFERRED`.

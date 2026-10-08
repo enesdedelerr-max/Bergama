@@ -204,13 +204,13 @@ IMPLEMENTATION_COMPLETE = YES
 GOVERNANCE_CLOSEOUT = COMPLETE
 SPRINT_COMPLETE = YES
 SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
-SPRINT_14_AUTHORIZED = NO
 TAG_RELEASE_AUTHORIZED = NO
 ```
 
 MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution remains
-DENIED / DEFERRED. Sprint 14, UI, persistence, HTTP productization, Feature
-Platform mutation, tag, release, and deployment remain unauthorized.
+DENIED / DEFERRED. Tag / release / deployment remain unauthorized. Sprint 14
+subsequently proceeded under its own Planning → Architecture → Governance →
+Policy → Implementation Authorization chain (see Sprint 14 below).
 
 Theme: Intelligence Pipeline Integration.
 Planning Gate ID: `sprint-13.planning-gate`.
@@ -236,18 +236,72 @@ Implementation Authorization ID: `intelligence-pipeline.implementation-authoriza
 See [`docs/sprints/sprint-13/README.md`](docs/sprints/sprint-13/README.md) and
 [`docs/sprints/sprint-13/CLOSEOUT.md`](docs/sprints/sprint-13/CLOSEOUT.md).
 
-### Next action
+### Sprint 14 — Durable Intelligence Run Persistence and Read/Query Boundary
+
+Status: **IMPLEMENTATION COMPLETE / SPRINT_COMPLETE = NO**. Planning Gate
+`sprint-14.planning-gate` APPROVED / EFFECTIVE. Architecture
+`intelligence-run-productization.architecture.v1` APPROVED / EFFECTIVE.
+Governance `intelligence-run-productization.governance.v1` APPROVED /
+EFFECTIVE. Policy Version `intelligence-run-productization.policy.v1` APPROVED
+/ FROZEN. Implementation Authorization
+`intelligence-run-productization.implementation-authorization.v1` APPROVED /
+EFFECTIVE. Implementation workstreams 4/4 COMPLETE:
+
+- Issue **#146** / PR **#147** — Persistence schema / repository / migrations
+- Issue **#148** / PR **#149** — Materializer / snapshot contract
+- Issue **#150** / PR **#151** — Query service / read API
+- Issue **#152** / PR **#153** — Productization hardening / authorization firewalls
+
+Authoritative implementation baseline:
+`748bc9977a8910565c05705b7467da71c4162de5`. Post-merge quality gate
+`37724824835` completed / success. Implementation-status synchronization is
+Issue **#154** (docs-only; IN PROGRESS). Governance closeout is **PENDING**.
 
 ```text
-POST_CLOSEOUT_NEXT_ACTION_CLASS = SEPARATE_SPRINT_14_PLANNING_GATE_DISCOVERY
-SPRINT_14_AUTHORIZED = NO
+IMPLEMENTATION_COMPLETE = YES
+SPRINT_COMPLETE = NO
+GOVERNANCE_CLOSEOUT = PENDING
+STATUS_SYNC = IN_PROGRESS / ISSUE_154
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
 ```
 
-This is a workflow eligibility statement only. Sprint 14 remains unauthorized
-until its own governance / planning process grants authority. Do **not** start
-Sprint 14 implementation, UI work, tag, release, or deployment from this
-status. Broker Execution remains DENIED / DEFERRED. MODEL PARTICIPATION remains
-UNAUTHORIZED.
+MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution remains
+DENIED / DEFERRED. Public write API remains UNAUTHORIZED / NOT IMPLEMENTED. UI
+implementation, Feature Platform expansion, live-provider expansion, tag,
+release, and deployment remain unauthorized. Sprint 15 / UI work requires
+separate future authorization.
+
+Theme: Durable Intelligence Run Persistence and Read/Query Boundary.
+Planning Gate ID: `sprint-14.planning-gate`.
+Architecture ID: `intelligence-run-productization.architecture.v1`.
+Governance ID: `intelligence-run-productization.governance.v1`.
+Policy Version ID: `intelligence-run-productization.policy.v1`.
+Implementation Authorization ID: `intelligence-run-productization.implementation-authorization.v1`.
+
+| Field | Value |
+| --- | --- |
+| Planning | APPROVED / EFFECTIVE |
+| Architecture | APPROVED / EFFECTIVE |
+| Governance | APPROVED / EFFECTIVE |
+| Policy Freeze | APPROVED / FROZEN |
+| Implementation Authorization | APPROVED / EFFECTIVE |
+| Implementation | 4/4 COMPLETE — #146 / #148 / #150 / #152 |
+| Status sync | Issue #154 (IN PROGRESS) |
+| Closeout | PENDING |
+| Broker Execution | DENIED / DEFERRED |
+| MODEL PARTICIPATION | UNAUTHORIZED |
+| Tag / release | NOT AUTHORIZED / NOT PERFORMED |
+
+See [`docs/sprints/sprint-14/README.md`](docs/sprints/sprint-14/README.md).
+
+### Next action
+
+Complete and verify Sprint 14 implementation-status synchronization
+(Issue #154), then perform a separate Sprint 14 Governance Closeout / ROADMAP
+Reconciliation. Do **not** declare Sprint 14 COMPLETE until that closeout. Do
+**not** start Sprint 15 / UI implementation, model participation, broker
+execution, tag, release, or deployment from this status. Broker Execution
+remains DENIED / DEFERRED. MODEL PARTICIPATION remains UNAUTHORIZED.
 
 ## Sprint sequence
 
@@ -265,6 +319,7 @@ UNAUTHORIZED.
 12. Sprint 11 — Human Review Foundation — Complete
 13. Sprint 12 — AI Decision Engine Foundation — Complete
 14. Sprint 13 — Intelligence Pipeline Integration — Complete
+15. Sprint 14 — Durable Intelligence Persistence — Implementation complete / closeout pending
 
 ### Downstream sequencing
 
@@ -275,13 +330,16 @@ Sprint 8  Premarket Scoring       COMPLETE / RELEASED
   → Sprint 11 Human Review            COMPLETE / RELEASED
   → Sprint 12 AI Decision Engine      COMPLETE
   → Sprint 13 Intelligence Pipeline   COMPLETE
+  → Sprint 14 Intelligence Persistence IMPLEMENTATION COMPLETE / CLOSEOUT PENDING
   → Broker Execution                  future / unauthorized
 ```
 
 Sprint 12 is COMPLETE under Issue #114. Sprint 13 is COMPLETE under Issue #134
 (authorized implementation Issues #126 / #128 / #130; status sync Issue #132 /
-PR #133; governance closeout Issue #134). Sprint 14 remains unauthorized.
-Broker Execution remains deferred future work and is **not** authorized.
+PR #133; governance closeout Issue #134). Sprint 14 authorized implementation
+is COMPLETE (Issues #146 / #148 / #150 / #152). Status sync is Issue #154.
+Sprint 14 governance closeout remains PENDING. Broker Execution remains
+deferred future work and is **not** authorized.
 
 ### Notes on later themes
 

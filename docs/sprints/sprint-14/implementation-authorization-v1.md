@@ -3,25 +3,25 @@
 **Authorization ID:** `intelligence-run-productization.implementation-authorization.v1`  
 **Title:** Intelligence Run Productization Implementation Authorization v1  
 **Version:** v1  
-**Status:** DRAFT  
+**Status:** APPROVED / EFFECTIVE  
 **Document class:** Implementation Authorization  
 **Sprint:** 14  
 **Theme:** Durable Intelligence Run Persistence and Read/Query Boundary  
 **Bounded context:** Intelligence Run Productization  
-**Authorized future package:** `apps/api/app/intelligence_runs/`  
+**Authorized package:** `apps/api/app/intelligence_runs/`  
 **Implementation Authorization issue:** [#144](https://github.com/enesdedelerr-max/Bergama/issues/144)
 
 ```text
-SPRINT_14_IMPLEMENTATION_AUTHORIZATION_STATUS = DRAFT
-SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO
-IMPLEMENTATION_WORK_STARTED = NO
-NEW_DEPENDENCY_AUTHORIZED = NO
-DATABASE_MIGRATION_AUTHORIZED = NO
-DATABASE_SCHEMA_IMPLEMENTATION_AUTHORIZED = NO
-REPOSITORY_IMPLEMENTATION_AUTHORIZED = NO
-MATERIALIZER_IMPLEMENTATION_AUTHORIZED = NO
-QUERY_SERVICE_IMPLEMENTATION_AUTHORIZED = NO
-HTTP_ENDPOINT_IMPLEMENTATION_AUTHORIZED = NO
+SPRINT_14_IMPLEMENTATION_AUTHORIZATION_STATUS = APPROVED / EFFECTIVE
+SPRINT_14_IMPLEMENTATION_AUTHORIZED = YES
+IMPLEMENTATION_WORK_STARTED = YES
+IMPLEMENTATION_SEQUENCE = 4/4 COMPLETE
+ISSUE_146 = COMPLETE
+ISSUE_148 = COMPLETE
+ISSUE_150 = COMPLETE
+ISSUE_152 = COMPLETE
+SPRINT_14 = NOT COMPLETE
+PUBLIC_WRITE_API = UNAUTHORIZED / NOT IMPLEMENTED
 UI_AUTHORIZED = NO
 FEATURE_PLATFORM_CHANGE_AUTHORIZED = NO
 LIVE_PROVIDER_EXPANSION_AUTHORIZED = NO
@@ -30,10 +30,11 @@ BROKER_EXECUTION = DENIED/DEFERRED
 TAG_RELEASE_DEPLOY_AUTHORIZED = NO
 ```
 
-This document is **DRAFT**. It does **not** authorize implementation.
-Implementation becomes authorized only after this artifact completes
-independent review, is committed, pushed, approved, merged, and its
-post-merge main CI is green (**EFFECTIVE AUTHORIZATION**).
+This document is **APPROVED / EFFECTIVE** (#144 / PR #145 @
+`0755b692a13345dc923570b73ea91b0f032f3242`). Implementation is **AUTHORIZED**
+strictly within the boundaries frozen by this artifact. The authorized four
+workstream sequence is COMPLETE. Sprint 14 governance closeout remains separate
+and NOT COMPLETE. Status sync is Issue #154 (docs-only).
 
 ---
 
@@ -43,21 +44,23 @@ post-merge main CI is green (**EFFECTIVE AUTHORIZATION**).
 
 | State | Meaning |
 | --- | --- |
-| **DRAFT** (current) | Artifact proposes bounded future authorization. `SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO`. |
-| **EFFECTIVE** (future) | Artifact has completed its own governed lifecycle (review → commit → push → PR → required CI → required approval → merge → post-merge main CI green). Only then may WS1–WS4 begin under this document. |
+| **DRAFT** (historical) | Artifact proposed bounded future authorization. `SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO`. |
+| **EFFECTIVE** (current) | Artifact completed its governed lifecycle (review → commit → push → PR → required CI → required approval → merge → post-merge main CI green). WS1–WS4 executed under this document and are COMPLETE. |
 
-Creating Issue #144 or drafting this artifact does **not** authorize:
+This Implementation Authorization does **not** authorize beyond the frozen
+minimum surface:
 
-- dependency installation or lockfile / `pyproject.toml` mutation
-- Alembic migration creation
-- database schema / ORM / repository implementation
-- materializer / query service / HTTP implementation
-- auth implementation changes
-- CI modification
+- public write API
+- UI implementation
+- Feature Platform expansion
+- live-provider expansion
+- model participation
+- broker / OMS / execution
 
 This Implementation Authorization is **subordinate** to Planning, Architecture,
 Governance, and Policy. It does **not** reopen, supersede, or reinterpret those
-gates.
+gates. Status synchronization does not expand authorization or create new
+deliverables.
 
 ---
 
@@ -65,10 +68,10 @@ gates.
 
 | Prerequisite | Process state | Evidence |
 | --- | --- | --- |
-| Planning Gate | ESTABLISHED | Issue [#136](https://github.com/enesdedelerr-max/Bergama/issues/136) / PR [#137](https://github.com/enesdedelerr-max/Bergama/pull/137) |
-| Architecture `intelligence-run-productization.architecture.v1` | ESTABLISHED | Issue [#138](https://github.com/enesdedelerr-max/Bergama/issues/138) / PR [#139](https://github.com/enesdedelerr-max/Bergama/pull/139) |
-| Governance `intelligence-run-productization.governance.v1` | ESTABLISHED | Issue [#140](https://github.com/enesdedelerr-max/Bergama/issues/140) / PR [#141](https://github.com/enesdedelerr-max/Bergama/pull/141) |
-| Policy / Contract `intelligence-run-productization.policy.v1` | ESTABLISHED | Issue [#142](https://github.com/enesdedelerr-max/Bergama/issues/142) / PR [#143](https://github.com/enesdedelerr-max/Bergama/pull/143) |
+| Planning Gate | APPROVED / EFFECTIVE | Issue [#136](https://github.com/enesdedelerr-max/Bergama/issues/136) / PR [#137](https://github.com/enesdedelerr-max/Bergama/pull/137) @ `38f808d83bdf9e84421f1f7d75e9d55510f493b3` |
+| Architecture `intelligence-run-productization.architecture.v1` | APPROVED / EFFECTIVE | Issue [#138](https://github.com/enesdedelerr-max/Bergama/issues/138) / PR [#139](https://github.com/enesdedelerr-max/Bergama/pull/139) @ `2390e4fbe56e8026d62ab4aece7137672d3ee15f` |
+| Governance `intelligence-run-productization.governance.v1` | APPROVED / EFFECTIVE | Issue [#140](https://github.com/enesdedelerr-max/Bergama/issues/140) / PR [#141](https://github.com/enesdedelerr-max/Bergama/pull/141) @ `9d2882437d585d5725226e849621f20e6ad3dc4b` |
+| Policy / Contract `intelligence-run-productization.policy.v1` | APPROVED / FROZEN | Issue [#142](https://github.com/enesdedelerr-max/Bergama/issues/142) / PR [#143](https://github.com/enesdedelerr-max/Bergama/pull/143) @ `ba4eed88c4598713f356035b28147812472c51ec` |
 
 Policy merge commit: `ba4eed88c4598713f356035b28147812472c51ec`  
 Post-merge main CI: run `37557309266` success on that SHA.
@@ -103,9 +106,10 @@ PIPELINE_DB_FREE = YES
 
 ## 4. Frozen Discovery Resolutions
 
-Discovery verdict: `B — READY TO DRAFT WITH NON-BLOCKING OPEN QUESTIONS`.
-This DRAFT freezes the four non-blocking items below. No dependency is installed
-by this document.
+Discovery verdict (historical): `B — READY TO DRAFT WITH NON-BLOCKING OPEN QUESTIONS`.
+This Implementation Authorization froze the four non-blocking items below.
+Dependencies were not installed by this document itself; installation occurred
+under EFFECTIVE authorization in WS1.
 
 ### 4.1 Dependency version policy (NBQ-1)
 
@@ -119,8 +123,8 @@ Repository reality at draft baseline (`ba4eed88…`):
 - Alembic and psycopg are absent from the direct dependency set and lock
   product surface
 
-**Frozen proposed direct dependency specifications** (install deferred to WS1
-after EFFECTIVE authorization; do not edit manifests under this DRAFT):
+**Frozen proposed direct dependency specifications** (install occurred in WS1
+after EFFECTIVE authorization; do not edit manifests in this status sync):
 
 ```text
 SQLALCHEMY_DEPENDENCY_SPEC = "sqlalchemy>=2.0.51,<2.1"
@@ -172,7 +176,7 @@ Requirements satisfied by this choice:
 - binary extra improves CI/dev reproducibility without requiring a system
   `libpq` install in the GitHub Actions runner image
 - Python 3.13 compatible packaging assumed at install time under WS1 review
-- license recorded for technical authorization; this DRAFT does not claim legal
+- license recorded for technical authorization; this IA does not claim legal
   counsel approval beyond that acknowledgment
 
 ### 4.3 Application package path (NBQ-3)
@@ -212,11 +216,12 @@ When EFFECTIVE and under WS1:
 - Do not require Helm / Kind deploy for unit/integration CI
 - Do not deploy the application
 
-This DRAFT does **not** modify `.github/workflows/ci.yml`.
+CI Postgres service provisioning was authorized under EFFECTIVE IA and delivered
+in WS1. This status synchronization does not modify `.github/workflows/ci.yml`.
 
 ---
 
-## 5. Dependency Authorization (future, when EFFECTIVE)
+## 5. Dependency Authorization (EFFECTIVE; executed in WS1)
 
 Authorize exactly three direct product dependency families:
 
@@ -235,12 +240,12 @@ Before WS1 install, require:
 - CI compatibility evidence
 
 ```text
-NEW_DEPENDENCY_AUTHORIZED = NO   # while DRAFT
+NEW_DEPENDENCY_AUTHORIZED = YES   # authorized under EFFECTIVE IA; installed in WS1
 ```
 
 ---
 
-## 6. Database / Infrastructure Authorization (future, when EFFECTIVE)
+## 6. Database / Infrastructure Authorization (EFFECTIVE; executed in WS1)
 
 Authorize PostgreSQL as the Sprint 14 Intelligence Run product OLTP store with:
 
@@ -261,11 +266,13 @@ Authorize PostgreSQL as the Sprint 14 Intelligence Run product OLTP store with:
 Blocking DB I/O MUST NOT run on the async event loop (prefer sync FastAPI
 `def` handlers or an explicit approved threadpool boundary).
 
-This DRAFT does **not** include executable SQL or migration files.
+Executable SQL / migration files were authorized under EFFECTIVE IA and
+delivered in WS1 (Issue #146 / PR #147). This status synchronization does not
+alter that schema.
 
 ```text
-DATABASE_MIGRATION_AUTHORIZED = NO   # while DRAFT
-DATABASE_SCHEMA_IMPLEMENTATION_AUTHORIZED = NO
+DATABASE_MIGRATION_AUTHORIZED = YES
+DATABASE_SCHEMA_IMPLEMENTATION_AUTHORIZED = YES
 ```
 
 ---
@@ -392,13 +399,23 @@ WS4.
 
 ---
 
-## 8. Future Implementation Issues (titles frozen; not created)
+## 8. Authorized Implementation Issues (sequence COMPLETE)
 
 ```text
 PROPOSED_IMPLEMENTATION_ISSUE_COUNT = 4
+IMPLEMENTATION_SEQUENCE = 4/4 COMPLETE
+AUTHORITATIVE_IMPLEMENTATION_BASELINE = 748bc9977a8910565c05705b7467da71c4162de5
+POST_MERGE_CI_RUN_ID = 37724824835
 ```
 
-### Issue 1 — WS1
+| Issue | Scope | State |
+| --- | --- | --- |
+| [#146](https://github.com/enesdedelerr-max/Bergama/issues/146) | WS1 Persistence schema / repository / migrations | COMPLETE (PR #147 @ `1d9c3c7a5c38342fc99c0a64a6e3fc3784b5e545`) |
+| [#148](https://github.com/enesdedelerr-max/Bergama/issues/148) | WS2 Materializer / snapshot contract | COMPLETE (PR #149 @ `5975290a5f78637aa323dc8a7c3f13c8226639f6`) |
+| [#150](https://github.com/enesdedelerr-max/Bergama/issues/150) | WS3 Query service / read API | COMPLETE (PR #151 @ `236affa60b182006c5844280e0c9084a420d33ca`) |
+| [#152](https://github.com/enesdedelerr-max/Bergama/issues/152) | WS4 Productization hardening / authorization firewalls | COMPLETE (PR #153 @ `748bc9977a8910565c05705b7467da71c4162de5`) |
+
+### Issue 1 — WS1 (COMPLETE)
 
 | Field | Value |
 | --- | --- |
@@ -411,8 +428,9 @@ PROPOSED_IMPLEMENTATION_ISSUE_COUNT = 4
 | TEST_OBLIGATIONS | repository + PostgreSQL integration + migration upgrade/compat |
 | COMPLETION_EVIDENCE | green CI including Postgres-backed tests; fresh Alembic upgrade proof |
 | MERGE_ORDER | 1 |
+| STATE | COMPLETE — Issue #146 / PR #147 |
 
-### Issue 2 — WS2
+### Issue 2 — WS2 (COMPLETE)
 
 | Field | Value |
 | --- | --- |
@@ -425,8 +443,9 @@ PROPOSED_IMPLEMENTATION_ISSUE_COUNT = 4
 | TEST_OBLIGATIONS | materializer, duplicate/equality, serialization, sanitization, ADE payload exclusion |
 | COMPLETION_EVIDENCE | equal reuse / unequal conflict proofs; no pipeline DB imports |
 | MERGE_ORDER | 2 |
+| STATE | COMPLETE — Issue #148 / PR #149 |
 
-### Issue 3 — WS3
+### Issue 3 — WS3 (COMPLETE)
 
 | Field | Value |
 | --- | --- |
@@ -439,8 +458,9 @@ PROPOSED_IMPLEMENTATION_ISSUE_COUNT = 4
 | TEST_OBLIGATIONS | HTTP, auth/authz, error mapping, latest selection, absence semantics |
 | COMPLETION_EVIDENCE | six-route contract green; scope enforcement proven |
 | MERGE_ORDER | 3 |
+| STATE | COMPLETE — Issue #150 / PR #151 |
 
-### Issue 4 — WS4
+### Issue 4 — WS4 (COMPLETE)
 
 | Field | Value |
 | --- | --- |
@@ -453,6 +473,10 @@ PROPOSED_IMPLEMENTATION_ISSUE_COUNT = 4
 | TEST_OBLIGATIONS | full hardening / firewall / determinism matrix |
 | COMPLETION_EVIDENCE | firewall suite green; no authority leakage |
 | MERGE_ORDER | 4 |
+| STATE | COMPLETE — Issue #152 / PR #153 |
+
+This Implementation Authorization does not authorize additional implementation
+beyond the exhausted four-workstream sequence.
 
 ---
 
@@ -632,25 +656,34 @@ document.
 
 ## 14. Effectiveness Lifecycle
 
-This artifact becomes **EFFECTIVE** only after all of the following succeed:
+This artifact is **APPROVED / EFFECTIVE** after completing:
 
-1. Independent review of this DRAFT
+1. Independent review
 2. Commit on the documentation branch
 3. Push and PR against `main`
 4. Required quality-gate CI success on the PR head
 5. Required approving review
-6. Merge (merge-commit preferred unless separately directed)
+6. Merge (PR #145 @ `0755b692a13345dc923570b73ea91b0f032f3242`)
 7. Post-merge main CI success on the merge SHA
 
-Until then:
+Effects under this APPROVED / EFFECTIVE Authorization:
+
+1. Bounded implementation within this document was authorized.
+2. The four authorized workstream issues were created and completed.
+3. Model participation remains UNAUTHORIZED.
+4. Broker / execution remains DENIED / DEFERRED.
+5. Public write API remains UNAUTHORIZED / NOT IMPLEMENTED.
+6. UI implementation remains NOT AUTHORIZED BY SPRINT 14.
+7. Feature Platform expansion and live-provider expansion remain NOT AUTHORIZED.
+8. Sprint 14 remains NOT COMPLETE until separate governance closeout.
+9. No fifth implementation workstream and no authorization expansion are granted.
 
 ```text
-SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO
+IMPLEMENTATION_COMPLETE = YES
+SPRINT_COMPLETE = NO
+STATUS_SYNC = IN_PROGRESS / ISSUE_154
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
 ```
-
-After EFFECTIVE, create the four implementation issues in merge order and
-execute WS1–WS4 only within this authorization. Do not claim Sprint 14 complete
-solely because this IA became effective.
 
 ---
 
@@ -661,8 +694,9 @@ SPRINT_14_PLANNING_GATE_ESTABLISHED = YES
 SPRINT_14_ARCHITECTURE_GATE_ESTABLISHED = YES
 SPRINT_14_GOVERNANCE_GATE_ESTABLISHED = YES
 SPRINT_14_PRODUCTIZATION_POLICY_CONTRACT_FREEZE_GATE_ESTABLISHED = YES
-SPRINT_14_IMPLEMENTATION_AUTHORIZATION_STATUS = DRAFT
-SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO
+SPRINT_14_IMPLEMENTATION_AUTHORIZATION_STATUS = APPROVED / EFFECTIVE
+SPRINT_14_IMPLEMENTATION_AUTHORIZED = YES
+IMPLEMENTATION_SEQUENCE = 4/4 COMPLETE
 PROPOSED_AUTHORIZED_DIRECT_DEPENDENCY_COUNT = 3
 PROPOSED_IMPLEMENTATION_WORKSTREAM_COUNT = 4
 PROPOSED_IMPLEMENTATION_ISSUE_COUNT = 4
@@ -672,6 +706,11 @@ CI_POSTGRES_PROVISIONING_MODE = GITHUB_ACTIONS_POSTGRES_SERVICE_CONTAINER
 PSYCOPG_INSTALLATION_MODE = PSYCOPG_BINARY_EXTRA_SYNC
 PSYCOPG_LICENSE_ACKNOWLEDGED = YES
 PIPELINE_DB_FREE = YES
+PUBLIC_WRITE_API = UNAUTHORIZED / NOT IMPLEMENTED
+UI_AUTHORIZED = NO
+FEATURE_PLATFORM_CHANGE_AUTHORIZED = NO
+LIVE_PROVIDER_EXPANSION_AUTHORIZED = NO
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
+SPRINT_14_COMPLETE = NO
 ```

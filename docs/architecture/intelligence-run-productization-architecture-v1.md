@@ -1,7 +1,7 @@
 # Intelligence Run Productization Architecture v1
 
 **Architecture ID:** `intelligence-run-productization.architecture.v1`  
-**Status:** DRAFT  
+**Status:** APPROVED / EFFECTIVE  
 **Sprint:** 14  
 **Gate:** Architecture Gate  
 **Theme:** Durable Intelligence Run Persistence and Read/Query Boundary  
@@ -10,22 +10,15 @@
 **Planning Issue:** [#136](https://github.com/enesdedelerr-max/Bergama/issues/136)  
 **Planning PR:** [#137](https://github.com/enesdedelerr-max/Bergama/pull/137)  
 **Architecture Gate Issue:** [#138](https://github.com/enesdedelerr-max/Bergama/issues/138)  
+**Architecture merge:** PR [#139](https://github.com/enesdedelerr-max/Bergama/pull/139) @ `2390e4fbe56e8026d62ab4aece7137672d3ee15f`  
 **Document class:** Architecture Gate only — not Implementation Authorization
 
 ```text
 ARCHITECTURE_GATE_APPROVAL != IMPLEMENTATION_AUTHORIZATION
-SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO
-NEW_INFRASTRUCTURE_AUTHORIZED = NO
-NEW_DEPENDENCY_AUTHORIZED = NO
-SQLALCHEMY_INSTALLATION_AUTHORIZED = NO
-ALEMBIC_INSTALLATION_AUTHORIZED = NO
-PSYCOPG_INSTALLATION_AUTHORIZED = NO
-DATABASE_MIGRATION_AUTHORIZED = NO
-DATABASE_SCHEMA_IMPLEMENTATION_AUTHORIZED = NO
-REPOSITORY_IMPLEMENTATION_AUTHORIZED = NO
-MATERIALIZER_IMPLEMENTATION_AUTHORIZED = NO
-QUERY_SERVICE_IMPLEMENTATION_AUTHORIZED = NO
-HTTP_ENDPOINT_IMPLEMENTATION_AUTHORIZED = NO
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate Implementation Authorization; not by this Architecture)
+IMPLEMENTATION_WORK_STARTED = YES
+IMPLEMENTATION_SEQUENCE = 4/4 COMPLETE
+SPRINT_14_COMPLETE = NO
 WRITE_API_AUTHORIZED = NO
 HR_ATTESTATION_CAPTURE_AUTHORIZED = NO
 UI_AUTHORIZED = NO
@@ -912,18 +905,9 @@ Architecture Gate draft.
 
 ```text
 ARCHITECTURE_GATE_APPROVAL != IMPLEMENTATION_AUTHORIZATION
-SPRINT_14_IMPLEMENTATION_AUTHORIZED = NO
-NEW_INFRASTRUCTURE_AUTHORIZED = NO
-NEW_DEPENDENCY_AUTHORIZED = NO
-SQLALCHEMY_INSTALLATION_AUTHORIZED = NO
-ALEMBIC_INSTALLATION_AUTHORIZED = NO
-PSYCOPG_INSTALLATION_AUTHORIZED = NO
-DATABASE_MIGRATION_AUTHORIZED = NO
-DATABASE_SCHEMA_IMPLEMENTATION_AUTHORIZED = NO
-REPOSITORY_IMPLEMENTATION_AUTHORIZED = NO
-MATERIALIZER_IMPLEMENTATION_AUTHORIZED = NO
-QUERY_SERVICE_IMPLEMENTATION_AUTHORIZED = NO
-HTTP_ENDPOINT_IMPLEMENTATION_AUTHORIZED = NO
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate Implementation Authorization; not by this Architecture)
+IMPLEMENTATION_SEQUENCE = 4/4 COMPLETE
+SPRINT_14_COMPLETE = NO
 WRITE_API_AUTHORIZED = NO
 HR_ATTESTATION_CAPTURE_AUTHORIZED = NO
 UI_AUTHORIZED = NO
@@ -936,32 +920,29 @@ TAG_RELEASE_DEPLOY_AUTHORIZED = NO
 
 No implementation issue, branch, dependency change, migration, or pull request
 may claim implementation authority merely because this Architecture Gate is
-drafted or later approved.
+APPROVED. Implementation proceeded only under separately approved Implementation
+Authorization and is COMPLETE (Issues #146 / #148 / #150 / #152). This
+Architecture Gate does not declare Sprint 14 COMPLETE.
 
 ---
 
 ## 32. Next Governance Step
 
-After:
+This Architecture Gate is **APPROVED / EFFECTIVE** (#138 / PR #139 @
+`2390e4fbe56e8026d62ab4aece7137672d3ee15f`). Subsequent Governance, Policy /
+Contract Freeze, Implementation Authorization, and WS1–WS4 completed under
+separate gates.
 
-1. Independent Architecture Gate review  
-2. Local commit  
-3. Pre-push review  
-4. PR  
-5. PR CI  
-6. Required approval  
-7. Controlled merge  
-8. Post-merge main CI success  
-
-the next eligible governance task is:
+Current next repository process step (separate issue):
 
 ```text
-NEXT_GATE = SPRINT_14_GOVERNANCE_GATE_DISCOVERY
+NEXT_PROCESS_STEP = Sprint 14 Governance Closeout / ROADMAP Reconciliation
+STATUS_SYNC = IN_PROGRESS / ISSUE_154
+GOVERNANCE_CLOSEOUT = PENDING
 ```
 
-Not Governance Gate creation.  
-Not Implementation Authorization.  
-Not implementation.
+`IMPLEMENTATION_COMPLETE = YES`. `SPRINT_COMPLETE = NO`.
+`MODEL_PARTICIPATION = UNAUTHORIZED`. `BROKER_EXECUTION = DENIED/DEFERRED`.
 
 Mandatory sequence remains:
 
