@@ -107,11 +107,12 @@ Implementation Authorization
 `intelligence-run-productization.implementation-authorization.v1` is
 **APPROVED / EFFECTIVE**. Authorized implementation workstreams are **4/4
 COMPLETE** (Issues #146 / #148 / #150 / #152). Status synchronization is
-reflected under Issue #154. Sprint 14 governance closeout is **NOT COMPLETE**.
+**COMPLETE** under Issue #154. Sprint 14 governance closeout is **COMPLETE**
+under Issue #156. Sprint 14 documentation target is **COMPLETE**.
 `SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`. MODEL PARTICIPATION remains
 UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED. Public write API
 remains UNAUTHORIZED / NOT IMPLEMENTED. UI implementation remains NOT
-AUTHORIZED BY SPRINT 14.
+AUTHORIZED BY SPRINT 14. Sprint 15 implementation remains NOT AUTHORIZED.
 
 | # | Document | Status |
 |---|----------|--------|
