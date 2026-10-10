@@ -1,5 +1,6 @@
 export const CONSOLE_NAV = [
   { href: "/", label: "Overview" },
+  { href: "/premarket", label: "Premarket" },
   { href: "/infrastructure", label: "Infrastructure" },
   { href: "/data-services", label: "Data Services" },
   { href: "/gitops", label: "GitOps" },
