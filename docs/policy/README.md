@@ -32,6 +32,11 @@ DENIED / DEFERRED. `premarket-command-center-ui.policy.v1` is
 **APPROVED / FROZEN** (#164 / PR #165 @
 `2f00c39e8acb381fd9533a07eb27526dd97529fa`). Sprint 15 Implementation
 Authorization is APPROVED / EFFECTIVE. Sprint 15 implementation workstreams
-are COMPLETE (3/3; Issues #168 / #170 / #172). Status Sync is Issue #174
-(OPEN). Sprint 15 Governance Closeout remains PENDING.
-`SPRINT_15_IMPLEMENTATION_COMPLETE = YES`. `SPRINT_15_COMPLETE = NO`.
+are COMPLETE (3/3; Issues #168 / #170 / #172). Status Sync is COMPLETE /
+FINAL (Issue #174 / PR #175 / merge `abd0c295731ac5b56d1193fa4d7dca8ad44fcfa7`
+/ CI `38082195143`). Governance Closeout documentation target is COMPLETE
+under Issue #176; operational Closeout remains
+`IN_PROGRESS / ISSUE_176`. `SPRINT_15_IMPLEMENTATION_COMPLETE = YES`.
+`SPRINT_15_COMPLETE = YES` (documentation target).
+`OPERATIONAL_SPRINT_15_COMPLETE = NO`.
+`SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`.

@@ -23,7 +23,12 @@ IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate Implementation Authorizat
 IMPLEMENTATION_WORK_STARTED = YES
 IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
 SPRINT_15_IMPLEMENTATION_COMPLETE = YES
-SPRINT_15_COMPLETE = NO
+STATUS_SYNC = COMPLETE / FINAL
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_15_COMPLETE = YES
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 TAG_RELEASE_DEPLOY_AUTHORIZED = NO
@@ -50,7 +55,7 @@ NEW_FRONTEND_DEPENDENCY_AUTHORIZED = NO
 | Approves Implementation Authorization | No |
 | Approves Implementation | No |
 | Next eligible process after APPROVED / EFFECTIVE (historical) | Sprint 15 Governance Gate creation |
-| Current next process | Status Sync Issue #174 → Governance Closeout |
+| Current next process | Governance Closeout finality (Issue #176) |
 
 DRAFT does **not** mean Architecture is EFFECTIVE. Architecture becomes
 **APPROVED / EFFECTIVE** only after controlled merge and post-merge
@@ -799,9 +804,10 @@ Next eligible gate after Architecture APPROVED/EFFECTIVE: **Governance**.
 
 This Architecture Gate is **APPROVED / EFFECTIVE** (#160 / PR #161 @
 `d50bd2f6579898f80b7f5faedc6a5b6999ad7363`). Subsequent Governance, Policy /
-Contract Freeze, Implementation Authorization, and WS1–WS3 completed under
-separate gates. AD-* decisions in this document remain frozen and unchanged by
-Status Sync.
+Contract Freeze, Implementation Authorization, WS1–WS3, and Status Sync
+completed under separate gates. AD-* decisions in this document remain frozen
+and unchanged by Status Sync / Closeout (Architecture decision change count =
+0).
 
 | WS | Evidence | State |
 | --- | --- | --- |
@@ -809,18 +815,25 @@ Status Sync.
 | WS2 | #170 / #171; impl `ae6f7460808a35026375c0e5277db64f0d007991`; merge `ed52c5e10445fe69a2d728ccd15239788192113a` | MERGED_POST_MERGE_CI_GREEN_FINAL |
 | WS3 | #172 / #173; impl `9e53af68c6ceaa1d2abfb92f4a1be127caa9215b`; merge `32e498ad791cbfbac6eaecbcf360a16706c38fa2`; CI `38073153105` success | MERGED_POST_MERGE_CI_GREEN_FINAL |
 
+Status Sync: Issue #174 CLOSED / COMPLETED; PR #175 MERGED @
+`abd0c295731ac5b56d1193fa4d7dca8ad44fcfa7`; post-merge CI `38082195143`
+SUCCESS.
+
 ```text
 SPRINT_15_IMPLEMENTATION_COMPLETE = YES
-STATUS_SYNC = IN_PROGRESS / ISSUE_174
-GOVERNANCE_CLOSEOUT = PENDING
-SPRINT_15_COMPLETE = NO
-NEXT_PROCESS_STEP = Sprint 15 Governance Closeout after Status Sync finality
+STATUS_SYNC = COMPLETE / FINAL
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_15_COMPLETE = YES
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
+NEXT_PROCESS_STEP = Closeout finality (merge / post-merge CI / Issue #176 closure)
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
 ```
 
-Architecture Status Sync does **not** declare Sprint 15 COMPLETE.
+Closeout lifecycle reconciliation does **not** change Architecture decisions.
 
 ---
 
@@ -829,7 +842,10 @@ Architecture Status Sync does **not** declare Sprint 15 COMPLETE.
 ```text
 ARCHITECTURE_GATE_APPROVAL ≠ IMPLEMENTATION_AUTHORIZATION
 IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE (under separate IA; not by this Architecture)
-SPRINT_15_COMPLETE = NO
+SPRINT_15_COMPLETE = YES
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 PUBLIC_WRITE_API_AUTHORIZED = NO

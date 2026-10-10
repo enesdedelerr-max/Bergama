@@ -21,9 +21,12 @@ SPRINT_15_IMPLEMENTATION_AUTHORIZED = YES
 IMPLEMENTATION_WORK_STARTED = YES
 IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
 SPRINT_15_IMPLEMENTATION_COMPLETE = YES
-SPRINT_15_COMPLETE = NO
-STATUS_SYNC = IN_PROGRESS / ISSUE_174
-GOVERNANCE_CLOSEOUT = PENDING
+STATUS_SYNC = COMPLETE / FINAL
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_15_COMPLETE = YES
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 NEW_FE_RUNTIME_DEPENDENCY_COUNT = 0
@@ -40,7 +43,11 @@ FEATURE_PLATFORM_EXPANSION_AUTHORIZED = NO
 
 This Implementation Authorization is **APPROVED / EFFECTIVE** (#166 / PR #167 @
 `eb3bc12931ea4a2e261cef9e743275da708d5ec5`). The authorized WS1–WS3 sequence is
-COMPLETE. Sprint 15 Governance Closeout remains separate and NOT COMPLETE.
+COMPLETE. Status Sync is COMPLETE / FINAL. Governance Closeout documentation
+target is COMPLETE under Issue #176; operational Closeout remains
+IN_PROGRESS until Closeout merge, post-merge CI, and Issue #176 closure.
+Closeout does **not** expand IA scope, authorize new product work, authorize
+production, authorize models, or authorize broker execution.
 Historical candidate-stage non-authorization text elsewhere in this document
 describes the pre-effectiveness state and is preserved as history.
 
@@ -77,11 +84,13 @@ Governance, and Policy. It does not reopen or reinterpret those gates.
 
 ---
 
-## 1a. Current Implementation Finality (Status Sync)
+## 1a. Current Implementation Finality (Status Sync / Closeout)
 
 Historical authorization narrative in this document remains historically
 accurate: IA became effective only after its own governed merge/post-merge
 lifecycle; WS coding required separate issue/preflight lifecycles.
+This section is additive subsequent-lifecycle reconciliation only and does
+**not** expand IA historical authorization boundaries.
 
 **Current evidence (post-IA execution):**
 
@@ -94,19 +103,28 @@ lifecycle; WS coding required separate issue/preflight lifecycles.
 WS3 post-merge CI: run `38073153105` on `32e498ad791cbfbac6eaecbcf360a16706c38fa2`
 (`push` / `main`) completed / success; `quality-gate` success;
 `frontend-quality-gate` success. Issue #172 CLOSED via PR linkage.
+Status Sync: Issue #174 CLOSED / COMPLETED; PR #175 MERGED @
+`abd0c295731ac5b56d1193fa4d7dca8ad44fcfa7`; post-merge CI `38082195143`
+SUCCESS; governed commit `0310cd63e6731da61c834721333bea10f890f77a`.
 
 ```text
 SPRINT_15_IMPLEMENTATION_COMPLETE = YES
-STATUS_SYNC = IN_PROGRESS / ISSUE_174
-GOVERNANCE_CLOSEOUT = PENDING
-SPRINT_15_COMPLETE = NO
-NEXT_PROCESS_STEP = Sprint 15 Governance Closeout after Status Sync finality
+STATUS_SYNC = COMPLETE / FINAL
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_15_COMPLETE = YES
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
+NEXT_PROCESS_STEP = Closeout finality (merge / post-merge CI / Issue #176 closure)
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
 ```
 
-See [`README.md`](README.md).
+Closeout does **not** expand IA scope, authorize new product work, authorize
+production, authorize models, or authorize broker execution.
+
+See [`README.md`](README.md) and [`CLOSEOUT.md`](CLOSEOUT.md).
 
 ---
 
@@ -958,9 +976,12 @@ SPRINT_15_IMPLEMENTATION_AUTHORIZATION_STATE = APPROVED_EFFECTIVE
 SPRINT_15_IMPLEMENTATION_AUTHORIZED = YES
 IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
 SPRINT_15_IMPLEMENTATION_COMPLETE = YES
-SPRINT_15_COMPLETE = NO
-STATUS_SYNC = IN_PROGRESS / ISSUE_174
-GOVERNANCE_CLOSEOUT = PENDING
+STATUS_SYNC = COMPLETE / FINAL
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_15_COMPLETE = YES
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
 NEW_FE_RUNTIME_DEPENDENCY_COUNT = 0
 NEW_FE_DEV_DEPENDENCY_COUNT = 0
 NEW_BE_DEPENDENCY_COUNT = 0
@@ -976,6 +997,9 @@ FEATURE_PLATFORM_EXPANSION_AUTHORIZED = NO
 POST_IA_WORKSTREAM_COUNT = 3
 WORKSTREAM_ORDER = WS1 → WS2 → WS3
 ```
+
+Closeout does **not** expand IA scope or authorize production, models, or
+broker execution.
 
 Known carried LOW (do not fix here): Governance `S15-GOV-01` evidence cites
 nonexistent `§47`.

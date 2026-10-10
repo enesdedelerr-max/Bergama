@@ -662,11 +662,12 @@ Planning candidate defects.
 
 ---
 
-## 29. Current Lifecycle Status (Status Sync)
+## 29. Current Lifecycle Status (Status Sync / Closeout)
 
 > Planning-time decisions and historical handoff markers above (including
 > section 25 `NOT_STARTED` states) remain historically accurate as of Planning
 > Gate approval. The following records subsequent governed completion.
+> This section does **not** rewrite the historical Planning Gate decision.
 
 After Planning became APPROVED / EFFECTIVE (#158 / PR #159 @
 `a0789bf05fa4f227d786e45e535edbd1c836d523`), subsequent gates and workstreams
@@ -681,16 +682,24 @@ completed:
 | WS1 | FINAL | #168 / #169; impl `d2900c399d87cbb63e54666b58d5253a2aca6bd2`; merge `d97b9b9e02542dd64cd68970aae7e8d6cec1881b` |
 | WS2 | FINAL | #170 / #171; impl `ae6f7460808a35026375c0e5277db64f0d007991`; merge `ed52c5e10445fe69a2d728ccd15239788192113a` |
 | WS3 | FINAL | #172 / #173; impl `9e53af68c6ceaa1d2abfb92f4a1be127caa9215b`; merge `32e498ad791cbfbac6eaecbcf360a16706c38fa2`; CI `38073153105` |
+| Status Sync | FINAL | #174 / #175; commit `0310cd63e6731da61c834721333bea10f890f77a`; merge `abd0c295731ac5b56d1193fa4d7dca8ad44fcfa7`; CI `38082195143` |
+| Governance Closeout | COMPLETE (documentation target) | Issue #176; [`CLOSEOUT.md`](CLOSEOUT.md) |
 
 ```text
 SPRINT_15_IMPLEMENTATION_COMPLETE = YES
-STATUS_SYNC = IN_PROGRESS / ISSUE_174
-GOVERNANCE_CLOSEOUT = PENDING
-SPRINT_15_COMPLETE = NO
-NEXT_PROCESS_STEP = Sprint 15 Governance Closeout after Status Sync finality
+STATUS_SYNC = COMPLETE / FINAL
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_15_COMPLETE = YES
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
 ```
 
-Sprint 15 status index: [`README.md`](README.md).
+```text
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
+NEXT_PROCESS_STEP = Closeout finality (merge / post-merge CI / Issue #176 closure)
+```
+
+Sprint 15 status index: [`README.md`](README.md). Closeout: [`CLOSEOUT.md`](CLOSEOUT.md).
