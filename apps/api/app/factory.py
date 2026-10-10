@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 
 from app.core.config import AppSettings, get_settings
@@ -16,6 +17,34 @@ from app.lifespan import lifespan
 from app.middleware.request_context import RequestContextMiddleware
 from app.routers import register_routers
 from app.routers.health import router as health_router
+
+_CORS_ALLOW_METHODS: tuple[str, ...] = ("GET", "OPTIONS", "POST")
+_CORS_ALLOW_HEADERS: tuple[str, ...] = ("Authorization", "Content-Type")
+_CORS_MAX_AGE_HEADER = b"access-control-max-age"
+
+
+class _OmitCorsMaxAgeMiddleware:
+    """Strip Starlette's default Access-Control-Max-Age so Max-Age is omitted."""
+
+    def __init__(self, app: Any) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_wrapper(message: dict[str, Any]) -> None:
+            if message["type"] == "http.response.start":
+                headers = [
+                    (key, value)
+                    for key, value in message.get("headers", [])
+                    if key.lower() != _CORS_MAX_AGE_HEADER
+                ]
+                message = {**message, "headers": headers}
+            await send(message)
+
+        await self.app(scope, receive, send_wrapper)
 
 
 def create_app(
@@ -54,6 +83,7 @@ def create_app(
     )
     attach_container(application.state, resolved_container)
     application.add_middleware(RequestContextMiddleware)
+    _install_cors_middleware(application, resolved)
     register_exception_handlers(application)
 
     # Probes stay unprefixed for Kubernetes / load-balancer conventions.
@@ -84,6 +114,25 @@ def _resolve_container(
         return container
     resolved_settings = settings if settings is not None else get_settings()
     return build_container(resolved_settings)
+
+
+def _install_cors_middleware(application: FastAPI, settings: AppSettings) -> None:
+    """Install explicit CORS allowlist; empty allowlist denies all cross-origin.
+
+    Max-Age is not product-configured. Starlette's default Max-Age header is
+    stripped so Access-Control-Max-Age is omitted on the wire.
+    """
+    origins = settings.cors.normalized_origins()
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=False,
+        allow_methods=list(_CORS_ALLOW_METHODS),
+        allow_headers=list(_CORS_ALLOW_HEADERS),
+        expose_headers=[],
+    )
+    # Outer wrapper: remove Starlette default Access-Control-Max-Age.
+    application.add_middleware(_OmitCorsMaxAgeMiddleware)
 
 
 def _install_openapi(application: FastAPI) -> None:

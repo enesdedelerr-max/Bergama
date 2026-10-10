@@ -18,6 +18,7 @@ from pydantic_settings import (
 from app.core.backfill_settings import BackfillSettings
 from app.core.benzinga_settings import BenzingaSettings
 from app.core.broker_settings import BrokerSettings
+from app.core.cors_settings import CorsSettings
 from app.core.data_quality_settings import DataQualitySettings
 from app.core.database_settings import DatabaseSettings
 from app.core.environment import AppEnvironment
@@ -102,6 +103,7 @@ class AppSettings(BaseSettings):
     risk: RiskSettings = Field(default_factory=RiskSettings)
     order: OrderSettings = Field(default_factory=OrderSettings)
     broker: BrokerSettings = Field(default_factory=BrokerSettings)
+    cors: CorsSettings = Field(default_factory=CorsSettings)
 
     # JWT bootstrap (Issue #205) — non-secret settings.
     jwt_algorithm: JwtAlgorithm = Field(default=JWT_ALGORITHM_HS256)
@@ -196,6 +198,9 @@ class AppSettings(BaseSettings):
                 "BERGAMA_ENVIRONMENT is staging or production"
             )
             raise ValueError(msg)
+
+        # Fail closed on invalid CORS allowlist configuration at settings load.
+        self.cors.normalized_origins()
 
         if enabled:
             self.secrets.validate_bootstrap_signing_key()
@@ -305,6 +310,7 @@ class AppSettings(BaseSettings):
             "feature_platform": self.feature_platform.safe_summary(),
             "premarket": self.premarket.safe_summary(),
             "portfolio": self.portfolio.safe_summary(),
+            "cors": self.cors.safe_summary(),
             "secrets": self.secrets.safe_summary(),
         }
         return summary
