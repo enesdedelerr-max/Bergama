@@ -58,4 +58,58 @@ describe("PremarketHumanReviewPanel", () => {
     ).toBeInTheDocument();
     expect(screen.queryByTestId("premarket-hr-payload")).not.toBeInTheDocument();
   });
+
+  it("keeps HTML, script, and event-handler payloads as inert text nodes", () => {
+    const adversarial =
+      '<img src=x onerror="window.__hr_pwned=1">' +
+      "<script>document.body.setAttribute('data-hr-pwned','1')</script>" +
+      '<a href="javascript:alert(1)">click</a>' +
+      "<svg onload=\"window.__hr_svg=1\"></svg>";
+    const { container } = render(
+      <PremarketHumanReviewPanel
+        humanReview={baseHr({
+          attestation: { recorded_payload: adversarial },
+        })}
+      />,
+    );
+    const payloadNode = screen.getByTestId("premarket-hr-payload");
+    expect(payloadNode.tagName).toBe("PRE");
+    expect(payloadNode).toHaveTextContent(adversarial);
+    expect(payloadNode.querySelector("script")).toBeNull();
+    expect(payloadNode.querySelector("img")).toBeNull();
+    expect(payloadNode.querySelector("a")).toBeNull();
+    expect(payloadNode.querySelector("svg")).toBeNull();
+    expect(container.querySelector("[data-hr-pwned]")).toBeNull();
+    expect(container.innerHTML).not.toContain("dangerouslySetInnerHTML");
+    expect(
+      (window as unknown as { __hr_pwned?: number }).__hr_pwned,
+    ).toBeUndefined();
+  });
+
+  it("respects the governed 8192-character boundary without truncating into the UI", () => {
+    const exact = "e".repeat(HR_RECORDED_PAYLOAD_MAX_LENGTH);
+    const { unmount } = render(
+      <PremarketHumanReviewPanel
+        humanReview={baseHr({
+          attestation: { recorded_payload: exact },
+        })}
+      />,
+    );
+    expect(screen.getByTestId("premarket-hr-payload")).toHaveTextContent(exact);
+    unmount();
+
+    render(
+      <PremarketHumanReviewPanel
+        humanReview={baseHr({
+          attestation: {
+            recorded_payload: `${exact}X`,
+          },
+        })}
+      />,
+    );
+    expect(
+      screen.getByTestId("premarket-hr-payload-oversized"),
+    ).toHaveTextContent(String(HR_RECORDED_PAYLOAD_MAX_LENGTH));
+    expect(screen.queryByText(`${exact}X`)).not.toBeInTheDocument();
+  });
 });

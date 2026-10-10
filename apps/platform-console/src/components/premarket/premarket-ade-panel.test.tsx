@@ -1,7 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 import { PremarketAdePanel } from "@/components/premarket/premarket-ade-panel";
 import type { AdeProductSnapshotRead } from "@/contracts/types/product-api";
+
+afterEach(() => {
+  cleanup();
+});
 
 const ade: AdeProductSnapshotRead = {
   outcome_kind: "accepted",
@@ -31,15 +35,47 @@ describe("PremarketAdePanel", () => {
     expect(screen.getByTestId("premarket-ade-panel")).toBeInTheDocument();
     expect(screen.getByText("accepted")).toBeInTheDocument();
     expect(screen.getByText("recorded detail")).toBeInTheDocument();
+    expect(screen.getByText("fp".padEnd(64, "0"))).toBeInTheDocument();
     expect(
-      screen.getByText("fp".padEnd(64, "0")),
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/recorded_attestation_payload/i)).not.toBeInTheDocument();
+      screen.queryByText(/recorded_attestation_payload/i),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", {
         name: /invoke|model|trade|execute|recommend/i,
       }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText(/BUY|SELL|safe-to-trade/i)).not.toBeInTheDocument();
+  });
+
+  it("does not render private recorded_attestation_payload from a source-shaped object", () => {
+    const privatePayload =
+      "PRIVATE_ADE_RECORDED_ATTESTATION_PAYLOAD_MUST_STAY_UNRENDERED";
+    const adversarialSource = {
+      ...ade,
+      recorded_attestation_payload: privatePayload,
+      provenance: {
+        ...ade.provenance,
+        recorded_attestation_payload: privatePayload,
+      },
+    } as AdeProductSnapshotRead & {
+      recorded_attestation_payload: string;
+      provenance: AdeProductSnapshotRead["provenance"] & {
+        recorded_attestation_payload: string;
+      };
+    };
+
+    const { container } = render(
+      <PremarketAdePanel ade={adversarialSource} />,
+    );
+
+    expect(screen.getByTestId("premarket-ade-panel")).toBeInTheDocument();
+    expect(screen.getByText("accepted")).toBeInTheDocument();
+    expect(screen.getByText("fp".padEnd(64, "0"))).toBeInTheDocument();
+    expect(screen.queryByText(privatePayload)).not.toBeInTheDocument();
+    expect(container.textContent ?? "").not.toContain(privatePayload);
+    expect(
+      screen.queryByText(/recorded_attestation_payload/i),
+    ).not.toBeInTheDocument();
+    expect(container.querySelector("[data-ade-field='recorded_attestation_payload']")).toBeNull();
   });
 });
