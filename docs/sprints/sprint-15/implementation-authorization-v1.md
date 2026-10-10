@@ -3,23 +3,27 @@
 **Authorization ID:** `premarket-command-center-ui.implementation-authorization.v1`  
 **Title:** Read-Only Premarket Command Center UI Implementation Authorization v1  
 **Version:** v1  
-**Status:** DRAFT  
+**Status:** APPROVED / EFFECTIVE
 **Document class:** Implementation Authorization  
 **Sprint:** 15  
 **Theme:** Read-Only Premarket Command Center UI  
 **Authority issue:** [#166](https://github.com/enesdedelerr-max/Bergama/issues/166)  
-**Policy:** `premarket-command-center-ui.policy.v1` (governed lifecycle `APPROVED_EFFECTIVE`; literal bytes `DRAFT`)  
+**IA PR:** [#167](https://github.com/enesdedelerr-max/Bergama/pull/167)
+**IA merge:** `eb3bc12931ea4a2e261cef9e743275da708d5ec5`
+**Policy:** `premarket-command-center-ui.policy.v1` (current lifecycle `APPROVED / FROZEN`)
 **Governance:** `premarket-command-center-ui.governance.v1` (`APPROVED_EFFECTIVE`)  
 **Architecture:** `premarket-command-center-ui.architecture.v1` (`APPROVED_EFFECTIVE`)  
 **Planning:** `sprint-15.planning-gate` (`APPROVED_EFFECTIVE`)
 
 ```text
-SPRINT_15_IMPLEMENTATION_AUTHORIZATION_STATE = CANDIDATE_NOT_EFFECTIVE
-SPRINT_15_IMPLEMENTATION_AUTHORIZED = NO
-WS1_ISSUE_CREATION_AUTHORIZED = NO
-WS1_IMPLEMENTATION_AUTHORIZED = NO
-UI_IMPLEMENTATION_MAY_BEGIN = NO
-IA_ARTIFACT_PRESENCE ≠ EFFECTIVENESS
+SPRINT_15_IMPLEMENTATION_AUTHORIZATION_STATE = APPROVED_EFFECTIVE
+SPRINT_15_IMPLEMENTATION_AUTHORIZED = YES
+IMPLEMENTATION_WORK_STARTED = YES
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+SPRINT_15_COMPLETE = NO
+STATUS_SYNC = IN_PROGRESS / ISSUE_174
+GOVERNANCE_CLOSEOUT = PENDING
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 NEW_FE_RUNTIME_DEPENDENCY_COUNT = 0
@@ -34,9 +38,11 @@ NEW_PROVIDER_AUTHORIZED = NO
 FEATURE_PLATFORM_EXPANSION_AUTHORIZED = NO
 ```
 
-This DRAFT candidate does **not** authorize product implementation, WS issue
-creation, AuthTokenProvider/CORS/CI coding, dependency additions, model
-participation, broker execution, or production deployment.
+This Implementation Authorization is **APPROVED / EFFECTIVE** (#166 / PR #167 @
+`eb3bc12931ea4a2e261cef9e743275da708d5ec5`). The authorized WS1–WS3 sequence is
+COMPLETE. Sprint 15 Governance Closeout remains separate and NOT COMPLETE.
+Historical candidate-stage non-authorization text elsewhere in this document
+describes the pre-effectiveness state and is preserved as history.
 
 ---
 
@@ -68,6 +74,39 @@ UI_IMPLEMENTATION_MAY_BEGIN = NO
 
 This Implementation Authorization is subordinate to Planning, Architecture,
 Governance, and Policy. It does not reopen or reinterpret those gates.
+
+---
+
+## 1a. Current Implementation Finality (Status Sync)
+
+Historical authorization narrative in this document remains historically
+accurate: IA became effective only after its own governed merge/post-merge
+lifecycle; WS coding required separate issue/preflight lifecycles.
+
+**Current evidence (post-IA execution):**
+
+| WS | Issue | PR | Implementation commit | Merge | State |
+| --- | --- | --- | --- | --- | --- |
+| WS1 | #168 | #169 | `d2900c399d87cbb63e54666b58d5253a2aca6bd2` | `d97b9b9e02542dd64cd68970aae7e8d6cec1881b` | MERGED_POST_MERGE_CI_GREEN_FINAL |
+| WS2 | #170 | #171 | `ae6f7460808a35026375c0e5277db64f0d007991` | `ed52c5e10445fe69a2d728ccd15239788192113a` | MERGED_POST_MERGE_CI_GREEN_FINAL |
+| WS3 | #172 | #173 | `9e53af68c6ceaa1d2abfb92f4a1be127caa9215b` | `32e498ad791cbfbac6eaecbcf360a16706c38fa2` | MERGED_POST_MERGE_CI_GREEN_FINAL |
+
+WS3 post-merge CI: run `38073153105` on `32e498ad791cbfbac6eaecbcf360a16706c38fa2`
+(`push` / `main`) completed / success; `quality-gate` success;
+`frontend-quality-gate` success. Issue #172 CLOSED via PR linkage.
+
+```text
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+STATUS_SYNC = IN_PROGRESS / ISSUE_174
+GOVERNANCE_CLOSEOUT = PENDING
+SPRINT_15_COMPLETE = NO
+NEXT_PROCESS_STEP = Sprint 15 Governance Closeout after Status Sync finality
+MODEL_PARTICIPATION = UNAUTHORIZED
+BROKER_EXECUTION = DENIED/DEFERRED
+PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
+```
+
+See [`README.md`](README.md).
 
 ---
 
@@ -915,11 +954,13 @@ At candidate stage, IA artifact presence does **NOT** authorize:
 ## 39. Authority Restatement
 
 ```text
-SPRINT_15_IMPLEMENTATION_AUTHORIZATION_STATE = CANDIDATE_NOT_EFFECTIVE
-SPRINT_15_IMPLEMENTATION_AUTHORIZED = NO
-WS1_ISSUE_CREATION_AUTHORIZED = NO
-WS1_IMPLEMENTATION_AUTHORIZED = NO
-UI_IMPLEMENTATION_MAY_BEGIN = NO
+SPRINT_15_IMPLEMENTATION_AUTHORIZATION_STATE = APPROVED_EFFECTIVE
+SPRINT_15_IMPLEMENTATION_AUTHORIZED = YES
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+SPRINT_15_COMPLETE = NO
+STATUS_SYNC = IN_PROGRESS / ISSUE_174
+GOVERNANCE_CLOSEOUT = PENDING
 NEW_FE_RUNTIME_DEPENDENCY_COUNT = 0
 NEW_FE_DEV_DEPENDENCY_COUNT = 0
 NEW_BE_DEPENDENCY_COUNT = 0

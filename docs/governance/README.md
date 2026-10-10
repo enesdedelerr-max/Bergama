@@ -112,7 +112,7 @@ under Issue #156. Sprint 14 documentation target is **COMPLETE**.
 `SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`. MODEL PARTICIPATION remains
 UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED. Public write API
 remains UNAUTHORIZED / NOT IMPLEMENTED. UI implementation remains NOT
-AUTHORIZED BY SPRINT 14. Sprint 15 implementation remains NOT AUTHORIZED.
+AUTHORIZED BY SPRINT 14.
 
 | # | Document | Status |
 |---|----------|--------|
@@ -123,3 +123,28 @@ Policy: [`../policy/intelligence-run-productization-policy-v1.md`](../policy/int
 
 See [intelligence-run-productization/README.md](intelligence-run-productization/README.md)
 for the Intelligence Run Productization Governance index.
+
+## Premarket Command Center UI
+
+Premarket Command Center UI Governance v1 is **APPROVED / EFFECTIVE**
+(`premarket-command-center-ui.governance.v1`). Policy Version
+`premarket-command-center-ui.policy.v1` is **APPROVED / FROZEN**.
+Implementation Authorization
+`premarket-command-center-ui.implementation-authorization.v1` is
+**APPROVED / EFFECTIVE**. Authorized implementation workstreams are **3/3
+COMPLETE** (Issues #168 / #170 / #172). Implementation Status Sync is the
+**current** governed phase under Issue #174. Sprint 15 Governance Closeout
+remains **PENDING**. `SPRINT_15_IMPLEMENTATION_COMPLETE = YES`.
+`SPRINT_15_COMPLETE = NO`. MODEL PARTICIPATION remains UNAUTHORIZED. Broker
+Execution remains DENIED / DEFERRED. Production deployment remains NOT
+AUTHORIZED.
+
+| # | Document | Status |
+|---|----------|--------|
+| 1 | [Premarket Command Center UI Governance v1](premarket-command-center-ui/premarket-command-center-ui-governance-v1.md) | APPROVED / EFFECTIVE |
+
+Policy: [`../policy/premarket-command-center-ui-policy-v1.md`](../policy/premarket-command-center-ui-policy-v1.md) —
+`premarket-command-center-ui.policy.v1` — APPROVED / FROZEN.
+
+See [premarket-command-center-ui/README.md](premarket-command-center-ui/README.md)
+for the Premarket Command Center UI Governance index.

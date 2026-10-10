@@ -659,3 +659,38 @@ Issue #158 lifecycle: the future Planning PR is expected to use
 
 Architecture-owned unresolved decisions are correctly deferred and are not
 Planning candidate defects.
+
+---
+
+## 29. Current Lifecycle Status (Status Sync)
+
+> Planning-time decisions and historical handoff markers above (including
+> section 25 `NOT_STARTED` states) remain historically accurate as of Planning
+> Gate approval. The following records subsequent governed completion.
+
+After Planning became APPROVED / EFFECTIVE (#158 / PR #159 @
+`a0789bf05fa4f227d786e45e535edbd1c836d523`), subsequent gates and workstreams
+completed:
+
+| Gate / WS | State | Evidence |
+| --- | --- | --- |
+| Architecture | COMPLETE | #160 / #161 @ `d50bd2f6579898f80b7f5faedc6a5b6999ad7363` |
+| Governance | COMPLETE | #162 / #163 @ `abd51911af065a02d7bb4438cd1aaf3e694b4602` |
+| Policy / Contract | COMPLETE | #164 / #165 @ `2f00c39e8acb381fd9533a07eb27526dd97529fa` |
+| Implementation Authorization | COMPLETE | #166 / #167 @ `eb3bc12931ea4a2e261cef9e743275da708d5ec5` |
+| WS1 | FINAL | #168 / #169; impl `d2900c399d87cbb63e54666b58d5253a2aca6bd2`; merge `d97b9b9e02542dd64cd68970aae7e8d6cec1881b` |
+| WS2 | FINAL | #170 / #171; impl `ae6f7460808a35026375c0e5277db64f0d007991`; merge `ed52c5e10445fe69a2d728ccd15239788192113a` |
+| WS3 | FINAL | #172 / #173; impl `9e53af68c6ceaa1d2abfb92f4a1be127caa9215b`; merge `32e498ad791cbfbac6eaecbcf360a16706c38fa2`; CI `38073153105` |
+
+```text
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+STATUS_SYNC = IN_PROGRESS / ISSUE_174
+GOVERNANCE_CLOSEOUT = PENDING
+SPRINT_15_COMPLETE = NO
+NEXT_PROCESS_STEP = Sprint 15 Governance Closeout after Status Sync finality
+MODEL_PARTICIPATION = UNAUTHORIZED
+BROKER_EXECUTION = DENIED/DEFERRED
+PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
+```
+
+Sprint 15 status index: [`README.md`](README.md).

@@ -5,12 +5,14 @@
 **Policy ID:** `premarket-command-center-ui.policy.v1`  
 **Version:** v1  
 **Title:** Read-Only Premarket Command Center UI Policy / Contract Freeze v1  
-**Status:** DRAFT  
+**Status:** APPROVED / FROZEN
 **Document class:** Combined Policy / Contract Freeze  
 **Sprint:** 15  
 **Gate:** Combined Policy / Contract Freeze  
 **Theme:** Read-Only Premarket Command Center UI  
 **Policy issue:** [#164](https://github.com/enesdedelerr-max/Bergama/issues/164)  
+**Policy PR:** [#165](https://github.com/enesdedelerr-max/Bergama/pull/165)
+**Policy merge:** `2f00c39e8acb381fd9533a07eb27526dd97529fa`
 **Planning:** `APPROVED_EFFECTIVE`  
 **Architecture Artifact ID:** `premarket-command-center-ui.architecture.v1` — `APPROVED_EFFECTIVE`  
 **Architecture merge:** `d50bd2f6579898f80b7f5faedc6a5b6999ad7363`  
@@ -23,11 +25,15 @@
 ```text
 POLICY APPROVAL ≠ IMPLEMENTATION AUTHORIZATION
 POLICY APPROVAL ≠ IMPLEMENTATION
-SPRINT_15_IMPLEMENTATION_AUTHORIZATION_STATE = NOT_STARTED
-SPRINT_15_IMPLEMENTATION_AUTHORIZED = NO
-UI_IMPLEMENTATION_MAY_BEGIN = NO
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate IA; not by this Policy)
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+SPRINT_15_COMPLETE = NO
+STATUS_SYNC = IN_PROGRESS / ISSUE_174
+GOVERNANCE_CLOSEOUT = PENDING
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
+PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
 ```
 
 ---
@@ -941,6 +947,11 @@ evidence; identity hashes.
 
 ## 47. Lifecycle / Exit Criteria
 
+> Historical candidate-lifecycle section preserved below. Current governed
+> lifecycle is **APPROVED / FROZEN** after Issue #164 / PR #165 merge
+> `2f00c39e8acb381fd9533a07eb27526dd97529fa` and post-merge verification.
+> POL-* contracts above are unchanged by Status Sync.
+
 Literal candidate status remains **DRAFT**.
 
 Artifact is not `APPROVED_EFFECTIVE` merely because it exists.
@@ -970,4 +981,30 @@ SPRINT_15_IMPLEMENTATION_AUTHORIZED = NO
 UI_IMPLEMENTATION_MAY_BEGIN = NO
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
+```
+
+---
+
+## 48. Current Implementation Finality (Status Sync)
+
+This Policy / Contract is **APPROVED / FROZEN** (#164 / PR #165 @
+`2f00c39e8acb381fd9533a07eb27526dd97529fa`). Implementation Authorization and
+WS1–WS3 subsequently completed under separate gates. POL-* contracts in this
+document remain frozen.
+
+| WS | Evidence | State |
+| --- | --- | --- |
+| WS1 | #168 / #169; impl `d2900c399d87cbb63e54666b58d5253a2aca6bd2`; merge `d97b9b9e02542dd64cd68970aae7e8d6cec1881b` | MERGED_POST_MERGE_CI_GREEN_FINAL |
+| WS2 | #170 / #171; impl `ae6f7460808a35026375c0e5277db64f0d007991`; merge `ed52c5e10445fe69a2d728ccd15239788192113a` | MERGED_POST_MERGE_CI_GREEN_FINAL |
+| WS3 | #172 / #173; impl `9e53af68c6ceaa1d2abfb92f4a1be127caa9215b`; merge `32e498ad791cbfbac6eaecbcf360a16706c38fa2`; CI `38073153105` success | MERGED_POST_MERGE_CI_GREEN_FINAL |
+
+```text
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+STATUS_SYNC = IN_PROGRESS / ISSUE_174
+GOVERNANCE_CLOSEOUT = PENDING
+SPRINT_15_COMPLETE = NO
+NEXT_PROCESS_STEP = Sprint 15 Governance Closeout after Status Sync finality
+MODEL_PARTICIPATION = UNAUTHORIZED
+BROKER_EXECUTION = DENIED/DEFERRED
+PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
 ```

@@ -10,5 +10,6 @@
 | [ai-decision-engine-architecture-v1.md](ai-decision-engine-architecture-v1.md) | AI Decision Engine Architecture v1 (APPROVED) |
 | [intelligence-pipeline-architecture-v1.md](intelligence-pipeline-architecture-v1.md) | Intelligence Pipeline Architecture v1 (APPROVED / EFFECTIVE) |
 | [intelligence-run-productization-architecture-v1.md](intelligence-run-productization-architecture-v1.md) | Intelligence Run Productization Architecture v1 (APPROVED / EFFECTIVE) |
+| [premarket-command-center-ui-architecture-v1.md](premarket-command-center-ui-architecture-v1.md) | Premarket Command Center UI Architecture v1 (APPROVED / EFFECTIVE) |
 
 Architecture v1 content must not be edited in place once APPROVED.
