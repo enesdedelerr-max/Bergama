@@ -1,12 +1,14 @@
 # Premarket Command Center UI Architecture v1
 
 **Architecture ID:** `premarket-command-center-ui.architecture.v1`  
-**Status:** DRAFT  
+**Status:** APPROVED / EFFECTIVE
 **Sprint:** 15  
 **Gate:** Architecture Gate  
 **Theme:** Read-Only Premarket Command Center UI  
 **Document class:** Architecture-only — not Implementation Authorization  
 **Architecture Issue:** [#160](https://github.com/enesdedelerr-max/Bergama/issues/160)  
+**Architecture PR:** [#161](https://github.com/enesdedelerr-max/Bergama/pull/161)
+**Architecture merge:** `d50bd2f6579898f80b7f5faedc6a5b6999ad7363`
 **Planning Issue:** [#158](https://github.com/enesdedelerr-max/Bergama/issues/158)  
 **Planning PR:** [#159](https://github.com/enesdedelerr-max/Bergama/pull/159)  
 **Planning merge SHA:** `a0789bf05fa4f227d786e45e535edbd1c836d523`  
@@ -15,9 +17,13 @@
 **Architecture discovery verdict:** B — SPRINT 15 ARCHITECTURE DISCOVERY COMPLETE — ARCHITECTURE ISSUE READY WITH NON-BLOCKING DECISIONS
 
 ```text
-THIS ARTIFACT DOES NOT AUTHORIZE PRODUCT IMPLEMENTATION.
+THIS ARTIFACT DOES NOT AUTHORIZE PRODUCT IMPLEMENTATION BY ITSELF.
 ARCHITECTURE_GATE_APPROVAL ≠ IMPLEMENTATION_AUTHORIZATION
-SPRINT_15_IMPLEMENTATION_AUTHORIZED = NO
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate Implementation Authorization; not by this Architecture)
+IMPLEMENTATION_WORK_STARTED = YES
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+SPRINT_15_COMPLETE = NO
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 TAG_RELEASE_DEPLOY_AUTHORIZED = NO
@@ -34,16 +40,17 @@ NEW_FRONTEND_DEPENDENCY_AUTHORIZED = NO
 | Field | Value |
 | --- | --- |
 | Artifact ID | `premarket-command-center-ui.architecture.v1` |
-| Status | DRAFT (candidate; not yet APPROVED / EFFECTIVE) |
+| Status | APPROVED / EFFECTIVE (lifecycle; AD-* decisions unchanged) |
 | Sprint | 15 |
 | Gate | Architecture |
-| Architecture Issue | #160 (OPEN at artifact creation) |
+| Architecture Issue | #160 (CLOSED; was OPEN at artifact creation) |
 | Planning state | APPROVED_EFFECTIVE |
 | Approves Governance | No |
 | Approves Policy / Contract Freeze | No |
 | Approves Implementation Authorization | No |
 | Approves Implementation | No |
-| Next eligible process after APPROVED / EFFECTIVE | Sprint 15 Governance Gate creation |
+| Next eligible process after APPROVED / EFFECTIVE (historical) | Sprint 15 Governance Gate creation |
+| Current next process | Status Sync Issue #174 → Governance Closeout |
 
 DRAFT does **not** mean Architecture is EFFECTIVE. Architecture becomes
 **APPROVED / EFFECTIVE** only after controlled merge and post-merge
@@ -787,10 +794,42 @@ Next eligible gate after Architecture APPROVED/EFFECTIVE: **Governance**.
 
 ---
 
+
+## 39a. Current Implementation Finality (Status Sync)
+
+This Architecture Gate is **APPROVED / EFFECTIVE** (#160 / PR #161 @
+`d50bd2f6579898f80b7f5faedc6a5b6999ad7363`). Subsequent Governance, Policy /
+Contract Freeze, Implementation Authorization, and WS1–WS3 completed under
+separate gates. AD-* decisions in this document remain frozen and unchanged by
+Status Sync.
+
+| WS | Evidence | State |
+| --- | --- | --- |
+| WS1 | #168 / #169; impl `d2900c399d87cbb63e54666b58d5253a2aca6bd2`; merge `d97b9b9e02542dd64cd68970aae7e8d6cec1881b` | MERGED_POST_MERGE_CI_GREEN_FINAL |
+| WS2 | #170 / #171; impl `ae6f7460808a35026375c0e5277db64f0d007991`; merge `ed52c5e10445fe69a2d728ccd15239788192113a` | MERGED_POST_MERGE_CI_GREEN_FINAL |
+| WS3 | #172 / #173; impl `9e53af68c6ceaa1d2abfb92f4a1be127caa9215b`; merge `32e498ad791cbfbac6eaecbcf360a16706c38fa2`; CI `38073153105` success | MERGED_POST_MERGE_CI_GREEN_FINAL |
+
+```text
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+STATUS_SYNC = IN_PROGRESS / ISSUE_174
+GOVERNANCE_CLOSEOUT = PENDING
+SPRINT_15_COMPLETE = NO
+NEXT_PROCESS_STEP = Sprint 15 Governance Closeout after Status Sync finality
+MODEL_PARTICIPATION = UNAUTHORIZED
+BROKER_EXECUTION = DENIED/DEFERRED
+PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
+```
+
+Architecture Status Sync does **not** declare Sprint 15 COMPLETE.
+
+---
+
 ## 40. Explicit Non-Authorization
 
 ```text
-SPRINT_15_IMPLEMENTATION_AUTHORIZED = NO
+ARCHITECTURE_GATE_APPROVAL ≠ IMPLEMENTATION_AUTHORIZATION
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE (under separate IA; not by this Architecture)
+SPRINT_15_COMPLETE = NO
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 PUBLIC_WRITE_API_AUTHORIZED = NO
@@ -803,4 +842,5 @@ TAG_RELEASE_DEPLOY_AUTHORIZED = NO
 NEW_FRONTEND_DEPENDENCY_AUTHORIZED = NO
 ```
 
-No Architecture decision itself grants implementation authority.
+No Architecture decision itself grants implementation authority. Implementation
+proceeded only under separately approved Implementation Authorization.

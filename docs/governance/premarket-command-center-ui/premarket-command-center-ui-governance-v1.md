@@ -1,10 +1,12 @@
 # Premarket Command Center UI Governance v1
 
 **Governance ID:** `premarket-command-center-ui.governance.v1`  
-**Status:** DRAFT  
+**Status:** APPROVED / EFFECTIVE
 **Sprint:** 15  
 **Gate:** Governance Gate  
 **Issue:** [#162](https://github.com/enesdedelerr-max/Bergama/issues/162)  
+**Governance PR:** [#163](https://github.com/enesdedelerr-max/Bergama/pull/163)
+**Governance merge:** `abd51911af065a02d7bb4438cd1aaf3e694b4602`
 **Theme:** Read-Only Premarket Command Center UI  
 **Document class:** Sprint 15 Governance Gate authoritative artifact — not Policy Freeze, not Implementation Authorization  
 **Planning Gate:** Issue [#158](https://github.com/enesdedelerr-max/Bergama/issues/158) / PR [#159](https://github.com/enesdedelerr-max/Bergama/pull/159) — `APPROVED_EFFECTIVE`  
@@ -17,10 +19,13 @@
 **Governance Preflight:** PASS_WITH_NON_BLOCKING_FINDINGS  
 
 ```text
-SPRINT_15_IMPLEMENTATION_AUTHORIZED = NO
-UI_IMPLEMENTATION_MAY_BEGIN = NO
-SPRINT_15_POLICY_CONTRACT_GATE_STATE = NOT_STARTED
-SPRINT_15_IMPLEMENTATION_AUTHORIZATION_STATE = NOT_STARTED
+GOVERNANCE_GATE_APPROVAL ≠ IMPLEMENTATION_AUTHORIZATION
+IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate IA; not by this Governance)
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+SPRINT_15_COMPLETE = NO
+STATUS_SYNC = IN_PROGRESS / ISSUE_174
+GOVERNANCE_CLOSEOUT = PENDING
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 TAG_RELEASE_DEPLOY_AUTHORIZED = NO
@@ -33,9 +38,9 @@ LIVE_PROVIDER_EXPANSION_AUTHORIZED = NO
 ```
 
 ```text
-THIS ARTIFACT GOVERNS FUTURE SPRINT 15 IMPLEMENTATION BOUNDARIES.
-IT DOES NOT AUTHORIZE UI, AUTH, CORS, CI, DEPENDENCIES, APIS, MODELS,
-OR BROKER EXECUTION.
+THIS ARTIFACT GOVERNS SPRINT 15 IMPLEMENTATION BOUNDARIES.
+IT DOES NOT BY ITSELF AUTHORIZE NEW UI, AUTH, CORS, CI, DEPENDENCIES,
+APIS, MODELS, OR BROKER EXECUTION BEYOND THE COMPLETED WS1–WS3 SURFACE.
 ```
 
 ---
@@ -821,10 +826,12 @@ BROKER_EXECUTION = DENIED/DEFERRED
 ## 38. Authority Firewall (Restatement)
 
 ```text
-SPRINT_15_IMPLEMENTATION_AUTHORIZED = NO
-UI_IMPLEMENTATION_MAY_BEGIN = NO
-SPRINT_15_POLICY_CONTRACT_GATE_STATE = NOT_STARTED
-SPRINT_15_IMPLEMENTATION_AUTHORIZATION_STATE = NOT_STARTED
+GOVERNANCE_GATE_APPROVAL ≠ IMPLEMENTATION_AUTHORIZATION
+IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+SPRINT_15_COMPLETE = NO
+STATUS_SYNC = IN_PROGRESS / ISSUE_174
+GOVERNANCE_CLOSEOUT = PENDING
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 TAG_RELEASE_DEPLOY_AUTHORIZED = NO
@@ -834,22 +841,28 @@ ADE_INVOCATION_AUTHORIZED = NO
 NEW_FRONTEND_DEPENDENCY_AUTHORIZED = NO
 FEATURE_PLATFORM_EXPANSION_AUTHORIZED = NO
 LIVE_PROVIDER_EXPANSION_AUTHORIZED = NO
+PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
 ```
+
+GD-* decision tables above remain frozen and are not rewritten by Status Sync.
 
 ---
 
-## 39. Next Step
+## 39. Current Implementation Finality / Next Step
 
-After candidate creation and validation, next step is:
+This Governance Gate is **APPROVED / EFFECTIVE** (#162 / PR #163 @
+`abd51911af065a02d7bb4438cd1aaf3e694b4602`). Policy, IA, and WS1–WS3
+subsequently completed under separate gates.
 
-**STRICT READ-ONLY independent Governance artifact review.**
+| WS | Evidence | State |
+| --- | --- | --- |
+| WS1 | #168 / #169; impl `d2900c399d87cbb63e54666b58d5253a2aca6bd2`; merge `d97b9b9e02542dd64cd68970aae7e8d6cec1881b` | MERGED_POST_MERGE_CI_GREEN_FINAL |
+| WS2 | #170 / #171; impl `ae6f7460808a35026375c0e5277db64f0d007991`; merge `ed52c5e10445fe69a2d728ccd15239788192113a` | MERGED_POST_MERGE_CI_GREEN_FINAL |
+| WS3 | #172 / #173; impl `9e53af68c6ceaa1d2abfb92f4a1be127caa9215b`; merge `32e498ad791cbfbac6eaecbcf360a16706c38fa2`; CI `38073153105` success | MERGED_POST_MERGE_CI_GREEN_FINAL |
 
-Not commit.
+```text
+NEXT_PROCESS_STEP = Complete Status Sync (#174), then separate Sprint 15 Governance Closeout
+```
 
-Not push.
-
-Not PR.
-
-Not Policy.
-
-Not implementation.
+Status Sync does **not** perform Governance Closeout.
+`SPRINT_15_COMPLETE = NO` remains until separate Governance Closeout finality.

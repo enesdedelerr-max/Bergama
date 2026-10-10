@@ -276,8 +276,9 @@ green, and Issue #156 closure.
 MODEL PARTICIPATION remains UNAUTHORIZED. Broker Execution remains
 DENIED / DEFERRED. Public write API remains UNAUTHORIZED / NOT IMPLEMENTED. UI
 implementation, Feature Platform expansion, live-provider expansion, tag,
-release, and deployment remain unauthorized. Sprint 15 implementation remains
-unauthorized; only a separate Sprint 15 planning/discovery gate may follow.
+release, and deployment remain unauthorized by Sprint 14. Sprint 15
+implementation subsequently completed under separate Sprint 15 governance
+(see Sprint 15 section below); Sprint 14 itself does not authorize Sprint 15.
 
 Theme: Durable Intelligence Run Persistence and Read/Query Boundary.
 Planning Gate ID: `sprint-14.planning-gate`.
@@ -304,14 +305,86 @@ Implementation Authorization ID: `intelligence-run-productization.implementation
 See [`docs/sprints/sprint-14/README.md`](docs/sprints/sprint-14/README.md) and
 [`docs/sprints/sprint-14/CLOSEOUT.md`](docs/sprints/sprint-14/CLOSEOUT.md).
 
+### Next action (historical Sprint 14 closeout)
+
+Sprint 14 closeout pointed to a separate Sprint 15 planning/discovery gate.
+That Sprint 15 planning gate and subsequent Sprint 15 gates / workstreams
+have since completed. See **Sprint 15** below. Sprint 14 closeout itself
+still does not authorize model participation, broker execution, tag, release,
+or deployment.
+
+### Sprint 15 — Read-Only Premarket Command Center UI
+
+Status: **IMPLEMENTATION COMPLETE** (Status Sync in progress; Governance
+Closeout pending).
+
+Planning Gate APPROVED / EFFECTIVE (#158 / PR #159 @
+`a0789bf05fa4f227d786e45e535edbd1c836d523`). Architecture
+`premarket-command-center-ui.architecture.v1` APPROVED / EFFECTIVE (#160 /
+PR #161 @ `d50bd2f6579898f80b7f5faedc6a5b6999ad7363`). Governance
+`premarket-command-center-ui.governance.v1` APPROVED / EFFECTIVE (#162 /
+PR #163 @ `abd51911af065a02d7bb4438cd1aaf3e694b4602`). Policy / Contract
+`premarket-command-center-ui.policy.v1` APPROVED / FROZEN (#164 / PR #165 @
+`2f00c39e8acb381fd9533a07eb27526dd97529fa`). Implementation Authorization
+`premarket-command-center-ui.implementation-authorization.v1` APPROVED /
+EFFECTIVE (#166 / PR #167 @ `eb3bc12931ea4a2e261cef9e743275da708d5ec5`).
+
+Implementation workstreams 3/3 COMPLETE:
+
+- Issue **#168** / PR **#169** — WS1 Client + Auth — impl
+  `d2900c399d87cbb63e54666b58d5253a2aca6bd2`; merge
+  `d97b9b9e02542dd64cd68970aae7e8d6cec1881b` —
+  `MERGED_POST_MERGE_CI_GREEN_FINAL`
+- Issue **#170** / PR **#171** — WS2 Read-Only Views — impl
+  `ae6f7460808a35026375c0e5277db64f0d007991`; merge
+  `ed52c5e10445fe69a2d728ccd15239788192113a` —
+  `MERGED_POST_MERGE_CI_GREEN_FINAL`
+- Issue **#172** / PR **#173** — WS3 Hardening / Tests / CI — impl
+  `9e53af68c6ceaa1d2abfb92f4a1be127caa9215b`; merge
+  `32e498ad791cbfbac6eaecbcf360a16706c38fa2` —
+  `MERGED_POST_MERGE_CI_GREEN_FINAL`
+
+Authoritative implementation baseline (WS3 merge):
+`32e498ad791cbfbac6eaecbcf360a16706c38fa2`. Post-merge CI run
+`38073153105` completed / success (`quality-gate` success;
+`frontend-quality-gate` success). Issue #172 CLOSED via PR linkage.
+Implementation Status Sync is the current governed phase under Issue
+**#174** (OPEN). Governance Closeout remains PENDING / NEXT.
+
+```text
+SPRINT_15_IMPLEMENTATION_COMPLETE = YES
+STATUS_SYNC = IN_PROGRESS / ISSUE_174
+GOVERNANCE_CLOSEOUT = PENDING
+SPRINT_15_COMPLETE = NO
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+MODEL_PARTICIPATION = UNAUTHORIZED
+BROKER_EXECUTION = DENIED/DEFERRED
+PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
+```
+
+| Field | Value |
+| --- | --- |
+| Planning | APPROVED / EFFECTIVE |
+| Architecture | APPROVED / EFFECTIVE |
+| Governance | APPROVED / EFFECTIVE |
+| Policy Freeze | APPROVED / FROZEN |
+| Implementation Authorization | APPROVED / EFFECTIVE |
+| Implementation | 3/3 COMPLETE — #168 / #170 / #172 |
+| Status sync | IN PROGRESS — Issue #174 |
+| Closeout | PENDING |
+| Broker Execution | DENIED / DEFERRED |
+| MODEL PARTICIPATION | UNAUTHORIZED |
+| Tag / release / deploy | NOT AUTHORIZED / NOT PERFORMED |
+
+See [`docs/sprints/sprint-15/README.md`](docs/sprints/sprint-15/README.md).
+
 ### Next action
 
-Perform a separate Sprint 15 planning/discovery gate for a read-only
-Premarket Command Center / ADE visibility UI when ready. Do **not** start
-Sprint 15 / UI implementation, model participation, broker execution, tag,
-release, or deployment from Sprint 14 Closeout. Broker Execution remains
-DENIED / DEFERRED. MODEL PARTICIPATION remains UNAUTHORIZED.
-`SPRINT_15_IMPLEMENTATION_AUTHORIZED = NO`.
+Complete Sprint 15 Implementation Status Sync (Issue #174). Then perform a
+**separate** Sprint 15 Governance Closeout. Do **not** treat Status Sync as
+closeout. Do **not** authorize model participation, broker execution, tag,
+release, deployment, Feature Platform expansion, or UI/UX redesign from this
+Status Sync.
 
 ## Sprint sequence
 
@@ -330,6 +403,7 @@ DENIED / DEFERRED. MODEL PARTICIPATION remains UNAUTHORIZED.
 13. Sprint 12 — AI Decision Engine Foundation — Complete
 14. Sprint 13 — Intelligence Pipeline Integration — Complete
 15. Sprint 14 — Durable Intelligence Persistence — Complete
+16. Sprint 15 — Read-Only Premarket Command Center UI — Implementation COMPLETE; Status Sync in progress; Closeout PENDING
 
 ### Downstream sequencing
 
@@ -341,7 +415,7 @@ Sprint 8  Premarket Scoring       COMPLETE / RELEASED
   → Sprint 12 AI Decision Engine      COMPLETE
   → Sprint 13 Intelligence Pipeline   COMPLETE
   → Sprint 14 Intelligence Persistence COMPLETE
-  → Sprint 15 Premarket / ADE UI planning   future / planning only
+  → Sprint 15 Premarket Command Center UI  IMPLEMENTATION COMPLETE / STATUS_SYNC IN PROGRESS / CLOSEOUT PENDING
   → Broker Execution                       future / unauthorized
 ```
 
@@ -350,8 +424,10 @@ Sprint 12 is COMPLETE under Issue #114. Sprint 13 is COMPLETE under Issue #134
 PR #133; governance closeout Issue #134). Sprint 14 authorized implementation
 is COMPLETE (Issues #146 / #148 / #150 / #152). Status sync is COMPLETE
 (Issue #154 / PR #155). Sprint 14 governance closeout is recorded under
-Issue #156. Sprint 15 implementation remains unauthorized. Broker Execution
-remains deferred future work and is **not** authorized.
+Issue #156. Sprint 15 authorized implementation is COMPLETE (Issues #168 /
+#170 / #172); Status Sync is Issue #174 (OPEN); Governance Closeout remains
+PENDING. Broker Execution remains deferred future work and is **not**
+authorized.
 
 ### Notes on later themes
 
