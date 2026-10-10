@@ -315,8 +315,8 @@ or deployment.
 
 ### Sprint 15 — Read-Only Premarket Command Center UI
 
-Status: **IMPLEMENTATION COMPLETE** (Status Sync in progress; Governance
-Closeout pending).
+Status: **COMPLETE** (documentation target). Operational Sprint 15 finality
+remains pending Closeout merge, post-merge CI, and Issue #176 closure.
 
 Planning Gate APPROVED / EFFECTIVE (#158 / PR #159 @
 `a0789bf05fa4f227d786e45e535edbd1c836d523`). Architecture
@@ -348,18 +348,35 @@ Authoritative implementation baseline (WS3 merge):
 `32e498ad791cbfbac6eaecbcf360a16706c38fa2`. Post-merge CI run
 `38073153105` completed / success (`quality-gate` success;
 `frontend-quality-gate` success). Issue #172 CLOSED via PR linkage.
-Implementation Status Sync is the current governed phase under Issue
-**#174** (OPEN). Governance Closeout remains PENDING / NEXT.
+Status Sync is COMPLETE / FINAL (Issue **#174** CLOSED / COMPLETED; PR
+**#175** MERGED @ `abd0c295731ac5b56d1193fa4d7dca8ad44fcfa7`; post-merge CI
+`38082195143` SUCCESS; governed commit
+`0310cd63e6731da61c834721333bea10f890f77a`). Governance Closeout
+documentation target is COMPLETE under Issue **#176**
+([`docs/sprints/sprint-15/CLOSEOUT.md`](docs/sprints/sprint-15/CLOSEOUT.md)).
 
 ```text
 SPRINT_15_IMPLEMENTATION_COMPLETE = YES
-STATUS_SYNC = IN_PROGRESS / ISSUE_174
-GOVERNANCE_CLOSEOUT = PENDING
-SPRINT_15_COMPLETE = NO
+STATUS_SYNC = COMPLETE / FINAL
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_15_COMPLETE = YES
 SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
+FEATURE_PLATFORM_EXPANSION = NOT_AUTHORIZED_BY_CLOSEOUT
+UI_UX_REDESIGN = NOT_AUTHORIZED_BY_CLOSEOUT
+CURSOR_SKILLS_PRODUCT_INTEGRATION = NOT_AUTHORIZED_BY_CLOSEOUT
+TAG_RELEASE_AUTHORIZED = NO
+```
+
+Lifecycle note: documentation target is COMPLETE; operational Sprint 15
+completion is recognized only after Closeout PR merge, post-merge main CI
+green, and Issue #176 closure.
+
+```text
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
 ```
 
 | Field | Value |
@@ -370,21 +387,23 @@ PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
 | Policy Freeze | APPROVED / FROZEN |
 | Implementation Authorization | APPROVED / EFFECTIVE |
 | Implementation | 3/3 COMPLETE — #168 / #170 / #172 |
-| Status sync | IN PROGRESS — Issue #174 |
-| Closeout | PENDING |
+| Status sync | COMPLETE / FINAL — Issue #174 / PR #175 / merge `abd0c295…` / CI `38082195143` |
+| Closeout | COMPLETE (documentation target) — Issue #176; operationally IN_PROGRESS |
 | Broker Execution | DENIED / DEFERRED |
 | MODEL PARTICIPATION | UNAUTHORIZED |
 | Tag / release / deploy | NOT AUTHORIZED / NOT PERFORMED |
 
-See [`docs/sprints/sprint-15/README.md`](docs/sprints/sprint-15/README.md).
+See [`docs/sprints/sprint-15/README.md`](docs/sprints/sprint-15/README.md) and
+[`docs/sprints/sprint-15/CLOSEOUT.md`](docs/sprints/sprint-15/CLOSEOUT.md).
 
 ### Next action
 
-Complete Sprint 15 Implementation Status Sync (Issue #174). Then perform a
-**separate** Sprint 15 Governance Closeout. Do **not** treat Status Sync as
-closeout. Do **not** authorize model participation, broker execution, tag,
-release, deployment, Feature Platform expansion, or UI/UX redesign from this
-Status Sync.
+Complete Sprint 15 Governance Closeout finality for Issue #176 (Closeout PR
+merge, post-merge CI success, Issue #176 CLOSED / COMPLETED). Do **not**
+treat this documentation target as operational Sprint 15 finality. Do **not**
+authorize model participation, broker execution, tag, release, deployment,
+Feature Platform expansion, UI/UX redesign, or Cursor skills product
+integration from Closeout. `SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`.
 
 ## Sprint sequence
 
@@ -403,7 +422,7 @@ Status Sync.
 13. Sprint 12 — AI Decision Engine Foundation — Complete
 14. Sprint 13 — Intelligence Pipeline Integration — Complete
 15. Sprint 14 — Durable Intelligence Persistence — Complete
-16. Sprint 15 — Read-Only Premarket Command Center UI — Implementation COMPLETE; Status Sync in progress; Closeout PENDING
+16. Sprint 15 — Read-Only Premarket Command Center UI — COMPLETE (documentation target); operational Closeout IN_PROGRESS / Issue #176
 
 ### Downstream sequencing
 
@@ -415,7 +434,7 @@ Sprint 8  Premarket Scoring       COMPLETE / RELEASED
   → Sprint 12 AI Decision Engine      COMPLETE
   → Sprint 13 Intelligence Pipeline   COMPLETE
   → Sprint 14 Intelligence Persistence COMPLETE
-  → Sprint 15 Premarket Command Center UI  IMPLEMENTATION COMPLETE / STATUS_SYNC IN PROGRESS / CLOSEOUT PENDING
+  → Sprint 15 Premarket Command Center UI  COMPLETE (doc target) / OPERATIONAL CLOSEOUT IN_PROGRESS / ISSUE_176
   → Broker Execution                       future / unauthorized
 ```
 
@@ -425,9 +444,12 @@ PR #133; governance closeout Issue #134). Sprint 14 authorized implementation
 is COMPLETE (Issues #146 / #148 / #150 / #152). Status sync is COMPLETE
 (Issue #154 / PR #155). Sprint 14 governance closeout is recorded under
 Issue #156. Sprint 15 authorized implementation is COMPLETE (Issues #168 /
-#170 / #172); Status Sync is Issue #174 (OPEN); Governance Closeout remains
-PENDING. Broker Execution remains deferred future work and is **not**
-authorized.
+#170 / #172). Status Sync is COMPLETE / FINAL (Issue #174 / PR #175 / merge
+`abd0c295731ac5b56d1193fa4d7dca8ad44fcfa7` / CI `38082195143`). Governance
+Closeout documentation target is COMPLETE under Issue #176; operational
+Closeout remains IN_PROGRESS until Closeout merge, post-merge CI, and Issue
+#176 closure. Broker Execution remains deferred future work and is **not**
+authorized. `SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`.
 
 ### Notes on later themes
 

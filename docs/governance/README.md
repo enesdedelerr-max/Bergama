@@ -132,12 +132,15 @@ Premarket Command Center UI Governance v1 is **APPROVED / EFFECTIVE**
 Implementation Authorization
 `premarket-command-center-ui.implementation-authorization.v1` is
 **APPROVED / EFFECTIVE**. Authorized implementation workstreams are **3/3
-COMPLETE** (Issues #168 / #170 / #172). Implementation Status Sync is the
-**current** governed phase under Issue #174. Sprint 15 Governance Closeout
-remains **PENDING**. `SPRINT_15_IMPLEMENTATION_COMPLETE = YES`.
-`SPRINT_15_COMPLETE = NO`. MODEL PARTICIPATION remains UNAUTHORIZED. Broker
-Execution remains DENIED / DEFERRED. Production deployment remains NOT
-AUTHORIZED.
+COMPLETE** (Issues #168 / #170 / #172). Status Sync is **COMPLETE / FINAL**
+(Issue #174 / PR #175 / merge `abd0c295731ac5b56d1193fa4d7dca8ad44fcfa7` /
+CI `38082195143`). Governance Closeout documentation target is **COMPLETE**
+under Issue #176; operational Closeout remains
+`IN_PROGRESS / ISSUE_176`. `SPRINT_15_IMPLEMENTATION_COMPLETE = YES`.
+`SPRINT_15_COMPLETE = YES` (documentation target).
+`OPERATIONAL_SPRINT_15_COMPLETE = NO`. MODEL PARTICIPATION remains
+UNAUTHORIZED. Broker Execution remains DENIED / DEFERRED. Production
+deployment remains NOT AUTHORIZED. `SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION`.
 
 | # | Document | Status |
 |---|----------|--------|

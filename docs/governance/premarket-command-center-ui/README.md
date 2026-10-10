@@ -54,24 +54,36 @@ IA = APPROVED_EFFECTIVE
 WS1 = MERGED_POST_MERGE_CI_GREEN_FINAL
 WS2 = MERGED_POST_MERGE_CI_GREEN_FINAL
 WS3 = MERGED_POST_MERGE_CI_GREEN_FINAL
+STATUS_SYNC = COMPLETE / FINAL
 SPRINT_15_IMPLEMENTATION_COMPLETE = YES
-STATUS_SYNC = IN_PROGRESS / ISSUE_174
-GOVERNANCE_CLOSEOUT = PENDING
-SPRINT_15_COMPLETE = NO
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_15_COMPLETE = YES
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
+FEATURE_PLATFORM_EXPANSION = NOT_AUTHORIZED_BY_CLOSEOUT
+UI_UX_REDESIGN = NOT_AUTHORIZED_BY_CLOSEOUT
+CURSOR_SKILLS_PRODUCT_INTEGRATION = NOT_AUTHORIZED_BY_CLOSEOUT
 ```
+
+Status Sync is FINAL (Issue #174 / PR #175 / merge
+`abd0c295731ac5b56d1193fa4d7dca8ad44fcfa7` / CI `38082195143`). Closeout
+documentation target is COMPLETE; operationally IN_PROGRESS / Issue #176.
 
 This index does **not** authorize new product implementation beyond the already
 completed Sprint 15 workstreams, model participation, broker execution,
 production deployment, Feature Platform expansion, or UI/UX redesign.
+Governance rules remain unchanged (Governance decision change count = 0).
 
 ## Lifecycle
 
 ```text
 STATUS = APPROVED / EFFECTIVE
-NEXT_PROCESS_STEP = Complete Status Sync (#174), then separate Governance Closeout
+NEXT_PROCESS_STEP = Closeout finality (merge / post-merge CI / Issue #176 closure)
 ```
 
-See [`../../sprints/sprint-15/README.md`](../../sprints/sprint-15/README.md).
+See [`../../sprints/sprint-15/README.md`](../../sprints/sprint-15/README.md)
+and [`../../sprints/sprint-15/CLOSEOUT.md`](../../sprints/sprint-15/CLOSEOUT.md).

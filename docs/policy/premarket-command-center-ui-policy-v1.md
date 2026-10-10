@@ -28,9 +28,12 @@ POLICY APPROVAL ≠ IMPLEMENTATION
 IMPLEMENTATION_AUTHORIZATION = AUTHORIZED (by separate IA; not by this Policy)
 IMPLEMENTATION_SEQUENCE = 3/3 COMPLETE
 SPRINT_15_IMPLEMENTATION_COMPLETE = YES
-SPRINT_15_COMPLETE = NO
-STATUS_SYNC = IN_PROGRESS / ISSUE_174
-GOVERNANCE_CLOSEOUT = PENDING
+STATUS_SYNC = COMPLETE / FINAL
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_15_COMPLETE = YES
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
@@ -988,9 +991,12 @@ BROKER_EXECUTION = DENIED/DEFERRED
 ## 48. Current Implementation Finality (Status Sync)
 
 This Policy / Contract is **APPROVED / FROZEN** (#164 / PR #165 @
-`2f00c39e8acb381fd9533a07eb27526dd97529fa`). Implementation Authorization and
-WS1–WS3 subsequently completed under separate gates. POL-* contracts in this
-document remain frozen.
+`2f00c39e8acb381fd9533a07eb27526dd97529fa`). Implementation Authorization,
+WS1–WS3, and Status Sync subsequently completed under separate gates. POL-*
+contracts in this document remain frozen (Policy decision change count = 0).
+Closeout lifecycle reconciliation does **not** change auth, bootstrap, CORS,
+query, retry, DTO, HR rendering, ADE visibility, security, dependency,
+deployment, or model/broker firewall contracts.
 
 | WS | Evidence | State |
 | --- | --- | --- |
@@ -998,12 +1004,19 @@ document remain frozen.
 | WS2 | #170 / #171; impl `ae6f7460808a35026375c0e5277db64f0d007991`; merge `ed52c5e10445fe69a2d728ccd15239788192113a` | MERGED_POST_MERGE_CI_GREEN_FINAL |
 | WS3 | #172 / #173; impl `9e53af68c6ceaa1d2abfb92f4a1be127caa9215b`; merge `32e498ad791cbfbac6eaecbcf360a16706c38fa2`; CI `38073153105` success | MERGED_POST_MERGE_CI_GREEN_FINAL |
 
+Status Sync: Issue #174 CLOSED / COMPLETED; PR #175 MERGED @
+`abd0c295731ac5b56d1193fa4d7dca8ad44fcfa7`; post-merge CI `38082195143`
+SUCCESS.
+
 ```text
 SPRINT_15_IMPLEMENTATION_COMPLETE = YES
-STATUS_SYNC = IN_PROGRESS / ISSUE_174
-GOVERNANCE_CLOSEOUT = PENDING
-SPRINT_15_COMPLETE = NO
-NEXT_PROCESS_STEP = Sprint 15 Governance Closeout after Status Sync finality
+STATUS_SYNC = COMPLETE / FINAL
+GOVERNANCE_CLOSEOUT = COMPLETE
+SPRINT_15_COMPLETE = YES
+SPRINT_COMPLETE ≠ CAPABILITY_AUTHORIZATION
+OPERATIONAL_SPRINT_15_COMPLETE = NO
+OPERATIONAL_GOVERNANCE_CLOSEOUT = IN_PROGRESS / ISSUE_176
+NEXT_PROCESS_STEP = Closeout finality (merge / post-merge CI / Issue #176 closure)
 MODEL_PARTICIPATION = UNAUTHORIZED
 BROKER_EXECUTION = DENIED/DEFERRED
 PRODUCTION_DEPLOYMENT = NOT_AUTHORIZED
