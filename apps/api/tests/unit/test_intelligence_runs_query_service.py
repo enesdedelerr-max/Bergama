@@ -13,7 +13,10 @@ from app.core.clock import FixedClock
 from app.intelligence_pipeline import PipelineOutcome, run_intelligence_pipeline
 from app.intelligence_runs.constants import (
     PERSISTENCE_SCHEMA_VERSION,
+    PERSISTENCE_SCHEMA_VERSION_V1,
+    PERSISTENCE_SCHEMA_VERSION_V2,
     SNAPSHOT_CONTRACT_VERSION,
+    SNAPSHOT_CONTRACT_VERSION_V1,
 )
 from app.intelligence_runs.errors import IntelligenceRunStorageUnavailableError
 from app.intelligence_runs.models import IntelligenceRunRecord
@@ -289,3 +292,91 @@ def test_completed_dashboard_outcome() -> None:
     read = service.get_run_by_id(str(record.run_id))
     assert read.dashboard is not None
     assert read.stage_presence["dashboard"] == "PRESENT"
+    assert read.analyst is not None
+    assert read.analyst.analyst_artifact_id == record.analyst_snapshot_json["analyst_artifact_id"]
+
+
+def _as_historical_v1(record: IntelligenceRunRecord) -> IntelligenceRunRecord:
+    record.__dict__["snapshot_contract_version"] = SNAPSHOT_CONTRACT_VERSION_V1
+    record.__dict__["persistence_schema_version"] = PERSISTENCE_SCHEMA_VERSION_V1
+    record.analyst_snapshot_json = None
+    return record
+
+
+def test_v2_nested_and_dedicated_analyst_round_trip() -> None:
+    record = _record_from_pipeline()
+    service = _service_with_record(record)
+    nested = service.get_run_by_id(str(record.run_id))
+    dedicated = service.get_analyst(str(record.run_id))
+    assert nested.analyst is not None
+    assert dedicated.analyst.analyst_artifact_id == nested.analyst.analyst_artifact_id
+    assert dedicated.model_dump(mode="json")["analyst"] == nested.model_dump(mode="json")["analyst"]
+
+
+def test_v1_nested_analyst_null_and_dedicated_absent() -> None:
+    record = _as_historical_v1(_record_from_pipeline())
+    service = _service_with_record(record)
+    nested = service.get_run_by_id(str(record.run_id))
+    assert nested.snapshot_contract_version == SNAPSHOT_CONTRACT_VERSION_V1
+    assert nested.analyst is None
+    with pytest.raises(IntelligenceRunProductError) as exc:
+        service.get_analyst(str(record.run_id))
+    assert exc.value.code == "intelligence.runs.stage_not_present"
+    assert exc.value.status_code == 404
+    assert exc.value.details == {"stage": "analyst"}
+
+
+def test_v2_ineligible_admission_rejected_analyst_absent() -> None:
+    record = _record_from_pipeline(hr_requested=True, hr_attestation=None)
+    assert record.outcome == PipelineOutcome.ADMISSION_REJECTED.value
+    assert record.analyst_snapshot_json is None
+    service = _service_with_record(record)
+    nested = service.get_run_by_id(str(record.run_id))
+    assert nested.analyst is None
+    with pytest.raises(IntelligenceRunProductError) as exc:
+        service.get_analyst(str(record.run_id))
+    assert exc.value.code == "intelligence.runs.stage_not_present"
+    assert exc.value.details == {"stage": "analyst"}
+
+
+def test_v2_eligible_missing_analyst_fail_closed() -> None:
+    record = _record_from_pipeline()
+    record.analyst_snapshot_json = None
+    service = _service_with_record(record)
+    with pytest.raises(IntelligenceRunProductError) as exc:
+        service.get_run_by_id(str(record.run_id))
+    assert exc.value.code == "intelligence.runs.corrupt_persisted_snapshot"
+    assert exc.value.status_code == 500
+
+
+def test_v2_ineligible_with_analyst_fail_closed() -> None:
+    rejected = _record_from_pipeline(hr_requested=True, hr_attestation=None)
+    eligible = _record_from_pipeline()
+    rejected.analyst_snapshot_json = eligible.analyst_snapshot_json
+    service = _service_with_record(rejected)
+    with pytest.raises(IntelligenceRunProductError) as exc:
+        service.get_run_by_id(str(rejected.run_id))
+    assert exc.value.code == "intelligence.runs.corrupt_persisted_snapshot"
+
+
+def test_invalid_version_pair_fail_closed() -> None:
+    record = _record_from_pipeline()
+    record.__dict__["snapshot_contract_version"] = SNAPSHOT_CONTRACT_VERSION_V1
+    record.__dict__["persistence_schema_version"] = PERSISTENCE_SCHEMA_VERSION_V2
+    record.analyst_snapshot_json = None
+    service = _service_with_record(record)
+    with pytest.raises(IntelligenceRunProductError) as exc:
+        service.get_run_by_id(str(record.run_id))
+    assert exc.value.code == "intelligence.runs.corrupt_persisted_snapshot"
+
+
+def test_query_service_does_not_import_project_analyst() -> None:
+    import ast
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "app" / "intelligence_runs" / "query_service.py"
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module:
+            assert "project_analyst" not in {alias.name for alias in node.names}
+            assert node.module != "app.premarket_analyst.engine"

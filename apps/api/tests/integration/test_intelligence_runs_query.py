@@ -14,9 +14,14 @@ from alembic import command
 from alembic.config import Config
 from app.core.clock import FixedClock
 from app.intelligence_pipeline import run_intelligence_pipeline
-from app.intelligence_runs.constants import SNAPSHOT_CONTRACT_VERSION
+from app.intelligence_runs.constants import (
+    PERSISTENCE_SCHEMA_VERSION_V1,
+    SNAPSHOT_CONTRACT_VERSION,
+    SNAPSHOT_CONTRACT_VERSION_V1,
+)
 from app.intelligence_runs.database import create_session_factory, create_sync_engine, session_scope
 from app.intelligence_runs.materializer import IntelligenceRunMaterializer
+from app.intelligence_runs.product_errors import IntelligenceRunProductError
 from app.intelligence_runs.query_service import IntelligenceRunQueryService
 from app.intelligence_runs.repository import SqlAlchemyIntelligenceRunRepository
 from sqlalchemy import Engine, text
@@ -116,9 +121,57 @@ def test_real_run_and_fingerprint_lookup(session_factory: sessionmaker) -> None:
         by_id = query.get_run_by_id(str(run_id))
         assert by_id.run_id == str(run_id)
         assert by_id.pipeline_fingerprint is not None
+        assert by_id.analyst is not None
         by_fp = query.get_run_by_fingerprint(by_id.pipeline_fingerprint)
         assert by_fp.run_id == str(run_id)
         assert by_fp.snapshot_contract_version == SNAPSHOT_CONTRACT_VERSION
+        dedicated = query.get_analyst(str(run_id))
+        assert dedicated.analyst.analyst_artifact_id == by_id.analyst.analyst_artifact_id
+
+
+def test_historical_v1_analyst_null_and_dedicated_absent(
+    session_factory: sessionmaker,
+) -> None:
+    run_id = _materialize(session_factory)
+    with session_scope(session_factory) as session:
+        session.execute(
+            text(
+                "UPDATE intelligence_runs SET "
+                "snapshot_contract_version = :snap_v1, "
+                "persistence_schema_version = :pers_v1, "
+                "analyst_snapshot_json = NULL "
+                "WHERE run_id = :run_id"
+            ),
+            {
+                "snap_v1": SNAPSHOT_CONTRACT_VERSION_V1,
+                "pers_v1": PERSISTENCE_SCHEMA_VERSION_V1,
+                "run_id": run_id,
+            },
+        )
+        session.commit()
+
+    with session_scope(session_factory) as session:
+        query = IntelligenceRunQueryService(session=session, clock=FixedClock(FIXED_NOW))
+        nested = query.get_run_by_id(str(run_id))
+        assert nested.snapshot_contract_version == SNAPSHOT_CONTRACT_VERSION_V1
+        assert nested.analyst is None
+        with pytest.raises(IntelligenceRunProductError) as exc:
+            query.get_analyst(str(run_id))
+        assert exc.value.code == "intelligence.runs.stage_not_present"
+        assert exc.value.details == {"stage": "analyst"}
+
+
+def test_admission_rejected_analyst_dedicated_absent(session_factory: sessionmaker) -> None:
+    materializer = IntelligenceRunMaterializer(session_factory)
+    rejected = run_intelligence_pipeline(_valid_request(hr_requested=True, hr_attestation=None))
+    run_id = materializer.materialize(rejected).run_id
+    with session_scope(session_factory) as session:
+        query = IntelligenceRunQueryService(session=session, clock=FixedClock(FIXED_NOW))
+        nested = query.get_run_by_id(str(run_id))
+        assert nested.analyst is None
+        with pytest.raises(IntelligenceRunProductError) as exc:
+            query.get_analyst(str(run_id))
+        assert exc.value.code == "intelligence.runs.stage_not_present"
 
 
 def test_latest_dashboard_ordering_and_eligibility(session_factory: sessionmaker) -> None:

@@ -18,8 +18,13 @@ from app.dashboard.models import DashboardPresentationOutput
 from app.human_review.models import HumanReviewOutput
 from app.intelligence_pipeline.policy import STAGE_ADE, STAGE_DASHBOARD, STAGE_HUMAN_REVIEW
 from app.intelligence_runs.constants import (
+    PERSISTENCE_SCHEMA_VERSION_V1,
+    PERSISTENCE_SCHEMA_VERSION_V2,
     PIPELINE_FINGERPRINT_LENGTH,
     SNAPSHOT_CONTRACT_VERSION,
+    SNAPSHOT_CONTRACT_VERSION_V1,
+    SNAPSHOT_CONTRACT_VERSION_V2,
+    SUPPORTED_SNAPSHOT_CONTRACT_VERSIONS,
 )
 from app.intelligence_runs.errors import (
     IntelligenceRunInvalidPersistedRepresentationError,
@@ -41,9 +46,11 @@ from app.intelligence_runs.snapshot import (
     StagePresenceStatus,
     reconstruct_authoritative_snapshot,
 )
+from app.premarket_analyst import PremarketAnalystArtifact
 from app.schemas.intelligence_runs import (
     AdeProductSnapshotRead,
     IntelligenceRunAdeRead,
+    IntelligenceRunAnalystRead,
     IntelligenceRunDashboardRead,
     IntelligenceRunHumanReviewRead,
     IntelligenceRunRead,
@@ -55,6 +62,13 @@ _UUID_RE = re.compile(
     re.IGNORECASE,
 )
 _FORBIDDEN_ADE_PAYLOAD_KEY = "recorded_attestation_payload"
+_ANALYST_STAGE_KEY = "analyst"
+_SUPPORTED_VERSION_PAIRS: frozenset[tuple[str, str]] = frozenset(
+    {
+        (SNAPSHOT_CONTRACT_VERSION_V1, PERSISTENCE_SCHEMA_VERSION_V1),
+        (SNAPSHOT_CONTRACT_VERSION_V2, PERSISTENCE_SCHEMA_VERSION_V2),
+    }
+)
 
 
 class IntelligenceRunQueryService:
@@ -125,6 +139,15 @@ class IntelligenceRunQueryService:
         ade = self._parse_ade(snapshot.ade_snapshot)
         return IntelligenceRunAdeRead(run_id=str(record.run_id), ade=ade)
 
+    def get_analyst(self, run_id_raw: str) -> IntelligenceRunAnalystRead:
+        run_id = self._parse_run_id(run_id_raw)
+        record = self._load_by_run_id(run_id)
+        snapshot = self._validated_snapshot(record)
+        if snapshot.analyst_snapshot is None:
+            raise stage_not_present(stage=_ANALYST_STAGE_KEY)
+        analyst = self._parse_analyst(snapshot.analyst_snapshot)
+        return IntelligenceRunAnalystRead(run_id=str(record.run_id), analyst=analyst)
+
     def _load_by_run_id(self, run_id: uuid.UUID) -> IntelligenceRunRecord:
         try:
             record = self._repository.get_by_run_id(run_id)
@@ -178,6 +201,11 @@ class IntelligenceRunQueryService:
             else None
         )
         ade = self._parse_ade(snapshot.ade_snapshot) if snapshot.ade_snapshot is not None else None
+        analyst = (
+            self._parse_analyst(snapshot.analyst_snapshot)
+            if snapshot.analyst_snapshot is not None
+            else None
+        )
         return IntelligenceRunRead(
             run_id=str(record.run_id),
             pipeline_fingerprint=snapshot.pipeline_fingerprint,
@@ -196,12 +224,21 @@ class IntelligenceRunQueryService:
             dashboard=dashboard,
             human_review=human_review,
             ade=ade,
+            analyst=analyst,
         )
 
     def _validated_snapshot(self, record: IntelligenceRunRecord) -> AuthoritativeSnapshot:
         version = record.snapshot_contract_version
-        if version != SNAPSHOT_CONTRACT_VERSION:
+        persistence_version = record.persistence_schema_version
+        if version not in SUPPORTED_SNAPSHOT_CONTRACT_VERSIONS:
             raise unsupported_snapshot_contract(version=version)
+        if (version, persistence_version) not in _SUPPORTED_VERSION_PAIRS:
+            raise corrupt_persisted_snapshot(
+                detail=(
+                    "snapshot_contract_version and persistence_schema_version "
+                    "pair is invalid or unsupported"
+                ),
+            )
         try:
             return reconstruct_authoritative_snapshot(record)
         except IntelligenceRunInvalidPersistedRepresentationError as exc:
@@ -263,6 +300,15 @@ class IntelligenceRunQueryService:
             return AdeProductSnapshotRead.model_validate(payload)
         except ValidationError as exc:
             raise corrupt_persisted_snapshot(detail="ade snapshot invalid") from exc
+
+    @staticmethod
+    def _parse_analyst(payload: dict[str, Any] | None) -> PremarketAnalystArtifact:
+        if payload is None:
+            raise corrupt_persisted_snapshot(detail="analyst snapshot missing")
+        try:
+            return PremarketAnalystArtifact.model_validate(payload)
+        except ValidationError as exc:
+            raise corrupt_persisted_snapshot(detail="analyst snapshot invalid") from exc
 
 
 def _contains_forbidden_ade_payload(payload: object) -> bool:

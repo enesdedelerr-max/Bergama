@@ -29,7 +29,9 @@ from app.factory import create_app
 from app.intelligence_pipeline import run_intelligence_pipeline
 from app.intelligence_runs.constants import (
     PERSISTENCE_SCHEMA_VERSION,
+    PERSISTENCE_SCHEMA_VERSION_V1,
     SNAPSHOT_CONTRACT_VERSION,
+    SNAPSHOT_CONTRACT_VERSION_V1,
 )
 from app.intelligence_runs.models import IntelligenceRunRecord
 from app.intelligence_runs.product_errors import (
@@ -56,6 +58,7 @@ PRODUCT_ROUTES = (
     f"/api/v1/intelligence/runs/id/{uuid.uuid4()}/dashboard",
     f"/api/v1/intelligence/runs/id/{uuid.uuid4()}/human-review",
     f"/api/v1/intelligence/runs/id/{uuid.uuid4()}/ade",
+    f"/api/v1/intelligence/runs/id/{uuid.uuid4()}/analyst",
 )
 
 
@@ -135,6 +138,7 @@ def _bind_real_query(
     query.get_dashboard.side_effect = service.get_dashboard
     query.get_human_review.side_effect = service.get_human_review
     query.get_ade.side_effect = service.get_ade
+    query.get_analyst.side_effect = service.get_analyst
     return service
 
 
@@ -157,7 +161,7 @@ async def client(app_and_query: tuple[Any, MagicMock]) -> AsyncIterator[AsyncCli
 
 
 @pytest.mark.asyncio
-async def test_all_six_routes_require_product_scope(client: AsyncClient) -> None:
+async def test_all_seven_routes_require_product_scope(client: AsyncClient) -> None:
     api_only = _mint_token(scopes=[API_READ_SCOPE])
     for path in PRODUCT_ROUTES:
         response = await client.get(path, headers={"Authorization": f"Bearer {api_only}"})
@@ -273,6 +277,16 @@ async def test_stage_routes_and_ade_payload_exclusion(
     assert ade.status_code == 200
     assert "recorded_attestation_payload" not in ade.text
 
+    analyst = await client.get(
+        f"/api/v1/intelligence/runs/id/{run_id}/analyst",
+        headers=headers,
+    )
+    assert analyst.status_code == 200
+    assert (
+        analyst.json()["analyst"]["analyst_artifact_id"]
+        == (record.analyst_snapshot_json["analyst_artifact_id"])
+    )
+
     dash_only = _record()
     _bind_real_query(query, dash_only)
     absent = await client.get(
@@ -281,6 +295,45 @@ async def test_stage_routes_and_ade_payload_exclusion(
     )
     assert absent.status_code == 404
     assert absent.json()["code"] == "intelligence.runs.stage_not_present"
+
+
+@pytest.mark.asyncio
+async def test_analyst_route_v1_absent_and_v2_nested(
+    client: AsyncClient,
+    app_and_query: tuple[Any, MagicMock],
+) -> None:
+    _, query = app_and_query
+    token = _mint_token(scopes=[INTELLIGENCE_RUNS_READ_SCOPE])
+    headers = {"Authorization": f"Bearer {token}"}
+
+    v2 = _record()
+    _bind_real_query(query, v2)
+    nested = await client.get(f"/api/v1/intelligence/runs/id/{v2.run_id}", headers=headers)
+    assert nested.status_code == 200
+    assert nested.json()["analyst"] is not None
+    dedicated = await client.get(
+        f"/api/v1/intelligence/runs/id/{v2.run_id}/analyst",
+        headers=headers,
+    )
+    assert dedicated.status_code == 200
+    assert dedicated.json()["analyst"] == nested.json()["analyst"]
+
+    v1 = _record()
+    v1.__dict__["snapshot_contract_version"] = SNAPSHOT_CONTRACT_VERSION_V1
+    v1.__dict__["persistence_schema_version"] = PERSISTENCE_SCHEMA_VERSION_V1
+    v1.analyst_snapshot_json = None
+    _bind_real_query(query, v1)
+    nested_v1 = await client.get(f"/api/v1/intelligence/runs/id/{v1.run_id}", headers=headers)
+    assert nested_v1.status_code == 200
+    assert nested_v1.json()["analyst"] is None
+    absent = await client.get(
+        f"/api/v1/intelligence/runs/id/{v1.run_id}/analyst",
+        headers=headers,
+    )
+    assert absent.status_code == 404
+    body = absent.json()
+    assert body["code"] == "intelligence.runs.stage_not_present"
+    assert body["details"] == {"stage": "analyst"}
 
 
 @pytest.mark.asyncio
@@ -340,10 +393,11 @@ async def test_missing_database_url_returns_sanitized_503() -> None:
 
 
 @pytest.mark.asyncio
-async def test_openapi_exposes_exactly_six_product_get_routes() -> None:
+async def test_openapi_exposes_exactly_seven_product_get_routes() -> None:
     application = create_app(_settings())
     openapi_paths = application.openapi()["paths"]
     product_paths = {path for path in openapi_paths if path.startswith("/api/v1/intelligence/runs")}
-    assert len(product_paths) == 6
+    assert len(product_paths) == 7
+    assert "/api/v1/intelligence/runs/id/{run_id}/analyst" in product_paths
     for path in product_paths:
         assert set(openapi_paths[path]) == {"get"}
