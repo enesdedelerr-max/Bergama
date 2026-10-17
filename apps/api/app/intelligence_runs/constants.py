@@ -1,4 +1,4 @@
-"""Frozen Intelligence Run productization version and outcome constants (WS1)."""
+"""Frozen Intelligence Run productization version and outcome constants."""
 
 from __future__ import annotations
 
@@ -13,13 +13,43 @@ from app.intelligence_pipeline.policy import (
     OUTCOME_REQUIRED_STAGE_FAILED,
 )
 
-SNAPSHOT_CONTRACT_VERSION = "intelligence-run-productization.snapshot.v1"
-PERSISTENCE_SCHEMA_VERSION = "intelligence-run-productization.persistence.v1"
+# Historical v1 literals (immutable rows remain readable).
+SNAPSHOT_CONTRACT_VERSION_V1 = "intelligence-run-productization.snapshot.v1"
+PERSISTENCE_SCHEMA_VERSION_V1 = "intelligence-run-productization.persistence.v1"
+
+# Current write contract (WS2 analyst co-persist).
+SNAPSHOT_CONTRACT_VERSION_V2 = "intelligence-run-productization.snapshot.v2"
+PERSISTENCE_SCHEMA_VERSION_V2 = "intelligence-run-productization.persistence.v2"
+
+# Aliases for current writers / materializer.
+SNAPSHOT_CONTRACT_VERSION = SNAPSHOT_CONTRACT_VERSION_V2
+PERSISTENCE_SCHEMA_VERSION = PERSISTENCE_SCHEMA_VERSION_V2
+
+SUPPORTED_SNAPSHOT_CONTRACT_VERSIONS: tuple[str, ...] = (
+    SNAPSHOT_CONTRACT_VERSION_V1,
+    SNAPSHOT_CONTRACT_VERSION_V2,
+)
+SUPPORTED_PERSISTENCE_SCHEMA_VERSIONS: tuple[str, ...] = (
+    PERSISTENCE_SCHEMA_VERSION_V1,
+    PERSISTENCE_SCHEMA_VERSION_V2,
+)
 
 PIPELINE_FINGERPRINT_LENGTH = 64
 FAILURE_DETAIL_MAX_CHARS = FAILURE_DETAIL_MAX_LENGTH
 
 PERSISTED_OUTCOMES: tuple[str, ...] = GLOBAL_OUTCOME_FAMILIES
+
+ANALYST_ELIGIBLE_OUTCOMES: tuple[str, ...] = (
+    OUTCOME_COMPLETED_DASHBOARD,
+    OUTCOME_COMPLETED_HUMAN_REVIEW,
+    OUTCOME_COMPLETED_ADE_ACCEPT,
+    OUTCOME_COMPLETED_ADE_ABSTAIN,
+)
+
+ANALYST_INELIGIBLE_OUTCOMES: tuple[str, ...] = (
+    OUTCOME_ADMISSION_REJECTED,
+    OUTCOME_REQUIRED_STAGE_FAILED,
+)
 
 assert PERSISTED_OUTCOMES == (
     OUTCOME_ADMISSION_REJECTED,
@@ -29,3 +59,5 @@ assert PERSISTED_OUTCOMES == (
     OUTCOME_COMPLETED_ADE_ACCEPT,
     OUTCOME_COMPLETED_ADE_ABSTAIN,
 )
+assert set(ANALYST_ELIGIBLE_OUTCOMES).isdisjoint(ANALYST_INELIGIBLE_OUTCOMES)
+assert set(ANALYST_ELIGIBLE_OUTCOMES) | set(ANALYST_INELIGIBLE_OUTCOMES) == set(PERSISTED_OUTCOMES)

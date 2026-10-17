@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM model for the ``intelligence_runs`` hybrid envelope (WS1)."""
+"""SQLAlchemy ORM model for the ``intelligence_runs`` hybrid envelope (WS1/WS2)."""
 
 from __future__ import annotations
 
@@ -23,15 +23,27 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, validates
 
 from app.intelligence_runs.constants import (
+    ANALYST_ELIGIBLE_OUTCOMES,
+    ANALYST_INELIGIBLE_OUTCOMES,
     FAILURE_DETAIL_MAX_CHARS,
     PERSISTED_OUTCOMES,
-    PERSISTENCE_SCHEMA_VERSION,
     PIPELINE_FINGERPRINT_LENGTH,
-    SNAPSHOT_CONTRACT_VERSION,
+    SNAPSHOT_CONTRACT_VERSION_V1,
+    SNAPSHOT_CONTRACT_VERSION_V2,
+    SUPPORTED_PERSISTENCE_SCHEMA_VERSIONS,
+    SUPPORTED_SNAPSHOT_CONTRACT_VERSIONS,
 )
 
 _FINGERPRINT_RE = re.compile(rf"^[0-9a-f]{{{PIPELINE_FINGERPRINT_LENGTH}}}$")
 _OUTCOME_SQL_LIST = ", ".join(f"'{value}'" for value in PERSISTED_OUTCOMES)
+_ELIGIBLE_SQL_LIST = ", ".join(f"'{value}'" for value in ANALYST_ELIGIBLE_OUTCOMES)
+_INELIGIBLE_SQL_LIST = ", ".join(f"'{value}'" for value in ANALYST_INELIGIBLE_OUTCOMES)
+_SNAPSHOT_VERSION_SQL_LIST = ", ".join(
+    f"'{value}'" for value in SUPPORTED_SNAPSHOT_CONTRACT_VERSIONS
+)
+_PERSISTENCE_VERSION_SQL_LIST = ", ".join(
+    f"'{value}'" for value in SUPPORTED_PERSISTENCE_SCHEMA_VERSIONS
+)
 
 INTELLIGENCE_RUNS_TABLE = "intelligence_runs"
 
@@ -63,12 +75,27 @@ class IntelligenceRunRecord(IntelligenceRunsBase):
             name="ck_intelligence_runs_failure_detail_length",
         ),
         CheckConstraint(
-            f"snapshot_contract_version = '{SNAPSHOT_CONTRACT_VERSION}'",
+            f"snapshot_contract_version IN ({_SNAPSHOT_VERSION_SQL_LIST})",
             name="ck_intelligence_runs_snapshot_contract_version",
         ),
         CheckConstraint(
-            f"persistence_schema_version = '{PERSISTENCE_SCHEMA_VERSION}'",
+            f"persistence_schema_version IN ({_PERSISTENCE_VERSION_SQL_LIST})",
             name="ck_intelligence_runs_persistence_schema_version",
+        ),
+        CheckConstraint(
+            "("
+            f"snapshot_contract_version = '{SNAPSHOT_CONTRACT_VERSION_V1}' "
+            "AND analyst_snapshot_json IS NULL"
+            ") OR ("
+            f"snapshot_contract_version = '{SNAPSHOT_CONTRACT_VERSION_V2}' "
+            f"AND outcome IN ({_INELIGIBLE_SQL_LIST}) "
+            "AND analyst_snapshot_json IS NULL"
+            ") OR ("
+            f"snapshot_contract_version = '{SNAPSHOT_CONTRACT_VERSION_V2}' "
+            f"AND outcome IN ({_ELIGIBLE_SQL_LIST}) "
+            "AND analyst_snapshot_json IS NOT NULL"
+            ")",
+            name="ck_intelligence_runs_analyst_snapshot_version_outcome",
         ),
         UniqueConstraint(
             "pipeline_fingerprint",
@@ -111,6 +138,10 @@ class IntelligenceRunRecord(IntelligenceRunsBase):
         nullable=True,
     )
     ade_snapshot_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    analyst_snapshot_json: Mapped[dict[str, Any] | None] = mapped_column(
+        JSONB(none_as_null=True),
+        nullable=True,
+    )
     snapshot_contract_version: Mapped[str] = mapped_column(Text, nullable=False)
     persistence_schema_version: Mapped[str] = mapped_column(Text, nullable=False)
     persisted_at: Mapped[datetime] = mapped_column(
@@ -149,14 +180,16 @@ class IntelligenceRunRecord(IntelligenceRunsBase):
 
     @validates("snapshot_contract_version")
     def _validate_snapshot_version(self, _key: str, value: str) -> str:
-        if value != SNAPSHOT_CONTRACT_VERSION:
-            msg = f"snapshot_contract_version must be {SNAPSHOT_CONTRACT_VERSION!r}"
+        if value not in SUPPORTED_SNAPSHOT_CONTRACT_VERSIONS:
+            msg = f"snapshot_contract_version must be one of {SUPPORTED_SNAPSHOT_CONTRACT_VERSIONS}"
             raise ValueError(msg)
         return value
 
     @validates("persistence_schema_version")
     def _validate_persistence_version(self, _key: str, value: str) -> str:
-        if value != PERSISTENCE_SCHEMA_VERSION:
-            msg = f"persistence_schema_version must be {PERSISTENCE_SCHEMA_VERSION!r}"
+        if value not in SUPPORTED_PERSISTENCE_SCHEMA_VERSIONS:
+            msg = (
+                f"persistence_schema_version must be one of {SUPPORTED_PERSISTENCE_SCHEMA_VERSIONS}"
+            )
             raise ValueError(msg)
         return value

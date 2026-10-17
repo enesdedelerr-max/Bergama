@@ -13,7 +13,9 @@ from alembic import command
 from alembic.config import Config
 from app.intelligence_runs.constants import (
     PERSISTENCE_SCHEMA_VERSION,
+    PERSISTENCE_SCHEMA_VERSION_V1,
     SNAPSHOT_CONTRACT_VERSION,
+    SNAPSHOT_CONTRACT_VERSION_V1,
 )
 from app.intelligence_runs.database import create_session_factory, create_sync_engine, session_scope
 from app.intelligence_runs.errors import IntelligenceRunIdentityConflictError
@@ -76,6 +78,15 @@ def _stage_presence(*, dashboard: str = "ABSENT") -> dict[str, str]:
     }
 
 
+def _analyst_fixture() -> dict[str, object]:
+    return {
+        "schema": "premarket-analyst.artifact.v1",
+        "evaluation_state": "INSUFFICIENT_EVIDENCE",
+        "as_of": "2026-10-07T12:00:00Z",
+        "bounded": True,
+    }
+
+
 def _base_record(**overrides: object) -> IntelligenceRunRecord:
     payload: dict[str, object] = {
         "run_id": uuid.uuid4(),
@@ -91,6 +102,7 @@ def _base_record(**overrides: object) -> IntelligenceRunRecord:
         "dashboard_snapshot_json": {"kind": "dashboard", "bounded": True},
         "human_review_snapshot_json": None,
         "ade_snapshot_json": None,
+        "analyst_snapshot_json": _analyst_fixture(),
         "snapshot_contract_version": SNAPSHOT_CONTRACT_VERSION,
         "persistence_schema_version": PERSISTENCE_SCHEMA_VERSION,
         "persisted_at": datetime(2026, 10, 7, 12, 5, tzinfo=UTC),
@@ -140,6 +152,7 @@ def test_multiple_null_fingerprint_admission_rejected_allowed(
         provenance_json={"pipeline_fingerprint": None},
         stage_presence_json=_stage_presence(dashboard="ABSENT"),
         dashboard_snapshot_json=None,
+        analyst_snapshot_json=None,
     )
     second = _base_record(
         run_id=uuid.uuid4(),
@@ -150,6 +163,7 @@ def test_multiple_null_fingerprint_admission_rejected_allowed(
         provenance_json={"pipeline_fingerprint": None},
         stage_presence_json=_stage_presence(dashboard="ABSENT"),
         dashboard_snapshot_json=None,
+        analyst_snapshot_json=None,
     )
     repo.insert(first)
     repo.insert(second)
@@ -185,7 +199,39 @@ def test_versions_and_jsonb_roundtrip(
     assert loaded.persistence_schema_version == PERSISTENCE_SCHEMA_VERSION
     assert loaded.human_review_snapshot_json == {"decision": "approve", "bounded": True}
     assert loaded.ade_snapshot_json == {"outcome": "accept", "bounded": True}
+    assert loaded.analyst_snapshot_json == _analyst_fixture()
     assert loaded.persisted_at.tzinfo is not None
+
+
+def test_v1_historical_row_coexists_with_null_analyst(
+    repository_session: tuple[Session, SqlAlchemyIntelligenceRunRepository],
+) -> None:
+    session, repo = repository_session
+    record = _base_record(
+        pipeline_fingerprint="f" * 64,
+        analyst_snapshot_json=None,
+        snapshot_contract_version=SNAPSHOT_CONTRACT_VERSION_V1,
+        persistence_schema_version=PERSISTENCE_SCHEMA_VERSION_V1,
+    )
+    repo.insert(record)
+    session.commit()
+    loaded = repo.get_by_run_id(record.run_id)
+    assert loaded is not None
+    assert loaded.analyst_snapshot_json is None
+    assert loaded.snapshot_contract_version == SNAPSHOT_CONTRACT_VERSION_V1
+
+
+def test_v2_completed_without_analyst_rejected_by_check(
+    repository_session: tuple[Session, SqlAlchemyIntelligenceRunRepository],
+) -> None:
+    session, repo = repository_session
+    record = _base_record(
+        pipeline_fingerprint="e" * 64,
+        analyst_snapshot_json=None,
+    )
+    with pytest.raises(IntelligenceRunIdentityConflictError):
+        repo.insert(record)
+    session.rollback()
 
 
 def test_partial_latest_dashboard_index_exists(engine: Engine) -> None:

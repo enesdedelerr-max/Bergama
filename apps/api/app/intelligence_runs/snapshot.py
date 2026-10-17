@@ -11,7 +11,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.ai_decision_engine.models import AdeOutcomeKind, AdeResult
 from app.dashboard.models import DashboardPresentationOutput
@@ -35,9 +35,14 @@ from app.intelligence_pipeline.policy import (
     STAGE_WATCHLIST,
 )
 from app.intelligence_runs.constants import (
+    ANALYST_ELIGIBLE_OUTCOMES,
+    ANALYST_INELIGIBLE_OUTCOMES,
     FAILURE_DETAIL_MAX_CHARS,
     PERSISTED_OUTCOMES,
     SNAPSHOT_CONTRACT_VERSION,
+    SNAPSHOT_CONTRACT_VERSION_V1,
+    SNAPSHOT_CONTRACT_VERSION_V2,
+    SUPPORTED_SNAPSHOT_CONTRACT_VERSIONS,
 )
 from app.intelligence_runs.errors import (
     IntelligenceRunInvalidMaterializationError,
@@ -45,6 +50,8 @@ from app.intelligence_runs.errors import (
 )
 from app.intelligence_runs.models import IntelligenceRunRecord
 from app.market_data.timing import require_utc_aware
+from app.premarket_analyst import AnalystProjectionRequest, project_analyst
+from app.premarket_analyst.errors import PremarketAnalystError
 
 STAGE_KEYS: tuple[str, ...] = (
     STAGE_WATCHLIST,
@@ -111,6 +118,7 @@ class AuthoritativeSnapshot(BaseModel):
     dashboard_snapshot: dict[str, Any] | None = None
     human_review_snapshot: dict[str, Any] | None = None
     ade_snapshot: dict[str, Any] | None = None
+    analyst_snapshot: dict[str, Any] | None = None
 
     @field_validator("as_of")
     @classmethod
@@ -130,8 +138,8 @@ class AuthoritativeSnapshot(BaseModel):
     @field_validator("snapshot_contract_version")
     @classmethod
     def require_snapshot_version(cls, value: str) -> str:
-        if value != SNAPSHOT_CONTRACT_VERSION:
-            msg = f"snapshot_contract_version must be {SNAPSHOT_CONTRACT_VERSION!r}"
+        if value not in SUPPORTED_SNAPSHOT_CONTRACT_VERSIONS:
+            msg = f"snapshot_contract_version must be one of {SUPPORTED_SNAPSHOT_CONTRACT_VERSIONS}"
             raise ValueError(msg)
         return value
 
@@ -157,6 +165,26 @@ class AuthoritativeSnapshot(BaseModel):
                 msg = f"invalid stage presence status for {key}: {status}"
                 raise ValueError(msg)
         return ordered
+
+    @model_validator(mode="after")
+    def require_analyst_version_outcome_rules(self) -> AuthoritativeSnapshot:
+        """Enforce version-specific analyst presence (v1 none; v2 outcome-gated)."""
+        has_analyst = self.analyst_snapshot is not None
+        if self.snapshot_contract_version == SNAPSHOT_CONTRACT_VERSION_V1:
+            if has_analyst:
+                msg = "v1 snapshots must not carry analyst_snapshot"
+                raise ValueError(msg)
+            return self
+        if self.snapshot_contract_version == SNAPSHOT_CONTRACT_VERSION_V2:
+            if self.outcome in ANALYST_ELIGIBLE_OUTCOMES and not has_analyst:
+                msg = f"v2 outcome {self.outcome} requires non-null analyst_snapshot"
+                raise ValueError(msg)
+            if self.outcome in ANALYST_INELIGIBLE_OUTCOMES and has_analyst:
+                msg = f"v2 outcome {self.outcome} forbids analyst_snapshot"
+                raise ValueError(msg)
+            return self
+        msg = f"unsupported snapshot_contract_version: {self.snapshot_contract_version}"
+        raise ValueError(msg)
 
 
 def canonical_snapshot_json(snapshot: AuthoritativeSnapshot) -> str:
@@ -187,6 +215,31 @@ def enforce_dashboard_invariant(snapshot: AuthoritativeSnapshot) -> None:
         )
 
 
+def enforce_analyst_invariant(snapshot: AuthoritativeSnapshot) -> None:
+    """Fail closed on version/outcome analyst presence (mirrors DB CHECK)."""
+    has_analyst = snapshot.analyst_snapshot is not None
+    version = snapshot.snapshot_contract_version
+    if version == SNAPSHOT_CONTRACT_VERSION_V1:
+        if has_analyst:
+            raise IntelligenceRunInvalidMaterializationError(
+                detail="v1 snapshots must not carry analyst_snapshot",
+            )
+        return
+    if version == SNAPSHOT_CONTRACT_VERSION_V2:
+        if snapshot.outcome in ANALYST_ELIGIBLE_OUTCOMES and not has_analyst:
+            raise IntelligenceRunInvalidMaterializationError(
+                detail=f"v2 outcome {snapshot.outcome} requires non-null analyst_snapshot",
+            )
+        if snapshot.outcome in ANALYST_INELIGIBLE_OUTCOMES and has_analyst:
+            raise IntelligenceRunInvalidMaterializationError(
+                detail=f"v2 outcome {snapshot.outcome} forbids analyst_snapshot",
+            )
+        return
+    raise IntelligenceRunInvalidMaterializationError(
+        detail=f"unsupported snapshot_contract_version: {version}",
+    )
+
+
 def build_ade_product_snapshot(ade: AdeResult) -> dict[str, Any]:
     """Serialize ADE public product snapshot without recorded attestation payload."""
     data = ade.model_dump(mode="json")
@@ -195,6 +248,54 @@ def build_ade_product_snapshot(ade: AdeResult) -> dict[str, Any]:
         provenance.pop(_FORBIDDEN_ADE_PAYLOAD_KEY, None)
     _assert_no_forbidden_ade_payload(data)
     return data
+
+
+def build_analyst_public_snapshot(
+    result: PipelineResult,
+    *,
+    outcome: str,
+) -> dict[str, Any] | None:
+    """Project WS1 analyst artifact from already-produced PipelineResult outputs.
+
+    Does not rerun Premarket engines. Returns ``None`` for ineligible outcomes.
+    Fail-closed for eligible outcomes that cannot produce a valid artifact.
+    """
+    if outcome in ANALYST_INELIGIBLE_OUTCOMES:
+        return None
+    if outcome not in ANALYST_ELIGIBLE_OUTCOMES:
+        raise IntelligenceRunInvalidMaterializationError(
+            detail=f"unsupported outcome for analyst projection: {outcome}",
+        )
+    if result.as_of is None:
+        raise IntelligenceRunInvalidMaterializationError(
+            detail="eligible analyst projection requires as_of",
+        )
+    if result.watchlist is None:
+        raise IntelligenceRunInvalidMaterializationError(
+            detail="eligible analyst projection requires watchlist public output",
+        )
+    request = AnalystProjectionRequest(
+        as_of=result.as_of,
+        watchlist=result.watchlist,
+        gaps=result.gaps,
+        catalysts=result.catalysts,
+        scores=result.scores,
+        briefing=result.briefing,
+        dashboard=result.dashboard,
+        membership_complete=True,
+        upstream_pipeline_failure_identity=None,
+    )
+    try:
+        artifact = project_analyst(request)
+    except PremarketAnalystError as exc:
+        raise IntelligenceRunInvalidMaterializationError(
+            detail=f"analyst_projection_failed:{exc}",
+        ) from exc
+    except Exception as exc:
+        raise IntelligenceRunInvalidMaterializationError(
+            detail=f"analyst_projection_failed:{type(exc).__name__}",
+        ) from exc
+    return artifact.model_dump(mode="json")
 
 
 def build_authoritative_snapshot(result: PipelineResult) -> AuthoritativeSnapshot:
@@ -224,6 +325,7 @@ def build_authoritative_snapshot(result: PipelineResult) -> AuthoritativeSnapsho
         result.human_review.model_dump(mode="json") if result.human_review is not None else None
     )
     ade_snapshot = build_ade_product_snapshot(result.ade) if result.ade is not None else None
+    analyst_snapshot = build_analyst_public_snapshot(result, outcome=outcome)
 
     fingerprint = result.provenance.pipeline_fingerprint
     bindings = result.bindings.model_dump(mode="json") if result.bindings is not None else None
@@ -255,14 +357,19 @@ def build_authoritative_snapshot(result: PipelineResult) -> AuthoritativeSnapsho
         dashboard_snapshot=dashboard_snapshot,
         human_review_snapshot=human_review_snapshot,
         ade_snapshot=ade_snapshot,
+        analyst_snapshot=analyst_snapshot,
     )
     enforce_dashboard_invariant(snapshot)
+    enforce_analyst_invariant(snapshot)
     _assert_no_forbidden_ade_payload(snapshot.model_dump(mode="json"))
     return snapshot
 
 
 def reconstruct_authoritative_snapshot(record: IntelligenceRunRecord) -> AuthoritativeSnapshot:
-    """Rebuild authoritative equality content from a persisted ORM row."""
+    """Rebuild authoritative equality content from a persisted ORM row.
+
+    Does not recompute analyst projections — reads stored ``analyst_snapshot_json``.
+    """
     if not isinstance(record, IntelligenceRunRecord):
         raise IntelligenceRunInvalidPersistedRepresentationError(
             detail="record must be an IntelligenceRunRecord",
@@ -288,8 +395,10 @@ def reconstruct_authoritative_snapshot(record: IntelligenceRunRecord) -> Authori
             dashboard_snapshot=record.dashboard_snapshot_json,
             human_review_snapshot=record.human_review_snapshot_json,
             ade_snapshot=record.ade_snapshot_json,
+            analyst_snapshot=record.analyst_snapshot_json,
         )
         enforce_dashboard_invariant(snapshot)
+        enforce_analyst_invariant(snapshot)
         _assert_no_forbidden_ade_payload(snapshot.model_dump(mode="json"))
     except (
         TypeError,

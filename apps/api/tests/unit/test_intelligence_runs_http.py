@@ -112,6 +112,7 @@ def _record(**kwargs: Any) -> IntelligenceRunRecord:
         dashboard_snapshot_json=snapshot.dashboard_snapshot,
         human_review_snapshot_json=snapshot.human_review_snapshot,
         ade_snapshot_json=snapshot.ade_snapshot,
+        analyst_snapshot_json=snapshot.analyst_snapshot,
         snapshot_contract_version=SNAPSHOT_CONTRACT_VERSION,
         persistence_schema_version=PERSISTENCE_SCHEMA_VERSION,
         persisted_at=FIXED_NOW,

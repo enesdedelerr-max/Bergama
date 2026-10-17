@@ -26,7 +26,11 @@ from app.intelligence_pipeline.models import PipelineProvenance, PipelineResult
 from app.intelligence_runs.constants import (
     FAILURE_DETAIL_MAX_CHARS,
     PERSISTENCE_SCHEMA_VERSION,
+    PERSISTENCE_SCHEMA_VERSION_V1,
+    PERSISTENCE_SCHEMA_VERSION_V2,
     SNAPSHOT_CONTRACT_VERSION,
+    SNAPSHOT_CONTRACT_VERSION_V1,
+    SNAPSHOT_CONTRACT_VERSION_V2,
 )
 from app.intelligence_runs.errors import IntelligenceRunInvalidMaterializationError
 from app.intelligence_runs.models import IntelligenceRunRecord
@@ -48,8 +52,12 @@ PRIVATE_ADE_MARKER = "PRIVATE_ADE_ATTESTATION_PAYLOAD_DO_NOT_PERSIST"
 
 
 def test_frozen_versions_and_stage_contract() -> None:
-    assert SNAPSHOT_CONTRACT_VERSION == "intelligence-run-productization.snapshot.v1"
-    assert PERSISTENCE_SCHEMA_VERSION == "intelligence-run-productization.persistence.v1"
+    assert SNAPSHOT_CONTRACT_VERSION_V1 == "intelligence-run-productization.snapshot.v1"
+    assert PERSISTENCE_SCHEMA_VERSION_V1 == "intelligence-run-productization.persistence.v1"
+    assert SNAPSHOT_CONTRACT_VERSION_V2 == "intelligence-run-productization.snapshot.v2"
+    assert PERSISTENCE_SCHEMA_VERSION_V2 == "intelligence-run-productization.persistence.v2"
+    assert SNAPSHOT_CONTRACT_VERSION == SNAPSHOT_CONTRACT_VERSION_V2
+    assert PERSISTENCE_SCHEMA_VERSION == PERSISTENCE_SCHEMA_VERSION_V2
     assert len(STAGE_KEYS) == 8
     assert STAGE_KEYS == (
         "watchlist",
@@ -81,6 +89,8 @@ def test_completed_dashboard_snapshot_and_stage_presence() -> None:
     assert snapshot.dashboard_snapshot is not None
     assert snapshot.human_review_snapshot is None
     assert snapshot.ade_snapshot is None
+    assert snapshot.analyst_snapshot is not None
+    assert "evaluation_state" in snapshot.analyst_snapshot
     presence = snapshot.stage_presence
     assert tuple(presence.keys()) == STAGE_KEYS
     assert presence["dashboard"] == StagePresenceStatus.PRESENT.value
@@ -99,6 +109,7 @@ def test_admission_rejected_null_identity() -> None:
     assert snapshot.as_of is None
     assert snapshot.bindings is None
     assert snapshot.dashboard_snapshot is None
+    assert snapshot.analyst_snapshot is None
     assert all(
         snapshot.stage_presence[key] == StagePresenceStatus.NOT_EXECUTED.value
         for key in ("watchlist", "gap", "catalyst", "score", "briefing")
@@ -123,6 +134,7 @@ def test_required_stage_failed_snapshot() -> None:
     assert len(snapshot.failure_detail) <= FAILURE_DETAIL_MAX_CHARS
     assert snapshot.stage_presence["gap"] == StagePresenceStatus.FAILED.value
     assert snapshot.stage_presence["catalyst"] == StagePresenceStatus.NOT_EXECUTED.value
+    assert snapshot.analyst_snapshot is None
 
 
 def test_completed_human_review_and_ade_accept() -> None:
@@ -137,6 +149,7 @@ def test_completed_human_review_and_ade_accept() -> None:
     snapshot = build_authoritative_snapshot(result)
     assert snapshot.human_review_snapshot is not None
     assert snapshot.ade_snapshot is not None
+    assert snapshot.analyst_snapshot is not None
     assert snapshot.stage_presence["human_review"] == StagePresenceStatus.PRESENT.value
     assert snapshot.stage_presence["ade"] == StagePresenceStatus.PRESENT.value
     assert "recorded_attestation_payload" not in json.dumps(snapshot.ade_snapshot)
@@ -286,6 +299,7 @@ def test_reconstruct_excludes_storage_metadata() -> None:
         dashboard_snapshot_json=snapshot.dashboard_snapshot,
         human_review_snapshot_json=snapshot.human_review_snapshot,
         ade_snapshot_json=snapshot.ade_snapshot,
+        analyst_snapshot_json=snapshot.analyst_snapshot,
         snapshot_contract_version=SNAPSHOT_CONTRACT_VERSION,
         persistence_schema_version=PERSISTENCE_SCHEMA_VERSION,
         persisted_at=datetime(2026, 10, 7, 15, 0, tzinfo=UTC),
@@ -294,6 +308,37 @@ def test_reconstruct_excludes_storage_metadata() -> None:
     assert canonical_snapshots_equal(snapshot, reconstructed)
     assert record.run_id.version == 4
     assert record.persisted_at is not None
+
+
+def test_v1_reconstruct_forces_analyst_none() -> None:
+    result = run_intelligence_pipeline(_valid_request())
+    snapshot = build_authoritative_snapshot(result)
+    v1_payload = snapshot.model_dump(mode="json")
+    v1_payload["snapshot_contract_version"] = SNAPSHOT_CONTRACT_VERSION_V1
+    v1_payload["analyst_snapshot"] = None
+    from app.intelligence_runs.snapshot import AuthoritativeSnapshot
+
+    v1_snapshot = AuthoritativeSnapshot.model_validate(v1_payload)
+    record = IntelligenceRunRecord(
+        run_id=uuid.uuid4(),
+        pipeline_fingerprint=v1_snapshot.pipeline_fingerprint,
+        as_of=v1_snapshot.as_of,
+        outcome=v1_snapshot.outcome,
+        bindings_json=v1_snapshot.bindings,
+        provenance_json=v1_snapshot.provenance,
+        stage_presence_json=dict(v1_snapshot.stage_presence),
+        dashboard_snapshot_json=v1_snapshot.dashboard_snapshot,
+        human_review_snapshot_json=None,
+        ade_snapshot_json=None,
+        analyst_snapshot_json=None,
+        snapshot_contract_version=SNAPSHOT_CONTRACT_VERSION_V1,
+        persistence_schema_version=PERSISTENCE_SCHEMA_VERSION_V1,
+        persisted_at=datetime(2026, 10, 7, 15, 0, tzinfo=UTC),
+    )
+    reconstructed = reconstruct_authoritative_snapshot(record)
+    assert reconstructed.snapshot_contract_version == SNAPSHOT_CONTRACT_VERSION_V1
+    assert reconstructed.analyst_snapshot is None
+    assert not canonical_snapshots_equal(snapshot, reconstructed)
 
 
 def test_invalid_completed_dashboard_without_dashboard_rejected() -> None:
