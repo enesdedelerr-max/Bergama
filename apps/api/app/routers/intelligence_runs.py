@@ -12,6 +12,7 @@ from app.intelligence_runs.query_service import IntelligenceRunQueryService
 from app.schemas.auth import AuthenticatedPrincipal
 from app.schemas.intelligence_runs import (
     IntelligenceRunAdeRead,
+    IntelligenceRunAnalystRead,
     IntelligenceRunDashboardRead,
     IntelligenceRunHumanReviewRead,
     IntelligenceRunRead,
@@ -89,3 +90,15 @@ def get_run_ade(
     query: Annotated[IntelligenceRunQueryService, Depends(get_intelligence_run_query_service)],
 ) -> IntelligenceRunAdeRead:
     return query.get_ade(run_id)
+
+
+@router.get(
+    "/id/{run_id}/analyst",
+    response_model=IntelligenceRunAnalystRead,
+)
+def get_run_analyst(
+    run_id: str,
+    _principal: Annotated[AuthenticatedPrincipal, Depends(require_intelligence_runs_read)],
+    query: Annotated[IntelligenceRunQueryService, Depends(get_intelligence_run_query_service)],
+) -> IntelligenceRunAnalystRead:
+    return query.get_analyst(run_id)

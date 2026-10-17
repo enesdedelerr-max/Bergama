@@ -12,6 +12,7 @@ from app.ai_decision_engine.reasons import AdeReasonFamily
 from app.dashboard.models import DashboardPresentationOutput
 from app.human_review.models import HumanReviewOutput
 from app.market_data.timing import require_utc_aware
+from app.premarket_analyst import PremarketAnalystArtifact
 
 
 class ProductErrorResponse(BaseModel):
@@ -115,6 +116,7 @@ class IntelligenceRunRead(BaseModel):
     dashboard: DashboardPresentationOutput | None = None
     human_review: HumanReviewOutput | None = None
     ade: AdeProductSnapshotRead | None = None
+    analyst: PremarketAnalystArtifact | None = None
 
     @field_validator("as_of", "persisted_at")
     @classmethod
@@ -149,3 +151,12 @@ class IntelligenceRunAdeRead(BaseModel):
 
     run_id: str = Field(min_length=36, max_length=36)
     ade: AdeProductSnapshotRead
+
+
+class IntelligenceRunAnalystRead(BaseModel):
+    """Premarket Analyst public subresource (persisted snapshot only)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: str = Field(min_length=36, max_length=36)
+    analyst: PremarketAnalystArtifact

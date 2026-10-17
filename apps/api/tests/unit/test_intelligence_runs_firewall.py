@@ -63,6 +63,7 @@ _EXPECTED_PRODUCT_GET_PATHS = {
     "/api/v1/intelligence/runs/id/{run_id}/dashboard",
     "/api/v1/intelligence/runs/id/{run_id}/human-review",
     "/api/v1/intelligence/runs/id/{run_id}/ade",
+    "/api/v1/intelligence/runs/id/{run_id}/analyst",
 }
 
 
@@ -113,6 +114,8 @@ def test_ws3_package_has_query_without_write_or_pipeline_recompute() -> None:
         assert "APIRouter" not in text
         assert "evaluate_ade" not in text
         assert "run_intelligence_pipeline" not in text
+        if path.name == "query_service.py":
+            assert "project_analyst" not in text
         tree = ast.parse(text, filename=str(path))
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom) and node.module:
@@ -124,7 +127,7 @@ def test_ws3_package_has_query_without_write_or_pipeline_recompute() -> None:
                     assert path.name in _WS2_PIPELINE_IMPORT_ALLOWLIST
 
 
-def test_exactly_six_product_get_routes_no_writes() -> None:
+def test_exactly_seven_product_get_routes_no_writes() -> None:
     settings = AppSettings(
         environment=AppEnvironment.LOCAL,
         debug=True,
@@ -135,6 +138,7 @@ def test_exactly_six_product_get_routes_no_writes() -> None:
     openapi_paths = application.openapi()["paths"]
     product_paths = {path for path in openapi_paths if path.startswith("/api/v1/intelligence/runs")}
     assert product_paths == _EXPECTED_PRODUCT_GET_PATHS
+    assert len(product_paths) == 7
     for path in product_paths:
         methods = {method.upper() for method in openapi_paths[path]}
         assert methods == {"GET"}
@@ -142,14 +146,20 @@ def test_exactly_six_product_get_routes_no_writes() -> None:
     assert "search" not in joined
     assert "history" not in joined
     assert "/list" not in joined
+    assert "/api/v1/intelligence/runs/id/{run_id}/analyst" in product_paths
 
 
 def test_router_enforces_product_scope_dependency() -> None:
     text = ROUTER_PATH.read_text(encoding="utf-8")
     assert "require_intelligence_runs_read" in text
-    assert text.count("require_intelligence_runs_read") >= 6
+    assert text.count("require_intelligence_runs_read") >= 7
     assert "APIRouter" in text
-    for forbidden in ("evaluate_ade", "run_intelligence_pipeline", "materialize("):
+    for forbidden in (
+        "evaluate_ade",
+        "run_intelligence_pipeline",
+        "materialize(",
+        "project_analyst",
+    ):
         assert forbidden not in text
 
 
