@@ -12,15 +12,14 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
-
 from app.intelligence_runs.constants import (
     FAILURE_DETAIL_MAX_CHARS,
     PERSISTED_OUTCOMES,
-    PERSISTENCE_SCHEMA_VERSION,
+    PERSISTENCE_SCHEMA_VERSION_V1,
     PIPELINE_FINGERPRINT_LENGTH,
-    SNAPSHOT_CONTRACT_VERSION,
+    SNAPSHOT_CONTRACT_VERSION_V1,
 )
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "20261007_0001"
@@ -95,11 +94,11 @@ def upgrade() -> None:
             name="ck_intelligence_runs_failure_detail_length",
         ),
         sa.CheckConstraint(
-            f"snapshot_contract_version = '{SNAPSHOT_CONTRACT_VERSION}'",
+            f"snapshot_contract_version = '{SNAPSHOT_CONTRACT_VERSION_V1}'",
             name="ck_intelligence_runs_snapshot_contract_version",
         ),
         sa.CheckConstraint(
-            f"persistence_schema_version = '{PERSISTENCE_SCHEMA_VERSION}'",
+            f"persistence_schema_version = '{PERSISTENCE_SCHEMA_VERSION_V1}'",
             name="ck_intelligence_runs_persistence_schema_version",
         ),
         sa.PrimaryKeyConstraint("run_id"),

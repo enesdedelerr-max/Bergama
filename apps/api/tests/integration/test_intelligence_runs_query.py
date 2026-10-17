@@ -298,6 +298,12 @@ def test_newest_unsupported_candidate_fail_closed_no_skip(
             )
             conn.execute(
                 text(
+                    "ALTER TABLE intelligence_runs DROP CONSTRAINT "
+                    "ck_intelligence_runs_analyst_snapshot_version_outcome"
+                )
+            )
+            conn.execute(
+                text(
                     "UPDATE intelligence_runs SET as_of = :as_of, persisted_at = :persisted "
                     "WHERE run_id = :run_id"
                 ),

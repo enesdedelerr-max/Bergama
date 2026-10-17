@@ -83,6 +83,8 @@ def test_materialize_completed_dashboard_insert_and_equal_reuse(
     assert first.run_id.version == 4
     assert first.pipeline_fingerprint == result.provenance.pipeline_fingerprint
     assert first.dashboard_snapshot_json is not None
+    assert first.analyst_snapshot_json is not None
+    assert first.snapshot_contract_version == SNAPSHOT_CONTRACT_VERSION
     assert first.stage_presence_json["dashboard"] == "PRESENT"
 
 

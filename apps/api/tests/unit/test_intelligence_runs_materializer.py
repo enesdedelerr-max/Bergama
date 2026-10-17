@@ -36,12 +36,16 @@ def test_materializer_builds_from_completed_pipeline_result_only() -> None:
 
 def test_six_outcomes_materializable_structurally() -> None:
     dashboard = run_intelligence_pipeline(_valid_request())
-    assert build_authoritative_snapshot(dashboard).outcome == "completed_dashboard"
+    dash_snap = build_authoritative_snapshot(dashboard)
+    assert dash_snap.outcome == "completed_dashboard"
+    assert dash_snap.analyst_snapshot is not None
 
     hr = run_intelligence_pipeline(
         _valid_request(hr_requested=True, hr_attestation=VALID_ATTESTATION)
     )
-    assert build_authoritative_snapshot(hr).outcome == "completed_human_review"
+    hr_snap = build_authoritative_snapshot(hr)
+    assert hr_snap.outcome == "completed_human_review"
+    assert hr_snap.analyst_snapshot is not None
 
     ade = run_intelligence_pipeline(
         _valid_request(
@@ -50,7 +54,19 @@ def test_six_outcomes_materializable_structurally() -> None:
             hr_attestation=VALID_ATTESTATION,
         )
     )
-    assert build_authoritative_snapshot(ade).outcome == "completed_ade_accept"
+    ade_snap = build_authoritative_snapshot(ade)
+    assert ade_snap.outcome == "completed_ade_accept"
+    assert ade_snap.analyst_snapshot is not None
 
     rejected = run_intelligence_pipeline(_valid_request(hr_requested=True, hr_attestation=None))
-    assert build_authoritative_snapshot(rejected).outcome == "admission_rejected"
+    rejected_snap = build_authoritative_snapshot(rejected)
+    assert rejected_snap.outcome == "admission_rejected"
+    assert rejected_snap.analyst_snapshot is None
+
+
+def test_materializer_to_record_includes_analyst() -> None:
+    result = run_intelligence_pipeline(_valid_request())
+    snapshot = build_authoritative_snapshot(result)
+    record = IntelligenceRunMaterializer._to_record(snapshot)
+    assert record.analyst_snapshot_json == snapshot.analyst_snapshot
+    assert record.snapshot_contract_version == snapshot.snapshot_contract_version
